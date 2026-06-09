@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { signupUser } from "../../services/authAPI";
@@ -9,6 +9,13 @@ import "./Signup.css";
 
 const Signup = () => {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      navigate("/dashboard");
+    }
+  }, [navigate]);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -31,24 +38,14 @@ const Signup = () => {
 
       navigate("/login");
     } catch (error) {
-      alert(
-        error?.response?.data?.message ||
-          "Signup Failed"
-      );
+      alert(error?.response?.data?.message || "Signup Failed");
     }
   };
 
   return (
     <div className="auth-page">
-      <form
-        onSubmit={submitHandler}
-        className="auth-card neu-card"
-      >
-        <img
-          src={logo}
-          alt="logo"
-          className="auth-logo"
-        />
+      <form onSubmit={submitHandler} className="auth-card neu-card">
+        <img src={logo} alt="logo" className="auth-logo" />
 
         <h1>Create Account</h1>
 
@@ -79,15 +76,10 @@ const Signup = () => {
           required
         />
 
-        <button type="submit">
-          Create Account
-        </button>
+        <button type="submit">Create Account</button>
 
         <p>
-          Already have an account?
-          <Link to="/login">
-            Login
-          </Link>
+          Already have an account? <Link to="/login">Login</Link>
         </p>
       </form>
     </div>

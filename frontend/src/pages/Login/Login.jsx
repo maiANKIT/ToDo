@@ -1,4 +1,4 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { loginUser } from "../../services/authAPI";
@@ -12,6 +12,13 @@ const Login = () => {
   const navigate = useNavigate();
 
   const { login } = useContext(AuthContext);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      navigate("/dashboard");
+    }
+  }, [navigate]);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -31,31 +38,20 @@ const Login = () => {
     try {
       const response = await loginUser(formData);
 
-      login(
-        response.data.token,
-        response.data.user
-      );
+      login(response.data.token, response.data.user);
+      
+      localStorage.setItem("token", response.data.token);
 
       navigate("/dashboard");
     } catch (error) {
-      alert(
-        error?.response?.data?.message ||
-          "Login Failed"
-      );
+      alert(error?.response?.data?.message || "Login Failed");
     }
   };
 
   return (
     <div className="auth-page">
-      <form
-        onSubmit={submitHandler}
-        className="auth-card neu-card"
-      >
-        <img
-          src={logo}
-          alt="logo"
-          className="auth-logo"
-        />
+      <form onSubmit={submitHandler} className="auth-card neu-card">
+        <img src={logo} alt="logo" className="auth-logo" />
 
         <h1>Welcome Back</h1>
 
@@ -77,15 +73,10 @@ const Login = () => {
           required
         />
 
-        <button type="submit">
-          Login
-        </button>
+        <button type="submit">Login</button>
 
         <p>
-          Don't have an account?
-          <Link to="/signup">
-            Sign Up
-          </Link>
+          Don't have an account? <Link to="/signup">Sign Up</Link>
         </p>
       </form>
     </div>
