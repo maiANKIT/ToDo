@@ -1,0 +1,60 @@
+.floating-btn {
+  position: fixed;
+
+  right: 40px;
+  bottom: 40px;
+
+  width: 75px;
+  height: 75px;
+
+  border: none;
+  border-radius: 50%;
+
+  font-size: 2rem;
+  font-weight: bold;
+
+  background: var(--card);
+  color: var(--text);
+
+  box-shadow:
+    10px 10px 20px var(--shadow-dark),
+    -10px -10px 20px var(--shadow-light);
+
+  transition: all 0.3s ease;
+
+  z-index: 999;
+}
+
+.floating-btn:hover {
+  transform: scale(1.08);
+}
+
+/* Tablet */
+@media (max-width: 768px) {
+  .floating-btn {
+    width: 65px;
+    height: 65px;
+
+    right: 20px;
+    bottom: 20px;
+
+    font-size: 1.8rem;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .floating-btn {
+    width: 58px;
+    height: 58px;
+
+    right: 15px;
+    bottom: 15px;
+
+    font-size: 1.6rem;
+
+    box-shadow:
+      6px 6px 14px var(--shadow-dark),
+      -6px -6px 14px var(--shadow-light);
+  }
+}

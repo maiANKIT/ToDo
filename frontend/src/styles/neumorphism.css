@@ -1,0 +1,15 @@
+.neu-card {
+  background: var(--card);
+
+  border-radius: var(--radius);
+
+  box-shadow:
+    12px 12px 24px var(--shadow-dark),
+    -12px -12px 24px var(--shadow-light);
+}
+
+.neu-inset {
+  box-shadow:
+    inset 6px 6px 12px var(--shadow-dark),
+    inset -6px -6px 12px var(--shadow-light);
+}

@@ -1,0 +1,95 @@
+.todo-card {
+  padding: 30px;
+  min-height: 200px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  border-radius: 28px;
+
+  background: var(--card);
+
+  transition: 0.3s;
+}
+
+.todo-card:hover {
+  transform: translateY(-6px);
+}
+
+.todo-card h3 {
+  font-size: 1.4rem;
+  color: var(--text);
+}
+
+.todo-card p {
+  color: var(--text);
+  opacity: 0.8;
+  line-height: 1.6;
+}
+
+.todo-actions {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.edit-btn,
+.delete-btn {
+  padding: 12px 24px;
+
+  border: none;
+
+  border-radius: 999px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: 0.3s;
+}
+
+.edit-btn {
+  background: var(--card);
+  color: var(--text);
+
+  box-shadow:
+    6px 6px 12px var(--shadow-dark),
+    -6px -6px 12px var(--shadow-light);
+}
+
+.edit-btn:hover {
+  transform: translateY(-2px);
+}
+
+.delete-btn {
+  background: #111;
+  color: white;
+}
+
+body[data-theme="dark"] .delete-btn {
+  background: white;
+  color: black;
+}
+
+@media (max-width: 480px) {
+  .todo-card {
+    min-height: auto;
+    padding: 22px;
+  }
+
+  .todo-actions {
+    flex-wrap: wrap;
+  }
+
+  .edit-btn,
+  .delete-btn {
+    flex: 1;
+    min-width: 100px;
+  }
+}
+.todo-card h3,
+.todo-card p {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}

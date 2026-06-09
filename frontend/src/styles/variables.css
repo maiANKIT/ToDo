@@ -1,0 +1,21 @@
+:root {
+  --bg: #f3f3f3;
+  --card: #ededed;
+  --text: #222222;
+  --primary: #000000;
+
+  --radius: 30px;
+
+  --shadow-dark: #cfcfcf;
+  --shadow-light: #ffffff;
+}
+
+body[data-theme="dark"] {
+  --bg: #111111;
+  --card: #1b1b1b;
+  --text: #ffffff;
+  --primary: #ffffff;
+
+  --shadow-dark: #0a0a0a;
+  --shadow-light: #252525;
+}
