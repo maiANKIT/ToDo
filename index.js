@@ -14,7 +14,11 @@ const cors = require("cors");
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: [
+      "http://localhost:5173", 
+      "https://to-4p5u1omkm-maiankits-projects.vercel.app",
+      "https://to-do-eight-plum.vercel.app"
+    ],
     credentials: true,
   })
 );
