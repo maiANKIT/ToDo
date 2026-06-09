@@ -6,7 +6,7 @@ import { AuthContext } from "../../context/AuthContext";
 
 import logo from "../../assets/images/logo.png";
 
-import "./Login.css";
+import "./login.css";
 
 const Login = () => {
   const navigate = useNavigate();
