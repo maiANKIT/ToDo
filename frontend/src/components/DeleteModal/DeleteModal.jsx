@@ -8,7 +8,7 @@ const DeleteModal = ({
 }) => {
   return createPortal(
     <div className="delete-overlay">
-      <div className="delete-modal neu-card">
+      <div className="delete-modal">
         <h2>Delete Task?</h2>
 
         <p>

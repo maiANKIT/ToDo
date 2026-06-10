@@ -104,6 +104,14 @@ const Dashboard = () => {
     setEditingTodo(null);
   };
 
+  // Toggle search — reset term when closing
+  const handleSearchToggle = () => {
+    setShowSearch((prev) => {
+      if (prev) setSearchTerm("");
+      return !prev;
+    });
+  };
+
   const filteredTodos = todos.filter(
     (todo) =>
       todo.title
@@ -115,109 +123,108 @@ const Dashboard = () => {
   );
 
   return (
-    <div
-      className={`dashboard-page ${
-        showSearch ? "search-open" : ""
-      }`}
-    >
-      <div className="dashboard-container">
+    <>
+      <div
+        className={`dashboard-page ${
+          showSearch ? "search-open" : ""
+        }`}
+      >
+        <div className="dashboard-container">
 
-        <Navbar
-  onSearchClick={() =>
-    setShowSearch((prev) => !prev)
-  }
-/>
+          <Navbar
+            onSearchClick={handleSearchToggle}
+          />
 
-        {showSearch && (
-          <div className="search-bar-container">
-            <input
-              type="text"
-              className="search-input"
-              placeholder="Search tasks..."
-              value={searchTerm}
-              onChange={(e) =>
-                setSearchTerm(
-                  e.target.value
-                )
-              }
-              autoFocus
-            />
-          </div>
-        )}
+          {showSearch && (
+            <div className="search-bar-container">
+              <input
+                type="text"
+                className="search-input"
+                placeholder="Search tasks..."
+                value={searchTerm}
+                onChange={(e) =>
+                  setSearchTerm(
+                    e.target.value
+                  )
+                }
+                autoFocus
+              />
+            </div>
+          )}
 
-        <div className="hero-card neu-card">
-          <h1>My Tasks</h1>
-
-          <p>
-            Manage your daily tasks with a
-            clean black & white interface.
-          </p>
-        </div>
-
-        {filteredTodos.length === 0 ? (
-          <div className="empty-state neu-card">
-            <h2>
-              {searchTerm
-                ? "No matching tasks found"
-                : "Ready to Start?"}
-            </h2>
+          <div className="hero-card neu-card">
+            <h1>My Tasks</h1>
 
             <p>
-              {searchTerm
-                ? "Try another search keyword."
-                : "Create your first task and stay productive."}
+              Manage your daily tasks with a
+              clean black & white interface.
             </p>
           </div>
-        ) : (
-          <div className="todo-grid">
-            {filteredTodos.map((todo) => (
-              <TodoCard
-                key={todo._id}
-                todo={todo}
-                onEdit={openEditModal}
-                onDelete={(id) =>
-                  setDeleteId(id)
-                }
-              />
-            ))}
-          </div>
-        )}
 
-        <FloatingButton
-          onClick={() => {
-            setEditingTodo(null);
-            setShowModal(true);
-          }}
-        />
+          {filteredTodos.length === 0 ? (
+            <div className="empty-state neu-card">
+              <h2>
+                {searchTerm
+                  ? "No matching tasks found"
+                  : "Ready to Start?"}
+              </h2>
 
-        {showModal && (
-          <TodoModal
-            editTodo={editingTodo}
-            onClose={() =>
-              setShowModal(false)
-            }
-            onSubmit={
-              handleModalSubmit
-            }
-          />
-        )}
+              <p>
+                {searchTerm
+                  ? "Try another search keyword."
+                  : "Create your first task and stay productive."}
+              </p>
+            </div>
+          ) : (
+            <div className="todo-grid">
+              {filteredTodos.map((todo) => (
+                <TodoCard
+                  key={todo._id}
+                  todo={todo}
+                  onEdit={openEditModal}
+                  onDelete={(id) =>
+                    setDeleteId(id)
+                  }
+                />
+              ))}
+            </div>
+          )}
 
-        {deleteId && (
-          <DeleteModal
-            onClose={() =>
-              setDeleteId(null)
-            }
-            onConfirm={async () => {
-              await deleteTaskHandler(
-                deleteId
-              );
-
-              setDeleteId(null);
+          <FloatingButton
+            onClick={() => {
+              setEditingTodo(null);
+              setShowModal(true);
             }}
           />
-        )}
+
+        </div>
       </div>
-    </div>
+
+      {showModal && (
+        <TodoModal
+          editTodo={editingTodo}
+          onClose={() =>
+            setShowModal(false)
+          }
+          onSubmit={handleModalSubmit}
+        />
+      )}
+
+      {deleteId && (
+        <DeleteModal
+          onClose={() =>
+            setDeleteId(null)
+          }
+          onConfirm={async () => {
+            await deleteTaskHandler(
+              deleteId
+            );
+
+            setDeleteId(null);
+          }}
+        />
+      )}
+    </>
   );
 };
 

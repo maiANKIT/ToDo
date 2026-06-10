@@ -16,6 +16,8 @@
   animation: fadeIn 0.25s ease;
 }
 
+/* neu-card override — remove neumorphic shadow from modal */
+.delete-modal.neu-card,
 .delete-modal {
   width: 420px;
   max-width: 90%;
@@ -26,24 +28,25 @@
 
   border-radius: 32px;
 
-  /* Clean solid white — no glow, no shadow */
   background: #ffffff;
 
   border: 1px solid rgba(0, 0, 0, 0.08);
 
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  /* Override neu-card box-shadow completely */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12) !important;
 
   color: #111;
 
   animation: deletePop 0.25s ease;
 }
 
+body[data-theme="dark"] .delete-modal.neu-card,
 body[data-theme="dark"] .delete-modal {
   background: #1c1c1c;
 
   border: 1px solid rgba(255, 255, 255, 0.08);
 
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
 
   color: #ffffff;
 }
