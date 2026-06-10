@@ -2,6 +2,8 @@
   position: fixed;
 
   top: 16px;
+
+  /* Use left/right margin instead of left:50% + transform to avoid stacking context */
   left: 50%;
   transform: translateX(-50%);
 
@@ -15,25 +17,25 @@
 
   border-radius: 32px;
 
-  background: rgb(255 255 255 / 18%);
+  /* Solid enough background so glass effect is visible */
+  background: rgba(255, 255, 255, 0.72);
 
   backdrop-filter: blur(30px);
   -webkit-backdrop-filter: blur(30px);
-  transform: translateX(-50%) translateZ(0); /* Modified to keep centering + hardware acceleration */
 
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.5);
 
   box-shadow:
     0 10px 40px rgba(0, 0, 0, 0.08),
-    inset 0 1px 1px rgba(255, 255, 255, 0.3);
+    inset 0 1px 1px rgba(255, 255, 255, 0.6);
 
   z-index: 1000;
 
-  transition: all 0.3s ease;
+  transition: background 0.3s ease, box-shadow 0.3s ease;
 }
 
 body[data-theme="dark"] .navbar {
-  background: rgb(18 18 18 / 45%);
+  background: rgba(18, 18, 18, 0.75);
 
   border: 1px solid rgba(255, 255, 255, 0.08);
 
@@ -99,12 +101,12 @@ body[data-theme="dark"] .logo {
 
   color: var(--text);
 
-  background: rgb(255 255 255 / 60%);
+  background: rgba(255, 255, 255, 0.8);
 
-  border: 1px solid rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(0, 0, 0, 0.08);
 
   box-shadow:
-    0 8px 24px rgba(0, 0, 0, 0.08);
+    0 4px 12px rgba(0, 0, 0, 0.06);
 
   transition: all 0.25s ease;
 }
@@ -116,7 +118,7 @@ body[data-theme="dark"] .logo {
 .search-btn:hover {
   transform: translateY(-2px);
 
-  background: rgb(255 255 255 / 85%);
+  background: rgba(255, 255, 255, 1);
 }
 
 .search-btn:active {
@@ -124,7 +126,7 @@ body[data-theme="dark"] .logo {
 }
 
 body[data-theme="dark"] .search-btn {
-  background: rgb(255 255 255 / 8%);
+  background: rgba(255, 255, 255, 0.08);
 
   border: 1px solid rgba(255, 255, 255, 0.15);
 }
