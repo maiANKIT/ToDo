@@ -32,13 +32,9 @@
   outline: none;
   font-size: 1rem;
   color: var(--text);
-  background: rgba(255, 255, 255, 0.18);
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  box-shadow:
-    0 10px 40px rgba(0, 0, 0, 0.08),
-    inset 0 1px 1px rgba(255, 255, 255, 0.3);
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
 }
 
@@ -54,11 +50,9 @@
 }
 
 body[data-theme="dark"] .search-input {
-  background: rgba(18, 18, 18, 0.45);
+  background: #1e1e1e;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow:
-    0 10px 40px rgba(0, 0, 0, 0.4),
-    inset 0 1px 1px rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
 @keyframes searchDrop {
