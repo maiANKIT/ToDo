@@ -5,12 +5,12 @@ const todoSchema = new mongoose.Schema({
     title:{
         type: String,
         required: true,
-        maxLength: 50
+        maxLength: 500
     },
     description:{
         type: String,
         required: true,
-        maxLength: 100
+        maxLength: 1000
     },
     user:{
         type: mongoose.Schema.Types.ObjectId,
