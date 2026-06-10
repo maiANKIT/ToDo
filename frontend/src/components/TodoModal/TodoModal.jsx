@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 
 import "./TodoModal.css";
 
@@ -29,7 +30,7 @@ const TodoModal = ({
     onClose();
   };
 
-  return (
+  return createPortal(
     <div className="modal-overlay">
       <div className="modal-box">
         <h2>
@@ -80,7 +81,8 @@ const TodoModal = ({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

@@ -1,10 +1,12 @@
+import { createPortal } from "react-dom";
+
 import "./DeleteModal.css";
 
 const DeleteModal = ({
   onClose,
   onConfirm,
 }) => {
-  return (
+  return createPortal(
     <div className="delete-overlay">
       <div className="delete-modal neu-card">
         <h2>Delete Task?</h2>
@@ -29,7 +31,8 @@ const DeleteModal = ({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
