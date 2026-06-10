@@ -15,7 +15,7 @@
 }
 
 body[data-theme="light"] .delete-overlay {
-  background: rgb(255 255 255 / 12%); 
+  background: rgba(255, 255, 255, 0.12);
 }
 
 body[data-theme="dark"] .delete-overlay {
@@ -181,4 +181,14 @@ body[data-theme="dark"] .cancel-btn {
     flex: 1;
     padding: 12px;
   }
+}
+.delete-modal {
+  background: rgba(255,255,255,0.65);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+}
+.delete-overlay {
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
