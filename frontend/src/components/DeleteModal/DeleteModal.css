@@ -15,7 +15,7 @@
 }
 
 body[data-theme="light"] .delete-overlay {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgb(255 255 255 / 12%); 
 }
 
 body[data-theme="dark"] .delete-overlay {
