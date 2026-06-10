@@ -10,16 +10,17 @@
 
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
+  transform: translateZ(0);
 
   animation: fadeIn 0.25s ease;
 }
 
 body[data-theme="light"] .delete-overlay {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgb(255 255 255 / 12%);
 }
 
 body[data-theme="dark"] .delete-overlay {
-  background: rgba(0, 0, 0, 0.25);
+  background: rgb(0 0 0 / 25%);
 }
 
 .delete-modal {
@@ -32,10 +33,11 @@ body[data-theme="dark"] .delete-overlay {
 
   border-radius: 32px;
 
-  background: rgba(255, 255, 255, 0.18);
+  background: rgb(255 255 255 / 18%);
 
   backdrop-filter: blur(30px);
   -webkit-backdrop-filter: blur(30px);
+  transform: translateZ(0);
 
   border: 1px solid rgba(255, 255, 255, 0.35);
 
@@ -48,10 +50,11 @@ body[data-theme="dark"] .delete-overlay {
 }
 
 body[data-theme="dark"] .delete-modal {
-  background: rgba(20, 20, 20, 0.25);
+  background: rgb(20 20 20 / 25%);
 
   backdrop-filter: blur(30px);
   -webkit-backdrop-filter: blur(30px);
+  transform: translateZ(0);
 
   border: 1px solid rgba(255, 255, 255, 0.08);
 
@@ -97,10 +100,11 @@ body[data-theme="dark"] .delete-modal {
 }
 
 .cancel-btn {
-  background: rgba(255, 255, 255, 0.45);
+  background: rgb(255 255 255 / 45%);
 
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  transform: translateZ(0);
 
   border: 1px solid rgba(255, 255, 255, 0.35);
 
@@ -111,7 +115,7 @@ body[data-theme="dark"] .delete-modal {
 }
 
 body[data-theme="dark"] .cancel-btn {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgb(255 255 255 / 8%);
 
   border: 1px solid rgba(255, 255, 255, 0.08);
 
@@ -181,14 +185,4 @@ body[data-theme="dark"] .cancel-btn {
     flex: 1;
     padding: 12px;
   }
-}
-.delete-modal {
-  background: rgba(255,255,255,0.65);
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
-}
-.delete-overlay {
-  background: rgba(255,255,255,0.15);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
 }

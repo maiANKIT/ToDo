@@ -21,10 +21,11 @@
 
   cursor: pointer;
 
-  background: rgba(255, 255, 255, 0.18);
+  background: rgb(255 255 255 / 18%);
 
   backdrop-filter: blur(25px);
   -webkit-backdrop-filter: blur(25px);
+  transform: translateZ(0);
 
   border: 1px solid rgba(255, 255, 255, 0.25);
 
@@ -37,7 +38,7 @@
 }
 
 body[data-theme="dark"] .floating-btn {
-  background: rgba(20, 20, 20, 0.35);
+  background: rgb(20 20 20 / 35%);
 
   border: 1px solid rgba(255, 255, 255, 0.08);
 
@@ -48,11 +49,11 @@ body[data-theme="dark"] .floating-btn {
 .floating-btn:hover {
   transform: translateY(-4px) scale(1.05);
 
-  background: rgba(255, 255, 255, 0.28);
+  background: rgb(255 255 255 / 28%);
 }
 
 body[data-theme="dark"] .floating-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgb(255 255 255 / 8%);
 }
 
 .floating-btn:active {

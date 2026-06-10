@@ -15,10 +15,11 @@
 
   border-radius: 32px;
 
-  background: rgba(255, 255, 255, 0.18);
+  background: rgb(255 255 255 / 18%);
 
   backdrop-filter: blur(30px);
   -webkit-backdrop-filter: blur(30px);
+  transform: translateX(-50%) translateZ(0); /* Modified to keep centering + hardware acceleration */
 
   border: 1px solid rgba(255, 255, 255, 0.25);
 
@@ -32,7 +33,7 @@
 }
 
 body[data-theme="dark"] .navbar {
-  background: rgba(18, 18, 18, 0.45);
+  background: rgb(18 18 18 / 45%);
 
   border: 1px solid rgba(255, 255, 255, 0.08);
 
@@ -98,7 +99,7 @@ body[data-theme="dark"] .logo {
 
   color: var(--text);
 
-  background: rgba(255, 255, 255, 0.6);
+  background: rgb(255 255 255 / 60%);
 
   border: 1px solid rgba(255, 255, 255, 0.8);
 
@@ -115,7 +116,7 @@ body[data-theme="dark"] .logo {
 .search-btn:hover {
   transform: translateY(-2px);
 
-  background: rgba(255, 255, 255, 0.85);
+  background: rgb(255 255 255 / 85%);
 }
 
 .search-btn:active {
@@ -123,7 +124,7 @@ body[data-theme="dark"] .logo {
 }
 
 body[data-theme="dark"] .search-btn {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgb(255 255 255 / 8%);
 
   border: 1px solid rgba(255, 255, 255, 0.15);
 }
