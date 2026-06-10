@@ -10,7 +10,8 @@
 
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
-  transform: translateZ(0);
+
+  /* REMOVED: transform: translateZ(0) — this was breaking position:fixed on production */
 
   animation: fadeIn 0.25s ease;
 }
@@ -37,7 +38,8 @@ body[data-theme="dark"] .delete-overlay {
 
   backdrop-filter: blur(30px);
   -webkit-backdrop-filter: blur(30px);
-  transform: translateZ(0);
+
+  /* REMOVED: transform: translateZ(0) */
 
   border: 1px solid rgba(255, 255, 255, 0.35);
 
@@ -54,7 +56,8 @@ body[data-theme="dark"] .delete-modal {
 
   backdrop-filter: blur(30px);
   -webkit-backdrop-filter: blur(30px);
-  transform: translateZ(0);
+
+  /* REMOVED: transform: translateZ(0) */
 
   border: 1px solid rgba(255, 255, 255, 0.08);
 
@@ -104,7 +107,8 @@ body[data-theme="dark"] .delete-modal {
 
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  transform: translateZ(0);
+
+  /* REMOVED: transform: translateZ(0) */
 
   border: 1px solid rgba(255, 255, 255, 0.35);
 

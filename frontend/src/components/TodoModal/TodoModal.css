@@ -10,18 +10,18 @@
 
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  transform: translateZ(0);
+
+  /* NO transform here — would break position:fixed */
 }
 
 body[data-theme="light"] .modal-overlay {
-  background: rgb(255 255 255 / 18%);
+  background: rgba(255, 255, 255, 0.18);
 }
 
 body[data-theme="dark"] .modal-overlay {
-  background: rgb(0 0 0 / 35%);
+  background: rgba(0, 0, 0, 0.35);
 }
 
-/* Glass Modal */
 .modal-box {
   width: 550px;
   max-width: 90%;
@@ -30,11 +30,10 @@ body[data-theme="dark"] .modal-overlay {
 
   border-radius: 30px;
 
-  background: rgb(255 255 255 / 75%);
+  background: rgba(255, 255, 255, 0.75);
 
   backdrop-filter: blur(25px);
   -webkit-backdrop-filter: blur(25px);
-  transform: translateZ(0);
 
   border: 1px solid rgba(255, 255, 255, 0.35);
 
@@ -45,7 +44,7 @@ body[data-theme="dark"] .modal-overlay {
 }
 
 body[data-theme="dark"] .modal-box {
-  background: rgb(25 25 25 / 75%);
+  background: rgba(25, 25, 25, 0.75);
 
   border: 1px solid rgba(255, 255, 255, 0.08);
 
@@ -67,7 +66,6 @@ body[data-theme="dark"] .modal-box {
   gap: 20px;
 }
 
-/* Inputs */
 .modal-box input,
 .modal-box textarea {
   width: 100%;
@@ -94,7 +92,7 @@ body[data-theme="dark"] .modal-box {
 
 body[data-theme="dark"] .modal-box input,
 body[data-theme="dark"] .modal-box textarea {
-  background: rgb(255 255 255 / 8%);
+  background: rgba(255, 255, 255, 0.08);
 
   border: 1px solid rgba(255, 255, 255, 0.08);
 
@@ -129,7 +127,6 @@ body[data-theme="dark"] .modal-box textarea:focus {
   resize: none;
 }
 
-/* Buttons */
 .modal-actions {
   display: flex;
   justify-content: flex-end;
@@ -165,7 +162,7 @@ body[data-theme="dark"] .modal-box textarea:focus {
 
   color: #111;
 
-  background: rgb(255 255 255 / 95%);
+  background: rgba(255, 255, 255, 0.95);
 
   box-shadow:
     0 4px 15px rgba(0, 0, 0, 0.08);
@@ -174,9 +171,11 @@ body[data-theme="dark"] .modal-box textarea:focus {
 }
 
 body[data-theme="dark"] .cancel-btn {
-  background: rgb(255 255 255 / 8%);
+  background: rgba(255, 255, 255, 0.08);
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
   color: white;
-  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .submit-btn {
