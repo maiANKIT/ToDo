@@ -31,7 +31,7 @@ const TodoModal = ({
 
   return (
     <div className="modal-overlay">
-      <div className="modal-box neu-card">
+      <div className="modal-box">
         <h2>
           {editTodo
             ? "Edit Task"
@@ -63,12 +63,16 @@ const TodoModal = ({
           <div className="modal-actions">
             <button
               type="button"
+              className="cancel-btn"
               onClick={onClose}
             >
               Cancel
             </button>
 
-            <button type="submit">
+            <button
+              type="submit"
+              className="submit-btn"
+            >
               {editTodo
                 ? "Update"
                 : "Create"}

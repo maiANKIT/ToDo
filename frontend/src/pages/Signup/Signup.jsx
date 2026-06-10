@@ -1,5 +1,14 @@
-import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import {
+  useState,
+  useEffect,
+} from "react";
+
+import {
+  Link,
+  useNavigate,
+} from "react-router-dom";
+
+import { toast } from "react-toastify";
 
 import { signupUser } from "../../services/authAPI";
 
@@ -11,22 +20,26 @@ const Signup = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token =
+      localStorage.getItem("token");
+
     if (token) {
       navigate("/dashboard");
     }
   }, [navigate]);
 
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-  });
+  const [formData, setFormData] =
+    useState({
+      name: "",
+      email: "",
+      password: "",
+    });
 
   const changeHandler = (e) => {
     setFormData((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value,
+      [e.target.name]:
+        e.target.value,
     }));
   };
 
@@ -36,16 +49,30 @@ const Signup = () => {
     try {
       await signupUser(formData);
 
+      toast.success(
+        "Account Created Successfully"
+      );
+
       navigate("/login");
     } catch (error) {
-      alert(error?.response?.data?.message || "Signup Failed");
+      toast.error(
+        error?.response?.data?.message ||
+          "Signup Failed"
+      );
     }
   };
 
   return (
     <div className="auth-page">
-      <form onSubmit={submitHandler} className="auth-card neu-card">
-        <img src={logo} alt="logo" className="auth-logo" />
+      <form
+        onSubmit={submitHandler}
+        className="auth-card neu-card"
+      >
+        <img
+          src={logo}
+          alt="logo"
+          className="auth-logo"
+        />
 
         <h1>Create Account</h1>
 
@@ -76,10 +103,15 @@ const Signup = () => {
           required
         />
 
-        <button type="submit">Create Account</button>
+        <button type="submit">
+          Create Account
+        </button>
 
         <p>
-          Already have an account? <Link to="/login">Login</Link>
+          Already have an account?{" "}
+          <Link to="/login">
+            Login
+          </Link>
         </p>
       </form>
     </div>

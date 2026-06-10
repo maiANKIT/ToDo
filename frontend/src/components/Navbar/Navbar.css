@@ -1,123 +1,251 @@
 .navbar {
-  width: 100%;
+  position: fixed;
+
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+
+  width: min(1250px, calc(100% - 32px));
 
   display: flex;
   justify-content: space-between;
   align-items: center;
 
-  padding: 25px 50px;
+  padding: 16px 24px;
+
+  border-radius: 32px;
+
+  background: rgba(255, 255, 255, 0.18);
+
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+
+  border: 1px solid rgba(255, 255, 255, 0.25);
+
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.08),
+    inset 0 1px 1px rgba(255, 255, 255, 0.3);
+
+  z-index: 1000;
+
+  transition: all 0.3s ease;
 }
+
+body[data-theme="dark"] .navbar {
+  background: rgba(18, 18, 18, 0.45);
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.4),
+    inset 0 1px 1px rgba(255, 255, 255, 0.05);
+}
+
+/* ---------------- LOGO ---------------- */
 
 .logo-section {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 14px;
+
+  flex-shrink: 0;
 }
 
 .logo {
-  width: 45px;
-  height: 45px;
+  width: 42px;
+  height: 42px;
 
   object-fit: contain;
+
+  transition: 0.3s;
 }
 
 body[data-theme="dark"] .logo {
   filter: invert(1);
 }
 
+.logo-section h2 {
+  font-size: 2rem;
+  font-weight: 700;
+
+  color: var(--text);
+
+  white-space: nowrap;
+}
+
+/* ---------------- ACTIONS ---------------- */
+
 .nav-actions {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
 }
 
+/* ---------------- SEARCH ---------------- */
+
+.search-btn {
+  width: 52px;
+  height: 52px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+  border-radius: 50%;
+
+  cursor: pointer;
+
+  color: var(--text);
+
+  background: rgba(255, 255, 255, 0.6);
+
+  border: 1px solid rgba(255, 255, 255, 0.8);
+
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.08);
+
+  transition: all 0.25s ease;
+}
+
+.search-btn svg {
+  font-size: 1.35rem;
+}
+
+.search-btn:hover {
+  transform: translateY(-2px);
+
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.search-btn:active {
+  transform: scale(0.96);
+}
+
+body[data-theme="dark"] .search-btn {
+  background: rgba(255, 255, 255, 0.08);
+
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* ---------------- LOGOUT ---------------- */
+
 .logout-btn {
-  padding: 12px 24px;
+  height: 52px;
+
+  padding: 0 24px;
 
   border: none;
   border-radius: 999px;
-
-  background: var(--card);
-  color: var(--text);
 
   font-size: 0.95rem;
   font-weight: 600;
 
   cursor: pointer;
 
-  box-shadow:
-    6px 6px 12px var(--shadow-dark),
-    -6px -6px 12px var(--shadow-light);
+  color: white;
 
-  transition: all 0.3s ease;
+  background: #111;
+
+  transition: all 0.25s ease;
+}
+
+body[data-theme="dark"] .logout-btn {
+  background: white;
+
+  color: black;
 }
 
 .logout-btn:hover {
   transform: translateY(-2px);
 
-  box-shadow:
-    8px 8px 16px var(--shadow-dark),
-    -8px -8px 16px var(--shadow-light);
+  background: #000;
 }
 
 .logout-btn:active {
-  transform: scale(0.97);
+  transform: scale(0.96);
 }
 
-.auth-logo {
-  transition: 0.3s;
-}
+/* ---------------- TABLET ---------------- */
 
-body[data-theme="dark"] .auth-logo {
-  filter: brightness(0) invert(1);
-}
-
-/* Tablet */
 @media (max-width: 768px) {
   .navbar {
-    padding: 20px 0;
+    width: calc(100% - 20px);
+
+    padding: 14px 18px;
+
+    border-radius: 24px;
+
+    top: 10px;
   }
 
   .logo {
-    width: 38px;
-    height: 38px;
+    width: 34px;
+    height: 34px;
   }
 
   .logo-section h2 {
-    font-size: 1.5rem;
+    font-size: 1.35rem;
+  }
+
+  .search-btn {
+    width: 46px;
+    height: 46px;
   }
 
   .logout-btn {
-    padding: 10px 18px;
-    font-size: 0.9rem;
+    height: 46px;
+
+    padding: 0 18px;
+
+    font-size: 0.85rem;
   }
 }
 
-/* Mobile */
+/* ---------------- MOBILE ---------------- */
+
 @media (max-width: 480px) {
+
   .navbar {
-    padding: 15px 0;
+    width: calc(100% - 12px);
+
+    top: 8px;
+
+    padding: 10px 12px;
+
+    border-radius: 18px;
   }
 
   .logo-section {
-    gap: 8px;
+    gap: 6px;
   }
 
   .logo {
-    width: 30px;
-    height: 30px;
+    width: 24px;
+    height: 24px;
   }
 
   .logo-section h2 {
-    font-size: 1.15rem;
+    font-size: 0.95rem;
+    font-weight: 700;
   }
 
   .nav-actions {
-    gap: 8px;
+    gap: 6px;
+  }
+
+  .search-btn {
+    width: 36px;
+    height: 36px;
+
+    font-size: 0.8rem;
   }
 
   .logout-btn {
-    padding: 8px 12px;
-    font-size: 0.8rem;
+    height: 36px;
+
+    padding: 0 10px;
+
+    font-size: 0.72rem;
   }
 }

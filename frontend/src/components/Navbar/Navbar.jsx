@@ -4,10 +4,11 @@ import { AuthContext } from "../../context/AuthContext";
 import ThemeToggle from "../ThemeToggle/ThemeToggle";
 
 import logo from "../../assets/images/logo.png";
+import { FiSearch } from "react-icons/fi";
 
 import "./Navbar.css";
 
-const Navbar = () => {
+const Navbar = ({ onSearchClick }) => {
   const { logout } = useContext(AuthContext);
 
   return (
@@ -23,10 +24,17 @@ const Navbar = () => {
       </div>
 
       <div className="nav-actions">
+        <button
+  className="search-btn"
+  onClick={onSearchClick}
+>
+  <FiSearch />
+</button>
+
         <ThemeToggle />
 
         <button
-          className="logout-btn neu-card"
+          className="logout-btn"
           onClick={logout}
         >
           Logout

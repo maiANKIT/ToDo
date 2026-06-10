@@ -17,6 +17,7 @@ import {
 
 const Dashboard = () => {
   const [todos, setTodos] = useState([]);
+
   const [showModal, setShowModal] =
     useState(false);
 
@@ -25,6 +26,12 @@ const Dashboard = () => {
 
   const [deleteId, setDeleteId] =
     useState(null);
+
+  const [showSearch, setShowSearch] =
+    useState(false);
+
+  const [searchTerm, setSearchTerm] =
+    useState("");
 
   const fetchTodos = async () => {
     try {
@@ -97,10 +104,46 @@ const Dashboard = () => {
     setEditingTodo(null);
   };
 
+  const filteredTodos = todos.filter(
+    (todo) =>
+      todo.title
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      todo.description
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase())
+  );
+
   return (
-    <div className="dashboard-page">
+    <div
+      className={`dashboard-page ${
+        showSearch ? "search-open" : ""
+      }`}
+    >
       <div className="dashboard-container">
-        <Navbar />
+
+        <Navbar
+  onSearchClick={() =>
+    setShowSearch((prev) => !prev)
+  }
+/>
+
+        {showSearch && (
+          <div className="search-bar-container">
+            <input
+              type="text"
+              className="search-input"
+              placeholder="Search tasks..."
+              value={searchTerm}
+              onChange={(e) =>
+                setSearchTerm(
+                  e.target.value
+                )
+              }
+              autoFocus
+            />
+          </div>
+        )}
 
         <div className="hero-card neu-card">
           <h1>My Tasks</h1>
@@ -111,18 +154,23 @@ const Dashboard = () => {
           </p>
         </div>
 
-        {todos.length === 0 ? (
+        {filteredTodos.length === 0 ? (
           <div className="empty-state neu-card">
-            <h2>Ready to Start?</h2>
+            <h2>
+              {searchTerm
+                ? "No matching tasks found"
+                : "Ready to Start?"}
+            </h2>
 
             <p>
-              Create your first task and
-              stay productive.
+              {searchTerm
+                ? "Try another search keyword."
+                : "Create your first task and stay productive."}
             </p>
           </div>
         ) : (
           <div className="todo-grid">
-            {todos.map((todo) => (
+            {filteredTodos.map((todo) => (
               <TodoCard
                 key={todo._id}
                 todo={todo}

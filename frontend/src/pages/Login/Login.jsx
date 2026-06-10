@@ -1,5 +1,15 @@
-import { useState, useContext, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import {
+  useState,
+  useContext,
+  useEffect,
+} from "react";
+
+import {
+  Link,
+  useNavigate,
+} from "react-router-dom";
+
+import { toast } from "react-toastify";
 
 import { loginUser } from "../../services/authAPI";
 import { AuthContext } from "../../context/AuthContext";
@@ -11,24 +21,29 @@ import "./login.css";
 const Login = () => {
   const navigate = useNavigate();
 
-  const { login } = useContext(AuthContext);
+  const { login } =
+    useContext(AuthContext);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token =
+      localStorage.getItem("token");
+
     if (token) {
       navigate("/dashboard");
     }
   }, [navigate]);
 
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const [formData, setFormData] =
+    useState({
+      email: "",
+      password: "",
+    });
 
   const changeHandler = (e) => {
     setFormData((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value,
+      [e.target.name]:
+        e.target.value,
     }));
   };
 
@@ -36,22 +51,43 @@ const Login = () => {
     e.preventDefault();
 
     try {
-      const response = await loginUser(formData);
+      const response =
+        await loginUser(formData);
 
-      login(response.data.token, response.data.user);
-      
-      localStorage.setItem("token", response.data.token);
+      login(
+        response.data.token,
+        response.data.user
+      );
+
+      localStorage.setItem(
+        "token",
+        response.data.token
+      );
+
+      toast.success(
+        "Login Successful"
+      );
 
       navigate("/dashboard");
     } catch (error) {
-      alert(error?.response?.data?.message || "Login Failed");
+      toast.error(
+        error?.response?.data?.message ||
+          "Login Failed"
+      );
     }
   };
 
   return (
     <div className="auth-page">
-      <form onSubmit={submitHandler} className="auth-card neu-card">
-        <img src={logo} alt="logo" className="auth-logo" />
+      <form
+        onSubmit={submitHandler}
+        className="auth-card neu-card"
+      >
+        <img
+          src={logo}
+          alt="logo"
+          className="auth-logo"
+        />
 
         <h1>Welcome Back</h1>
 
@@ -73,10 +109,15 @@ const Login = () => {
           required
         />
 
-        <button type="submit">Login</button>
+        <button type="submit">
+          Login
+        </button>
 
         <p>
-          Don't have an account? <Link to="/signup">Sign Up</Link>
+          Don't have an account?{" "}
+          <Link to="/signup">
+            Sign Up
+          </Link>
         </p>
       </form>
     </div>

@@ -1,42 +1,66 @@
 .todo-card {
   padding: 30px;
-  min-height: 200px;
+
+  min-height: 220px;
 
   display: flex;
   flex-direction: column;
   justify-content: space-between;
 
-  border-radius: 28px;
+  border-radius: 30px;
 
   background: var(--card);
 
-  transition: 0.3s;
+  transition: all 0.3s ease;
+
+  overflow: hidden;
 }
 
 .todo-card:hover {
   transform: translateY(-6px);
 }
 
+.todo-content {
+  flex: 1;
+}
+
 .todo-card h3 {
-  font-size: 1.4rem;
+  font-size: 1.35rem;
+
+  margin-bottom: 12px;
+
   color: var(--text);
+
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .todo-card p {
   color: var(--text);
+
   opacity: 0.8;
+
   line-height: 1.6;
+
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
+
+/* ---------- ACTIONS ---------- */
 
 .todo-actions {
   display: flex;
-  gap: 15px;
-  margin-top: 20px;
+
+  gap: 12px;
+
+  margin-top: 24px;
 }
 
 .edit-btn,
 .delete-btn {
-  padding: 12px 24px;
+  flex: 1;
+
+  padding: 12px 20px;
 
   border: none;
 
@@ -46,50 +70,59 @@
 
   cursor: pointer;
 
-  transition: 0.3s;
+  transition: all 0.3s ease;
 }
 
-.edit-btn {
-  background: var(--card);
-  color: var(--text);
+/* EDIT */
 
-  box-shadow:
-    6px 6px 12px var(--shadow-dark),
-    -6px -6px 12px var(--shadow-light);
+.edit-btn {
+  background: rgba(255,255,255,0.25);
+
+  backdrop-filter: blur(12px);
+
+  border: 1px solid rgba(255,255,255,0.2);
+
+  color: var(--text);
+}
+
+body[data-theme="dark"] .edit-btn {
+  background: rgba(255,255,255,0.08);
+
+  border: 1px solid rgba(255,255,255,0.08);
 }
 
 .edit-btn:hover {
   transform: translateY(-2px);
 }
 
+/* DELETE */
+
 .delete-btn {
   background: #111;
+
   color: white;
 }
 
 body[data-theme="dark"] .delete-btn {
   background: white;
+
   color: black;
 }
 
+.delete-btn:hover {
+  transform: translateY(-2px);
+}
+
+/* MOBILE */
+
 @media (max-width: 480px) {
   .todo-card {
+    padding: 24px;
+
     min-height: auto;
-    padding: 22px;
   }
 
   .todo-actions {
-    flex-wrap: wrap;
+    flex-direction: column;
   }
-
-  .edit-btn,
-  .delete-btn {
-    flex: 1;
-    min-width: 100px;
-  }
-}
-.todo-card h3,
-.todo-card p {
-  overflow-wrap: break-word;
-  word-break: break-word;
 }

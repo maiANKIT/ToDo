@@ -3,7 +3,7 @@ import "./FloatingButton.css";
 const FloatingButton = ({ onClick }) => {
   return (
     <button
-      className="floating-btn neu-card"
+      className="floating-btn"
       onClick={onClick}
     >
       +

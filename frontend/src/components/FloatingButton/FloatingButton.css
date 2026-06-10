@@ -10,51 +10,51 @@
   border: none;
   border-radius: 50%;
 
-  font-size: 2rem;
-  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-  background: var(--card);
+  font-size: 2rem;
+  font-weight: 700;
+
   color: var(--text);
 
+  cursor: pointer;
+
+  background: rgba(255, 255, 255, 0.18);
+
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+
+  border: 1px solid rgba(255, 255, 255, 0.25);
+
   box-shadow:
-    10px 10px 20px var(--shadow-dark),
-    -10px -10px 20px var(--shadow-light);
+    0 8px 32px rgba(0, 0, 0, 0.12);
 
   transition: all 0.3s ease;
 
   z-index: 999;
 }
 
+body[data-theme="dark"] .floating-btn {
+  background: rgba(20, 20, 20, 0.35);
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.35);
+}
+
 .floating-btn:hover {
-  transform: scale(1.08);
+  transform: translateY(-4px) scale(1.05);
+
+  background: rgba(255, 255, 255, 0.28);
 }
 
-/* Tablet */
-@media (max-width: 768px) {
-  .floating-btn {
-    width: 65px;
-    height: 65px;
-
-    right: 20px;
-    bottom: 20px;
-
-    font-size: 1.8rem;
-  }
+body[data-theme="dark"] .floating-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
 }
 
-/* Mobile */
-@media (max-width: 480px) {
-  .floating-btn {
-    width: 58px;
-    height: 58px;
-
-    right: 15px;
-    bottom: 15px;
-
-    font-size: 1.6rem;
-
-    box-shadow:
-      6px 6px 14px var(--shadow-dark),
-      -6px -6px 14px var(--shadow-light);
-  }
+.floating-btn:active {
+  transform: scale(0.95);
 }
