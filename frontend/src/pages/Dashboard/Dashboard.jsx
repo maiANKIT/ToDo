@@ -33,6 +33,9 @@ const Dashboard = () => {
   const [searchTerm, setSearchTerm] =
     useState("");
 
+  const [showScrollTop, setShowScrollTop] =
+    useState(false);
+
   const fetchTodos = async () => {
     try {
       const response = await getTodos();
@@ -45,6 +48,25 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchTodos();
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(
+        window.scrollY > 400
+      );
+    };
+
+    window.addEventListener(
+      "scroll",
+      handleScroll
+    );
+
+    return () =>
+      window.removeEventListener(
+        "scroll",
+        handleScroll
+      );
   }, []);
 
   const addTaskHandler = async (data) => {
@@ -104,7 +126,6 @@ const Dashboard = () => {
     setEditingTodo(null);
   };
 
-  // Toggle search — reset term when closing
   const handleSearchToggle = () => {
     setShowSearch((prev) => {
       if (prev) setSearchTerm("");
@@ -112,15 +133,25 @@ const Dashboard = () => {
     });
   };
 
-  const filteredTodos = todos.filter(
-    (todo) =>
-      todo.title
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      todo.description
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase())
-  );
+  const filteredTodos = todos
+    .filter(
+      (todo) =>
+        todo.title
+          .toLowerCase()
+          .includes(
+            searchTerm.toLowerCase()
+          ) ||
+        todo.description
+          .toLowerCase()
+          .includes(
+            searchTerm.toLowerCase()
+          )
+    )
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt) -
+        new Date(a.createdAt)
+    );
 
   return (
     <>
@@ -130,9 +161,10 @@ const Dashboard = () => {
         }`}
       >
         <div className="dashboard-container">
-
           <Navbar
-            onSearchClick={handleSearchToggle}
+            onSearchClick={
+              handleSearchToggle
+            }
           />
 
           {showSearch && (
@@ -153,13 +185,12 @@ const Dashboard = () => {
           )}
 
           <div className="hero-card neu-card">
-            <h1>My Tasks</h1>
+  <h1>My Tasks</h1>
 
-            <p>
-              Manage your daily tasks with a
-              clean black & white interface.
-            </p>
-          </div>
+  <p>
+    {todos.length} Active Tasks • Stay Productive
+  </p>
+</div>
 
           {filteredTodos.length === 0 ? (
             <div className="empty-state neu-card">
@@ -177,16 +208,20 @@ const Dashboard = () => {
             </div>
           ) : (
             <div className="todo-grid">
-              {filteredTodos.map((todo) => (
-                <TodoCard
-                  key={todo._id}
-                  todo={todo}
-                  onEdit={openEditModal}
-                  onDelete={(id) =>
-                    setDeleteId(id)
-                  }
-                />
-              ))}
+              {filteredTodos.map(
+                (todo) => (
+                  <TodoCard
+                    key={todo._id}
+                    todo={todo}
+                    onEdit={
+                      openEditModal
+                    }
+                    onDelete={(id) =>
+                      setDeleteId(id)
+                    }
+                  />
+                )
+              )}
             </div>
           )}
 
@@ -196,9 +231,22 @@ const Dashboard = () => {
               setShowModal(true);
             }}
           />
-
         </div>
       </div>
+
+      {showScrollTop && (
+        <button
+          className="scroll-top-btn"
+          onClick={() =>
+            window.scrollTo({
+              top: 0,
+              behavior: "smooth",
+            })
+          }
+        >
+          ↑
+        </button>
+      )}
 
       {showModal && (
         <TodoModal
@@ -206,7 +254,9 @@ const Dashboard = () => {
           onClose={() =>
             setShowModal(false)
           }
-          onSubmit={handleModalSubmit}
+          onSubmit={
+            handleModalSubmit
+          }
         />
       )}
 

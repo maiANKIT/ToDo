@@ -9,20 +9,26 @@ const TodoCard = ({ todo, onEdit, onDelete }) => {
         <p>{todo.description}</p>
       </div>
 
-      <div className="todo-actions">
-        <button
-          className="edit-btn"
-          onClick={() => onEdit(todo)}
-        >
-          Edit
-        </button>
+      <div className="todo-footer">
+        <span className="todo-date">
+          {new Date(todo.createdAt).toLocaleDateString()}
+        </span>
 
-        <button
-          className="delete-btn"
-          onClick={() => onDelete(todo._id)}
-        >
-          Delete
-        </button>
+        <div className="todo-actions">
+          <button
+            className="edit-btn"
+            onClick={() => onEdit(todo)}
+          >
+            Edit
+          </button>
+
+          <button
+            className="delete-btn"
+            onClick={() => onDelete(todo._id)}
+          >
+            Delete
+          </button>
+        </div>
       </div>
     </div>
   );

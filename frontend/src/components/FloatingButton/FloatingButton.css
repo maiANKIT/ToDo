@@ -1,11 +1,11 @@
 .floating-btn {
   position: fixed;
 
-  right: 40px;
-  bottom: 40px;
+  right: 32px;
+  bottom: 32px;
 
-  width: 75px;
-  height: 75px;
+  width: 68px;
+  height: 68px;
 
   border: none;
   border-radius: 50%;
@@ -14,14 +14,14 @@
   align-items: center;
   justify-content: center;
 
-  font-size: 2rem;
-  font-weight: 700;
+  font-size: 2.2rem;
+  font-weight: 900;
 
   color: var(--text);
 
   cursor: pointer;
 
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.88);
 
   backdrop-filter: blur(25px);
   -webkit-backdrop-filter: blur(25px);
@@ -29,7 +29,7 @@
   border: 1px solid rgba(255, 255, 255, 0.6);
 
   box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.12);
+    0 10px 35px rgba(0, 0, 0, 0.12);
 
   transition: all 0.3s ease;
 
@@ -37,24 +37,36 @@
 }
 
 body[data-theme="dark"] .floating-btn {
-  background: rgba(30, 30, 30, 0.85);
+  background: rgba(30, 30, 30, 0.88);
 
   border: 1px solid rgba(255, 255, 255, 0.08);
 
   box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.35);
+    0 10px 35px rgba(0, 0, 0, 0.35);
 }
 
 .floating-btn:hover {
-  transform: translateY(-4px) scale(1.05);
+  transform: translateY(-4px) scale(1.06);
 
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.96);
 }
 
 body[data-theme="dark"] .floating-btn:hover {
-  background: rgba(50, 50, 50, 0.9);
+  background: rgba(50, 50, 50, 0.92);
 }
 
 .floating-btn:active {
   transform: scale(0.95);
+}
+
+@media (max-width: 768px) {
+  .floating-btn {
+    width: 62px;
+    height: 62px;
+
+    right: 16px;
+    bottom: 16px;
+
+    font-size: 2rem;
+  }
 }

@@ -1,7 +1,7 @@
 .todo-card {
-  padding: 30px;
+  padding: 28px;
 
-  min-height: 220px;
+  min-height: 240px;
 
   display: flex;
   flex-direction: column;
@@ -11,13 +11,18 @@
 
   background: var(--card);
 
-  transition: all 0.3s ease;
+  transition: all 0.35s ease;
 
   overflow: hidden;
+
+  position: relative;
 }
 
 .todo-card:hover {
-  transform: translateY(-6px);
+  transform: translateY(-8px);
+
+  box-shadow:
+    0 20px 40px rgba(0,0,0,0.12);
 }
 
 .todo-content {
@@ -25,11 +30,15 @@
 }
 
 .todo-card h3 {
-  font-size: 1.35rem;
+  font-size: 1.4rem;
 
-  margin-bottom: 12px;
+  font-weight: 700;
+
+  margin-bottom: 14px;
 
   color: var(--text);
+
+  line-height: 1.4;
 
   overflow-wrap: break-word;
   word-break: break-word;
@@ -38,12 +47,38 @@
 .todo-card p {
   color: var(--text);
 
-  opacity: 0.8;
+  opacity: 0.78;
 
-  line-height: 1.6;
+  line-height: 1.7;
 
   overflow-wrap: break-word;
   word-break: break-word;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+
+  overflow: hidden;
+}
+
+/* ---------- FOOTER ---------- */
+
+.todo-footer {
+  margin-top: 24px;
+}
+
+.todo-date {
+  display: inline-block;
+
+  margin-bottom: 16px;
+
+  font-size: 0.8rem;
+
+  font-weight: 600;
+
+  opacity: 0.55;
+
+  color: var(--text);
 }
 
 /* ---------- ACTIONS ---------- */
@@ -52,15 +87,13 @@
   display: flex;
 
   gap: 12px;
-
-  margin-top: 24px;
 }
 
 .edit-btn,
 .delete-btn {
   flex: 1;
 
-  padding: 12px 20px;
+  height: 46px;
 
   border: none;
 
@@ -73,14 +106,14 @@
   transition: all 0.3s ease;
 }
 
-/* EDIT */
+/* ---------- EDIT ---------- */
 
 .edit-btn {
-  background: rgba(255,255,255,0.25);
+  background: rgba(255,255,255,0.22);
 
   backdrop-filter: blur(12px);
 
-  border: 1px solid rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.25);
 
   color: var(--text);
 }
@@ -93,9 +126,11 @@ body[data-theme="dark"] .edit-btn {
 
 .edit-btn:hover {
   transform: translateY(-2px);
+
+  background: rgba(255,255,255,0.35);
 }
 
-/* DELETE */
+/* ---------- DELETE ---------- */
 
 .delete-btn {
   background: #111;
@@ -111,18 +146,54 @@ body[data-theme="dark"] .delete-btn {
 
 .delete-btn:hover {
   transform: translateY(-2px);
+
+  opacity: 0.9;
 }
 
-/* MOBILE */
+/* ---------- MOBILE ---------- */
 
 @media (max-width: 480px) {
   .todo-card {
-    padding: 24px;
-
+    padding: 22px;
     min-height: auto;
+
+    border-radius: 24px;
+  }
+
+  .todo-card h3 {
+    font-size: 1.15rem;
+    margin-bottom: 10px;
+  }
+
+  .todo-card p {
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  .todo-date {
+    font-size: 0.75rem;
+    margin-bottom: 12px;
+  }
+
+  .todo-footer {
+    margin-top: 18px;
   }
 
   .todo-actions {
-    flex-direction: column;
+    display: flex;
+    flex-direction: row; /* keep side-by-side */
+    gap: 10px;
+  }
+
+  .edit-btn,
+  .delete-btn {
+    flex: 1;
+
+    height: 42px;
+
+    font-size: 0.9rem;
+    font-weight: 600;
+
+    width: auto;
   }
 }

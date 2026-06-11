@@ -19,6 +19,25 @@ const TodoModal = ({
     }
   }, [editTodo]);
 
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+
+    window.addEventListener(
+      "keydown",
+      handleEscape
+    );
+
+    return () =>
+      window.removeEventListener(
+        "keydown",
+        handleEscape
+      );
+  }, [onClose]);
+
   const submitHandler = (e) => {
     e.preventDefault();
 
@@ -31,8 +50,16 @@ const TodoModal = ({
   };
 
   return createPortal(
-    <div className="modal-overlay">
-      <div className="modal-box">
+    <div
+      className="modal-overlay"
+      onClick={onClose}
+    >
+      <div
+        className="modal-box"
+        onClick={(e) =>
+          e.stopPropagation()
+        }
+      >
         <h2>
           {editTodo
             ? "Edit Task"

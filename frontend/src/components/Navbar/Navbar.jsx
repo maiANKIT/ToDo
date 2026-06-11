@@ -27,8 +27,9 @@ const Navbar = ({ onSearchClick }) => {
         <button
   className="search-btn"
   onClick={onSearchClick}
+  aria-label="Search tasks"
 >
-  <FiSearch />
+  <FiSearch size={22} />
 </button>
 
         <ThemeToggle />
