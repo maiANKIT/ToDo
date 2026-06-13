@@ -1,16 +1,7 @@
 import { useEffect, useState, useContext, useRef, useCallback } from "react";
 import "./Dashboard.css";
 
-import {
-  Sun,
-  Cloud,
-  Moon,
-  Flame,
-  CheckCircle2,
-  ListTodo,
-  BarChart2,
-  Search,
-} from "lucide-react";
+import { Sun, Cloud, Moon, Flame, CheckCircle2, ListTodo, BarChart2, Search } from "lucide-react";
 
 import Navbar from "../../components/Navbar/Navbar";
 import FloatingButton from "../../components/FloatingButton/FloatingButton";
@@ -18,97 +9,75 @@ import TodoModal from "../../components/TodoModal/TodoModal";
 import TodoCard from "../../components/TodoCard/TodoCard";
 import DeleteModal from "../../components/DeleteModal/DeleteModal";
 import { AuthContext } from "../../context/AuthContext";
-
-import {
-  getTodos,
-  createTodo,
-  deleteTodo,
-  updateTodo,
-} from "../../services/todoAPI";
+import { getTodos, createTodo, deleteTodo, updateTodo } from "../../services/todoAPI";
 
 const getGreeting = () => {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good Morning";
-  if (hour < 17) return "Good Afternoon";
+  const h = new Date().getHours();
+  if (h < 12) return "Good Morning";
+  if (h < 17) return "Good Afternoon";
   return "Good Evening";
 };
-
 const getGreetingIcon = () => {
-  const hour = new Date().getHours();
-  if (hour < 12) return <Sun size={32} strokeWidth={1.8} />;
-  if (hour < 17) return <Cloud size={32} strokeWidth={1.8} />;
-  return <Moon size={32} strokeWidth={1.8} />;
+  const h = new Date().getHours();
+  if (h < 12) return <Sun size={30} strokeWidth={1.8} />;
+  if (h < 17) return <Cloud size={30} strokeWidth={1.8} />;
+  return <Moon size={30} strokeWidth={1.8} />;
 };
-
 const getStreak = (todos) => {
   if (!todos.length) return 0;
-  const doneDates = todos
-    .filter((t) => t.status === "done" && t.updatedAt)
-    .map((t) => new Date(t.updatedAt).toDateString());
-  const uniqueDates = [...new Set(doneDates)];
-  if (!uniqueDates.length) return 0;
+  const dates = [...new Set(
+    todos.filter(t => t.status === "done" && t.updatedAt)
+         .map(t => new Date(t.updatedAt).toDateString())
+  )];
+  if (!dates.length) return 0;
   let streak = 0;
   const today = new Date();
   for (let i = 0; i < 30; i++) {
-    const day = new Date(today);
-    day.setDate(today.getDate() - i);
-    if (uniqueDates.includes(day.toDateString())) {
-      streak++;
-    } else if (i > 0) {
-      break;
-    }
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    if (dates.includes(d.toDateString())) streak++;
+    else if (i > 0) break;
   }
   return streak;
 };
-
-const getProductivityScore = (todos) => {
+const getScore = (todos) => {
   if (!todos.length) return 0;
-  const done = todos.filter((t) => t.status === "done").length;
-  return Math.round((done / todos.length) * 100);
+  return Math.round(todos.filter(t => t.status === "done").length / todos.length * 100);
 };
 
 const Dashboard = () => {
   const { user } = useContext(AuthContext);
   const userName = user?.name?.split(" ")[0] || "User";
 
-  const [todos, setTodos] = useState([]);
-  const [showModal, setShowModal] = useState(false);
-  const [editingTodo, setEditingTodo] = useState(null);
-  const [deleteId, setDeleteId] = useState(null);
-  const [showSearch, setShowSearch] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [showScrollTop, setShowScrollTop] = useState(false);
-  const [activeFilter, setActiveFilter] = useState("all");
-  const [stripSticky, setStripSticky] = useState(false);
-  // Tracks actual pixel bottom of navbar for precise sticky positioning
-  const [navbarBottom, setNavbarBottom] = useState(108);
+  const [todos,         setTodos]        = useState([]);
+  const [showModal,     setShowModal]    = useState(false);
+  const [editingTodo,   setEditingTodo]  = useState(null);
+  const [deleteId,      setDeleteId]     = useState(null);
+  const [searchTerm,    setSearchTerm]   = useState("");
+  const [showScrollTop, setShowScrollTop]= useState(false);
+  const [activeFilter,  setActiveFilter] = useState("all");
+  const [stripSticky,   setStripSticky]  = useState(false);
+  const [navbarBottom,  setNavbarBottom] = useState(80);
+  // "closed" | "opening" | "open" | "closing"
+  const [searchState,   setSearchState]  = useState("closed");
 
   const heroRef   = useRef(null);
   const navbarRef = useRef(null);
 
-  // Measure the navbar's actual bottom edge (top + height)
   const measureNavbar = useCallback(() => {
     if (navbarRef.current) {
-      const rect = navbarRef.current.getBoundingClientRect();
-      // rect.bottom is relative to viewport, which is what we need for `top` in fixed positioning
-      setNavbarBottom(rect.bottom + 8); // 8px gap between navbar and strip
+      const r = navbarRef.current.getBoundingClientRect();
+      setNavbarBottom(r.bottom + 8);
     }
   }, []);
 
   const fetchTodos = async () => {
-    try {
-      const response = await getTodos();
-      setTodos(response.data.data);
-    } catch (error) {
-      console.log(error);
-    }
+    try { const r = await getTodos(); setTodos(r.data.data); }
+    catch (e) { console.log(e); }
   };
 
-  useEffect(() => {
-    fetchTodos();
-  }, []);
+  useEffect(() => { fetchTodos(); }, []);
 
-  // Measure navbar on mount and on resize
   useEffect(() => {
     measureNavbar();
     window.addEventListener("resize", measureNavbar);
@@ -116,169 +85,141 @@ const Dashboard = () => {
   }, [measureNavbar]);
 
   useEffect(() => {
-    const handleScroll = () => setShowScrollTop(window.scrollY > 400);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    const fn = () => setShowScrollTop(window.scrollY > 400);
+    window.addEventListener("scroll", fn);
+    return () => window.removeEventListener("scroll", fn);
   }, []);
 
-  // IntersectionObserver: go sticky when hero card fully scrolls out of view
   useEffect(() => {
     const hero = heroRef.current;
     if (!hero) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setStripSticky(!entry.isIntersecting);
-      },
+    const obs = new IntersectionObserver(
+      ([e]) => setStripSticky(!e.isIntersecting),
       { rootMargin: "-1px 0px 0px 0px", threshold: 0 }
     );
-    observer.observe(hero);
-    return () => observer.disconnect();
+    obs.observe(hero);
+    return () => obs.disconnect();
   }, []);
 
-  const addTaskHandler = async (data) => {
-    try {
-      await createTodo(data);
-      fetchTodos();
-    } catch (error) {
-      console.log(error);
-    }
+  const openSearch = () => {
+    setSearchState("opening");
+    setTimeout(() => { setSearchState("open"); measureNavbar(); }, 30);
   };
 
-  const updateTaskHandler = async (id, data) => {
-    try {
-      await updateTodo(id, data);
-      fetchTodos();
-    } catch (error) {
-      console.log(error);
-    }
+  const closeSearch = () => {
+    setSearchState("closing");
+    setSearchTerm("");
+    setTimeout(() => { setSearchState("closed"); measureNavbar(); }, 320);
   };
 
-  const deleteTaskHandler = async (id) => {
-    try {
-      await deleteTodo(id);
-      setTodos((prev) => prev.filter((todo) => todo._id !== id));
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  const openEditModal = (todo) => {
-    setEditingTodo(todo);
-    setShowModal(true);
+  const addTask    = async (d) => { try { await createTodo(d);    fetchTodos(); } catch(e){} };
+  const updateTask = async (id,d)=>{ try { await updateTodo(id,d); fetchTodos(); } catch(e){} };
+  const deleteTask = async (id) => {
+    try { await deleteTodo(id); setTodos(p => p.filter(t => t._id !== id)); } catch(e){}
   };
 
   const handleModalSubmit = async (data) => {
-    if (editingTodo) {
-      await updateTaskHandler(editingTodo._id, data);
-    } else {
-      await addTaskHandler(data);
-    }
+    if (editingTodo) await updateTask(editingTodo._id, data);
+    else await addTask(data);
     setEditingTodo(null);
   };
 
-  const handleSearchToggle = () => {
-    setShowSearch((prev) => {
-      if (prev) setSearchTerm("");
-      return !prev;
-    });
-  };
-
-  const pendingCount    = todos.filter((t) => t.status === "pending").length;
-  const inProgressCount = todos.filter((t) => t.status === "inprogress").length;
-  const doneCount       = todos.filter((t) => t.status === "done").length;
+  const pendingCount    = todos.filter(t => t.status === "pending").length;
+  const inProgressCount = todos.filter(t => t.status === "inprogress").length;
+  const doneCount       = todos.filter(t => t.status === "done").length;
   const streak          = getStreak(todos);
-  const score           = getProductivityScore(todos);
+  const score           = getScore(todos);
 
   const filteredTodos = todos
-    .filter((todo) => {
-      const matchesSearch =
-        todo.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        todo.description.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesFilter =
-        activeFilter === "all" || todo.status === activeFilter;
-      return matchesSearch && matchesFilter;
+    .filter(t => {
+      const s = t.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                t.description.toLowerCase().includes(searchTerm.toLowerCase());
+      const f = activeFilter === "all" || t.status === activeFilter;
+      return s && f;
     })
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    .sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-  const filterItems = [
-    { key: "all",        label: "All",         count: todos.length,    dot: "dot-all"        },
-    { key: "pending",    label: "Pending",     count: pendingCount,    dot: "dot-pending"    },
-    { key: "inprogress", label: "In Progress", count: inProgressCount, dot: "dot-inprogress" },
-    { key: "done",       label: "Done",        count: doneCount,       dot: "dot-done"       },
+  const filters = [
+    { key:"all",        label:"All",         count:todos.length,    dot:"dot-all"        },
+    { key:"pending",    label:"Pending",     count:pendingCount,    dot:"dot-pending"    },
+    { key:"inprogress", label:"In Progress", count:inProgressCount, dot:"dot-inprogress" },
+    { key:"done",       label:"Done",        count:doneCount,       dot:"dot-done"       },
   ];
+
+  const isSearchOpen = searchState === "open" || searchState === "opening" || searchState === "closing";
+  const heroHidden   = searchState === "open" || searchState === "opening" || searchState === "closing";
+  const stickyStyle  = stripSticky ? { top: `${navbarBottom}px` } : {};
 
   return (
     <>
-      <div className={`dashboard-page ${showSearch ? "search-open" : ""}`}>
+      <div className="dashboard-page">
         <div className="dashboard-container">
-          {/* Pass navbarRef so we can measure its exact bottom */}
-          <Navbar onSearchClick={handleSearchToggle} navbarRef={navbarRef} />
 
-          {showSearch && (
-            <div className="search-bar-container">
-              <input
-                type="text"
-                className="search-input"
-                placeholder="Search tasks..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                autoFocus
-              />
-            </div>
-          )}
+          <Navbar
+            navbarRef={navbarRef}
+            searchState={searchState}
+            onSearchOpen={openSearch}
+            onSearchClose={closeSearch}
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+          />
 
-          {/* ── Hero ── */}
-          <div className="hero-card neu-card" ref={heroRef}>
+          {/* ── Hero — collapses when search opens ── */}
+          <div
+            className={`hero-card neu-card${heroHidden ? " hero-card--hidden" : ""}`}
+            ref={heroRef}
+          >
             <div className="hero-top">
               <div className="hero-greeting">
                 <span className="hero-icon">{getGreetingIcon()}</span>
-                <h1>
-                  {getGreeting()},{" "}
-                  <span className="hero-username">{userName}</span>!
-                </h1>
+                <h1>{getGreeting()}, <span className="hero-username">{userName}</span>!</h1>
               </div>
               <p className="hero-sub">Here's your productivity snapshot for today</p>
             </div>
 
             <div className="hero-stats">
               <div className="hero-stat">
-                <ListTodo size={20} strokeWidth={1.8} className="stat-icon" />
+                <ListTodo size={18} strokeWidth={1.8} className="stat-icon" />
                 <span className="stat-value">{todos.length}</span>
                 <span className="stat-label">Total Tasks</span>
               </div>
               <div className="hero-stat-divider" />
               <div className="hero-stat">
-                <CheckCircle2 size={20} strokeWidth={1.8} className="stat-icon" />
+                <CheckCircle2 size={18} strokeWidth={1.8} className="stat-icon" />
                 <span className="stat-value">{doneCount}</span>
                 <span className="stat-label">Completed</span>
               </div>
               <div className="hero-stat-divider" />
               <div className="hero-stat">
-                <Flame size={20} strokeWidth={1.8} className="stat-icon" />
+                <Flame size={18} strokeWidth={1.8} className="stat-icon" />
                 <span className="stat-value">{streak}</span>
                 <span className="stat-label">Day Streak</span>
               </div>
               <div className="hero-stat-divider" />
               <div className="hero-stat">
-                <BarChart2 size={20} strokeWidth={1.8} className="stat-icon" />
+                <BarChart2 size={18} strokeWidth={1.8} className="stat-icon" />
                 <span className="stat-value">{score}%</span>
                 <span className="stat-label">Score</span>
                 <div className="score-bar">
-                  <div className="score-bar-fill" style={{ width: `${score}%` }} />
+                  <div className="score-bar-fill" style={{ width:`${score}%` }} />
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Spacer holds layout space when strip goes fixed */}
+          {/* Spacer when strip is sticky */}
           {stripSticky && <div className="status-strip-spacer" />}
 
-          {/* ── Status Filter Strip ── */}
+          {/* ── Status Strip ── */}
           <div
-            className={`status-strip${stripSticky ? " status-strip--sticky" : ""}`}
-            style={stripSticky ? { top: `${navbarBottom}px` } : {}}
+            className={[
+              "status-strip",
+              stripSticky  ? "status-strip--sticky" : "",
+              isSearchOpen ? "status-strip--hidden"  : "",
+            ].filter(Boolean).join(" ")}
+            style={stickyStyle}
           >
-            {filterItems.map(({ key, label, count, dot }) => (
+            {filters.map(({ key, label, count, dot }) => (
               <button
                 key={key}
                 className={`status-pill ${activeFilter === key ? "active" : ""}`}
@@ -304,60 +245,42 @@ const Dashboard = () => {
                 <>
                   <Search size={48} strokeWidth={1.5} className="empty-icon" />
                   <h2>Nothing here</h2>
-                  <p>
-                    {searchTerm
-                      ? "No tasks match your search."
-                      : `No ${activeFilter === "inprogress" ? "in progress" : activeFilter} tasks yet.`}
+                  <p>{searchTerm
+                    ? "No tasks match your search."
+                    : `No ${activeFilter === "inprogress" ? "in progress" : activeFilter} tasks yet.`}
                   </p>
                 </>
               )}
             </div>
           ) : (
             <div className="todo-grid">
-              {filteredTodos.map((todo) => (
+              {filteredTodos.map(todo => (
                 <TodoCard
                   key={todo._id}
                   todo={todo}
-                  onEdit={openEditModal}
-                  onDelete={(id) => setDeleteId(id)}
+                  onEdit={t => { setEditingTodo(t); setShowModal(true); }}
+                  onDelete={id => setDeleteId(id)}
                 />
               ))}
             </div>
           )}
 
-          <FloatingButton
-            onClick={() => {
-              setEditingTodo(null);
-              setShowModal(true);
-            }}
-          />
+          <FloatingButton onClick={() => { setEditingTodo(null); setShowModal(true); }} />
         </div>
       </div>
 
       {showScrollTop && (
-        <button
-          className="scroll-top-btn"
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-        >
-          ↑
-        </button>
+        <button className="scroll-top-btn"
+          onClick={() => window.scrollTo({ top:0, behavior:"smooth" })}>↑</button>
       )}
 
       {showModal && (
-        <TodoModal
-          editTodo={editingTodo}
-          onClose={() => setShowModal(false)}
-          onSubmit={handleModalSubmit}
-        />
+        <TodoModal editTodo={editingTodo} onClose={() => setShowModal(false)} onSubmit={handleModalSubmit} />
       )}
-
       {deleteId && (
         <DeleteModal
           onClose={() => setDeleteId(null)}
-          onConfirm={async () => {
-            await deleteTaskHandler(deleteId);
-            setDeleteId(null);
-          }}
+          onConfirm={async () => { await deleteTask(deleteId); setDeleteId(null); }}
         />
       )}
     </>

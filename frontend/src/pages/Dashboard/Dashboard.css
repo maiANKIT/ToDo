@@ -1,94 +1,64 @@
 .dashboard-page {
   min-height: 100vh;
-  padding: 120px 40px 40px;
+  padding: 100px 40px 40px;
 }
-
 .dashboard-container {
   max-width: 1300px;
   margin: 0 auto;
 }
 
 /* =======================
-   SEARCH BAR
+   HERO — with collapse animation
 ======================= */
-
-.search-bar-container {
-  width: 100%;
-  margin-bottom: 24px;
-  position: sticky;
-  top: 120px;
-  z-index: 10;
-}
-
-.search-input {
-  width: 100%;
-  height: 72px;
-  padding: 0 24px;
-  border-radius: 32px;
-  outline: none;
-  font-size: 1rem;
-  color: var(--text);
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s ease;
-}
-
-.search-input::placeholder {
-  color: rgba(120, 120, 120, 0.9);
-}
-
-.search-input:focus {
-  border-color: rgba(255, 255, 255, 0.4);
-  box-shadow:
-    0 12px 40px rgba(0, 0, 0, 0.12),
-    inset 0 1px 1px rgba(255, 255, 255, 0.4);
-}
-
-body[data-theme="dark"] .search-input {
-  background: rgba(30, 30, 30, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-}
-
-/* =======================
-   HERO
-======================= */
-
 .hero-card {
-  padding: 36px 40px;
-  margin-bottom: 20px;
+  padding: 30px 36px;
+  margin-bottom: 16px;
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 22px;
+  /* Animate height collapse when search opens */
+  max-height: 600px;
+  overflow: hidden;
+  opacity: 1;
+  transform: translateY(0) scaleY(1);
+  transform-origin: top center;
+  transition:
+    max-height  0.38s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity     0.25s ease,
+    transform   0.32s cubic-bezier(0.4, 0, 0.2, 1),
+    margin      0.32s ease,
+    padding     0.32s ease;
 }
 
-.hero-top {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+.hero-card--hidden {
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-12px) scaleY(0.94);
+  margin-bottom: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  pointer-events: none;
 }
+
+.hero-top { display: flex; flex-direction: column; gap: 6px; }
 
 .hero-greeting {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
 .hero-icon {
   display: flex;
   align-items: center;
-  justify-content: center;
   color: var(--text);
   opacity: 0.75;
   flex-shrink: 0;
 }
 
 .hero-card h1 {
-  font-size: 2.8rem;
+  font-size: 2.6rem;
   font-weight: 800;
   margin: 0;
   line-height: 1.1;
@@ -100,7 +70,6 @@ body[data-theme="dark"] .search-input {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
-
 body[data-theme="dark"] .hero-username {
   background: linear-gradient(135deg, #a78bfa, #60a5fa);
   -webkit-background-clip: text;
@@ -108,536 +77,289 @@ body[data-theme="dark"] .hero-username {
   background-clip: text;
 }
 
-.hero-sub {
-  font-size: 0.95rem;
-  font-weight: 500;
-  opacity: 0.5;
-  margin: 0;
-}
+.hero-sub { font-size: 0.92rem; font-weight: 500; opacity: 0.5; margin: 0; }
 
-/* ── Stats Row ── */
 .hero-stats {
   display: flex;
   align-items: center;
-  background: rgba(0, 0, 0, 0.03);
-  border-radius: 20px;
-  padding: 20px 28px;
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: rgba(0,0,0,0.03);
+  border-radius: 18px;
+  padding: 16px 24px;
+  border: 1px solid rgba(0,0,0,0.06);
 }
-
 body[data-theme="dark"] .hero-stats {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 255, 255, 0.06);
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.06);
 }
 
-.hero-stat {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
+.hero-stat { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; }
 
 .hero-stat-divider {
-  width: 1px;
-  height: 52px;
-  background: rgba(0, 0, 0, 0.08);
-  flex-shrink: 0;
+  width: 1px; height: 44px;
+  background: rgba(0,0,0,0.08); flex-shrink: 0;
 }
+body[data-theme="dark"] .hero-stat-divider { background: rgba(255,255,255,0.08); }
 
-body[data-theme="dark"] .hero-stat-divider {
-  background: rgba(255, 255, 255, 0.08);
-}
+.stat-icon { opacity: 0.35; margin-bottom: 2px; }
 
-.stat-icon {
-  opacity: 0.35;
-  margin-bottom: 2px;
-}
-
-.stat-value {
-  font-size: 1.9rem;
-  font-weight: 800;
-  line-height: 1;
-  color: var(--text);
-}
+.stat-value { font-size: 1.75rem; font-weight: 800; line-height: 1; color: var(--text); }
 
 .stat-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  opacity: 0.45;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font-size: 0.7rem; font-weight: 600; opacity: 0.45;
+  text-transform: uppercase; letter-spacing: 0.06em;
 }
 
-/* Score bar */
 .score-bar {
-  width: 80px;
-  height: 4px;
-  background: rgba(0, 0, 0, 0.08);
-  border-radius: 999px;
-  overflow: hidden;
-  margin-top: 5px;
+  width: 72px; height: 3px;
+  background: rgba(0,0,0,0.08); border-radius: 999px; overflow: hidden; margin-top: 4px;
 }
-
-body[data-theme="dark"] .score-bar {
-  background: rgba(255, 255, 255, 0.1);
-}
+body[data-theme="dark"] .score-bar { background: rgba(255,255,255,0.1); }
 
 .score-bar-fill {
-  height: 100%;
-  border-radius: 999px;
+  height: 100%; border-radius: 999px;
   background: linear-gradient(90deg, #667eea, #10b981);
   transition: width 0.6s ease;
 }
 
 /* =======================
-   STATUS STRIP — normal flow
+   STATUS STRIP — normal
 ======================= */
-
 .status-strip {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  margin-bottom: 28px;
+  gap: 10px;
+  margin-bottom: 24px;
+  transition:
+    opacity   0.25s ease,
+    transform 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+    visibility 0.25s;
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
 }
 
-/*
-  Spacer: holds the exact height that the strip occupied in normal flow,
-  so the task grid doesn't jump when the strip lifts into fixed position.
-  Normal pill height ≈ 48px + 28px margin = 76px.
-*/
-.status-strip-spacer {
-  height: 76px;
+.status-strip--hidden {
+  opacity: 0;
+  transform: translateY(-8px);
+  visibility: hidden;
+  pointer-events: none;
 }
+
+/* spacer: pill height ~42px + margin 24px */
+.status-strip-spacer { height: 66px; margin-bottom: 24px; }
 
 /* =======================
-   STATUS STRIP — sticky (fixed) state
-   `top` is set via inline style from JS (navbarRef.bottom + 8px gap)
-   so it always sits exactly below the navbar regardless of screen size.
+   STATUS STRIP — sticky
 ======================= */
-
 .status-strip--sticky {
   position: fixed;
-  /* top is injected by JS */
   left: 50%;
   transform: translateX(-50%);
-
-  /* Match navbar width formula exactly */
   width: min(1250px, calc(100% - 32px));
-
   z-index: 999;
   margin-bottom: 0;
-
-  /* Glass pill — same as navbar */
-  padding: 10px 16px;
-  border-radius: 32px;
-  background: rgba(255, 255, 255, 0.82);
+  padding: 8px 14px;
+  border-radius: 28px;
+  background: rgba(255,255,255,0.82);
   backdrop-filter: blur(30px);
   -webkit-backdrop-filter: blur(30px);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.10);
-
-  /* Slide-in animation when becoming sticky */
-  animation: strip-slide-in 0.28s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+  border: 1px solid rgba(255,255,255,0.6);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.10);
+  animation: strip-in 0.28s cubic-bezier(0.34,1.4,0.64,1) both;
 }
-
 body[data-theme="dark"] .status-strip--sticky {
-  background: rgba(20, 20, 20, 0.82);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  background: rgba(20,20,20,0.82);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
 }
 
-/* Slide down from slightly above + scale up from 95% */
-@keyframes strip-slide-in {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) translateY(-12px) scaleX(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0) scaleX(1);
-  }
+.status-strip--sticky.status-strip--hidden {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-8px);
+  visibility: hidden;
+  pointer-events: none;
+  animation: none;
 }
 
-/* Pills are slightly smaller when in sticky bar */
-.status-strip--sticky .status-pill {
-  padding: 10px 14px;
-  font-size: 0.85rem;
+@keyframes strip-in {
+  from { opacity:0; transform: translateX(-50%) translateY(-10px) scaleX(0.97); }
+  to   { opacity:1; transform: translateX(-50%) translateY(0) scaleX(1); }
 }
+
+.status-strip--sticky .status-pill { padding: 8px 12px; font-size: 0.82rem; }
 
 /* =======================
-   PILLS
+   PILLS — with active indicator animation
 ======================= */
-
 .status-pill {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 14px 18px;
-  border-radius: 18px;
-  border: 1.5px solid rgba(0, 0, 0, 0.1);
-  background: rgba(255, 255, 255, 0.7);
+  gap: 6px;
+  padding: 10px 14px;
+  border-radius: 16px;
+  border: 1.5px solid rgba(0,0,0,0.1);
+  background: rgba(255,255,255,0.7);
   backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   color: var(--text);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.25s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  /* smooth all property changes for tab switching */
+  transition:
+    background    0.22s ease,
+    color         0.22s ease,
+    border-color  0.22s ease,
+    box-shadow    0.22s ease,
+    transform     0.18s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .status-pill:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.1);
 }
+
+.status-pill:active { transform: scale(0.97); }
 
 .status-pill.active {
   background: #111;
   color: #fff;
   border-color: #111;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.22);
 }
 
 body[data-theme="dark"] .status-pill {
-  background: rgba(255, 255, 255, 0.07);
-  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255,255,255,0.07);
+  border-color: rgba(255,255,255,0.1);
 }
+body[data-theme="dark"] .status-pill:hover { background: rgba(255,255,255,0.12); }
+body[data-theme="dark"] .status-pill.active { background:#fff; color:#111; border-color:#fff; }
 
-body[data-theme="dark"] .status-pill:hover {
-  background: rgba(255, 255, 255, 0.12);
-}
-
-body[data-theme="dark"] .status-pill.active {
-  background: #ffffff;
-  color: #111;
-  border-color: #ffffff;
-}
-
+/* Pill dot */
 .pill-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
+  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+  transition: transform 0.22s cubic-bezier(0.34,1.6,0.64,1);
 }
+.status-pill.active .pill-dot { transform: scale(1.3); }
 
 .dot-all        { background: #888; }
 .dot-pending    { background: #f59e0b; }
 .dot-inprogress { background: #3b82f6; }
 .dot-done       { background: #10b981; }
 
+/* Pill count badge */
 .pill-count {
-  background: rgba(0, 0, 0, 0.08);
+  background: rgba(0,0,0,0.08);
   color: inherit;
-  font-size: 0.78rem;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 999px;
-  min-width: 24px;
-  text-align: center;
+  font-size: 0.72rem; font-weight: 700;
+  padding: 1px 6px; border-radius: 999px;
+  min-width: 20px; text-align: center;
+  transition: background 0.22s ease, transform 0.22s cubic-bezier(0.34,1.4,0.64,1);
 }
-
+/* count badge bounces when switching tabs */
 .status-pill.active .pill-count {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255,255,255,0.22);
+  transform: scale(1.08);
 }
 
-body[data-theme="dark"] .pill-count {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-body[data-theme="dark"] .status-pill.active .pill-count {
-  background: rgba(0, 0, 0, 0.12);
-}
+body[data-theme="dark"] .pill-count { background: rgba(255,255,255,0.1); }
+body[data-theme="dark"] .status-pill.active .pill-count { background: rgba(0,0,0,0.15); }
 
 /* =======================
    EMPTY STATE
 ======================= */
-
 .empty-state {
-  padding: 80px 40px;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
+  padding: 80px 40px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
 }
-
-.empty-icon {
-  opacity: 0.2;
-  margin-bottom: 6px;
-}
-
-.empty-state h2 {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin: 0;
-}
-
-.empty-state p {
-  font-size: 0.95rem;
-  opacity: 0.55;
-  margin: 0;
-}
+.empty-icon { opacity: 0.2; margin-bottom: 6px; }
+.empty-state h2 { font-size: 1.5rem; font-weight: 700; margin: 0; }
+.empty-state p  { font-size: 0.95rem; opacity: 0.55; margin: 0; }
 
 /* =======================
    TODO GRID
 ======================= */
-
 .todo-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  gap: 30px;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
   padding-bottom: 120px;
 }
 
 /* =======================
    SCROLL TOP
 ======================= */
-
 .scroll-top-btn {
-  position: fixed;
-  right: 39px;
-  bottom: 120px;
-  width: 58px;
-  height: 58px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.22);
+  position: fixed; right: 36px; bottom: 110px;
+  width: 52px; height: 52px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.22);
   backdrop-filter: blur(25px);
-  -webkit-backdrop-filter: blur(25px);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  color: var(--text);
-  font-size: 1.6rem;
-  font-weight: 900;
-  cursor: pointer;
-  z-index: 999;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(255,255,255,0.25);
+  color: var(--text); font-size: 1.5rem; font-weight: 900;
+  cursor: pointer; z-index: 999;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.12);
   transition: all 0.3s ease;
 }
-
-.scroll-top-btn:hover {
-  transform: translateY(-4px) scale(1.08);
-  background: rgba(255, 255, 255, 0.35);
-}
-
-.scroll-top-btn:active {
-  transform: scale(0.95);
-}
-
+.scroll-top-btn:hover  { transform: translateY(-4px) scale(1.08); background: rgba(255,255,255,0.35); }
+.scroll-top-btn:active { transform: scale(0.95); }
 body[data-theme="dark"] .scroll-top-btn {
-  background: rgba(20, 20, 20, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  background: rgba(20,20,20,0.45);
+  border: 1px solid rgba(255,255,255,0.08);
 }
 
 /* =======================
-   TABLET  (≤ 768px)
+   TABLET ≤768px
 ======================= */
-
 @media (max-width: 768px) {
-  .dashboard-page {
-    padding: 100px 16px 20px;
-  }
-
-  .search-bar-container {
-    margin-bottom: 20px;
-    top: 100px;
-  }
-
-  .search-input {
-    padding: 16px 20px;
-    border-radius: 20px;
-  }
-
-  .hero-card {
-    padding: 28px 24px;
-    margin-bottom: 16px;
-    gap: 20px;
-  }
-
-  .hero-card h1 {
-    font-size: 2.2rem;
-  }
-
-  .hero-icon svg {
-    width: 26px;
-    height: 26px;
-  }
-
-  .hero-stats {
-    padding: 16px 12px;
-  }
-
-  .stat-value {
-    font-size: 1.5rem;
-  }
-
-  .score-bar {
-    width: 60px;
-  }
-
-  .status-strip {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-  }
-
-  /* On tablet the sticky strip matches the narrower navbar */
-  .status-strip--sticky {
-    width: calc(100% - 20px);
-    border-radius: 24px;
-    padding: 8px 12px;
-  }
-
-  .status-strip-spacer {
-    height: 68px;
-  }
-
-  .status-pill {
-    padding: 8px 14px;
-    font-size: 0.85rem;
-  }
-
-  .todo-grid {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-
-  .empty-state {
-    padding: 60px 20px;
-  }
-
-  .scroll-top-btn {
-    right: 18px;
-    bottom: 95px;
-    width: 52px;
-    height: 52px;
-    font-size: 1.4rem;
-  }
+  .dashboard-page { padding: 88px 16px 20px; }
+  .hero-card { padding: 24px 20px; margin-bottom: 14px; gap: 18px; }
+  .hero-card h1 { font-size: 2rem; }
+  .hero-stats { padding: 14px 10px; }
+  .stat-value { font-size: 1.5rem; }
+  .hero-stat-divider { height: 38px; }
+  .status-strip { gap: 8px; }
+  .status-strip--sticky { width: calc(100% - 20px); border-radius: 22px; padding: 7px 11px; }
+  .status-strip-spacer { height: 60px; }
+  .status-pill { padding: 9px 10px; font-size: 0.8rem; gap: 5px; border-radius: 14px; }
+  .todo-grid { grid-template-columns: 1fr; gap: 18px; }
+  .scroll-top-btn { right: 16px; bottom: 90px; width: 48px; height: 48px; }
 }
 
 /* =======================
-   MOBILE  (≤ 500px)
+   MOBILE ≤500px
 ======================= */
-
 @media (max-width: 500px) {
-  .dashboard-page {
-    padding: 80px 12px 16px;
-  }
+  .dashboard-page { padding: 76px 10px 16px; }
+  .hero-card { padding: 18px 16px; margin-bottom: 12px; border-radius: 20px; gap: 14px; }
+  .hero-card h1 { font-size: 1.6rem; }
+  .hero-icon svg { width: 20px; height: 20px; }
+  .hero-sub { font-size: 0.8rem; }
+  .hero-stats { padding: 12px 6px; border-radius: 14px; }
+  .stat-value { font-size: 1.2rem; }
+  .stat-label { font-size: 0.6rem; }
+  .stat-icon { width: 14px; height: 14px; }
+  .score-bar { width: 42px; }
+  .hero-stat-divider { height: 34px; }
 
-  .search-bar-container {
-    margin-bottom: 16px;
-    top: 80px;
-  }
-
-  .search-input {
-    padding: 14px 18px;
-    border-radius: 18px;
-    font-size: 0.95rem;
-  }
-
-  .hero-card {
-    padding: 22px 18px;
-    margin-bottom: 14px;
-    border-radius: 24px;
-    gap: 16px;
-  }
-
-  .hero-card h1 {
-    font-size: 1.75rem;
-  }
-
-  .hero-icon svg {
-    width: 22px;
-    height: 22px;
-  }
-
-  .hero-sub {
-    font-size: 0.82rem;
-  }
-
-  .hero-stats {
-    padding: 14px 8px;
-    border-radius: 16px;
-  }
-
-  .stat-value {
-    font-size: 1.3rem;
-  }
-
-  .stat-label {
-    font-size: 0.65rem;
-  }
-
-  .stat-icon {
-    width: 16px;
-    height: 16px;
-  }
-
-  .score-bar {
-    width: 48px;
-  }
-
-  .hero-stat-divider {
-    height: 40px;
-  }
-
-  .status-strip {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-  }
-
-  /* Mobile sticky strip matches the small navbar width */
-  .status-strip--sticky {
-    width: calc(100% - 12px);
-    border-radius: 18px;
-    padding: 6px 10px;
-  }
-
-  .status-strip-spacer {
-    height: 60px;
-  }
-
-  .status-strip--sticky .status-pill {
-    padding: 8px 10px;
-    font-size: 0.78rem;
-    gap: 5px;
-    border-radius: 12px;
-  }
+  /* Single row — 4 cols always */
+  .status-strip { grid-template-columns: repeat(4,1fr); gap: 5px; }
+  .status-strip--sticky { width: calc(100% - 12px); border-radius: 16px; padding: 5px 8px; }
+  .status-strip-spacer { height: 52px; }
 
   .status-pill {
-    padding: 12px 10px;
-    font-size: 0.82rem;
-    gap: 6px;
-    border-radius: 14px;
+    padding: 7px 4px; font-size: 0.68rem; gap: 3px;
+    border-radius: 11px; flex-direction: column; justify-content: center;
   }
-
-  .pill-count {
-    padding: 1px 6px;
-    font-size: 0.72rem;
-  }
-
-  .empty-icon {
-    width: 36px;
-    height: 36px;
-  }
-
-  .todo-grid {
-    gap: 16px;
-  }
-
-  .empty-state {
-    padding: 40px 16px;
-  }
-
-  .scroll-top-btn {
-    right: 14px;
-    bottom: 90px;
-    width: 50px;
-    height: 50px;
-    font-size: 1.3rem;
-  }
+  .status-strip--sticky .status-pill { padding: 5px 4px; font-size: 0.65rem; }
+  .pill-dot { width: 6px; height: 6px; }
+  .pill-count { padding: 1px 4px; font-size: 0.62rem; min-width: 16px; }
+  .todo-grid { gap: 12px; }
+  .empty-state { padding: 40px 14px; }
+  .scroll-top-btn { right: 12px; bottom: 85px; width: 44px; height: 44px; font-size: 1.2rem; }
 }
