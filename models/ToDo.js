@@ -12,6 +12,11 @@ const todoSchema = new mongoose.Schema({
         required: true,
         maxLength: 1000
     },
+    status:{
+        type: String,
+        enum: ['pending', 'done', 'inprogress'],
+        default: 'pending'
+    },
     user:{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
