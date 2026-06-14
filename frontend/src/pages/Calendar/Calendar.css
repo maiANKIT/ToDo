@@ -448,13 +448,14 @@ body[data-theme="dark"] .cal-day__num--today { color: #a78bfa; }
   margin-bottom: 2px;
 }
 
+/* === UPDATED DESCRIPTION CLASS TO FIX MOBILE OVERFLOW === */
 .cal-day__task-desc {
   font-size: 0.78rem;
   opacity: 0.5;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 400px;
+  overflow-wrap: break-word;
+  word-break: break-all;
+  white-space: normal;
+  max-width: 100%; 
 }
 
 .cal-badge {
@@ -584,4 +585,12 @@ body[data-theme="dark"] .cal-search-results {
   opacity: 0.45;
   margin-top: 2px;
   font-weight: 500;
+}
+
+/* === UPDATED: GLOBAL RULE FOR LONG LINKS === */
+.cal-day__task a, 
+.cal-week__task a {
+  overflow-wrap: break-word;
+  word-break: break-all;
+  white-space: normal;
 }
