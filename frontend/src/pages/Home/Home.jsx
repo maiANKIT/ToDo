@@ -15,39 +15,41 @@ import {
   Check,
   Flame,
   Circle,
+  Calendar // <-- Added Calendar icon
 } from "lucide-react";
 import "./Home.css";
 
+// Updated features based on the core pillars!
 const features = [
   {
-    icon: <ListTodo size={24} strokeWidth={1.8} />,
-    title: "Organize Tasks",
-    desc: "Create, edit, and delete tasks in seconds. Keep everything in one clean place.",
+    icon: <BarChart2 size={24} strokeWidth={1.8} />,
+    title: "Productivity Dashboard",
+    desc: "Track daily streaks, completion rates, and boost your overall productivity score.",
+  },
+  {
+    icon: <Calendar size={24} strokeWidth={1.8} />,
+    title: "Deep Calendar Sync",
+    desc: "Plan your life, not just your day. View tasks seamlessly by month, week, or day.",
   },
   {
     icon: <SlidersHorizontal size={24} strokeWidth={1.8} />,
-    title: "Track Progress",
-    desc: "Move tasks from Pending → In Progress → Done. Always know where things stand.",
-  },
-  {
-    icon: <BarChart2 size={24} strokeWidth={1.8} />,
-    title: "Productivity Score",
-    desc: "See your completion rate and daily streak at a glance on your dashboard.",
+    title: "Flexible Workspaces",
+    desc: "Organize your way. Switch between Kanban boards, grid, or list views instantly.",
   },
   {
     icon: <Search size={24} strokeWidth={1.8} />,
-    title: "Instant Search",
-    desc: "Find any task instantly with the built-in search — no typing delays.",
+    title: "Lightning Fast Search",
+    desc: "Find any task instantly with zero delays. Quick-edit modals keep you in the flow.",
   },
   {
     icon: <Moon size={24} strokeWidth={1.8} />,
-    title: "Dark Mode",
-    desc: "Looks great day or night. Follows your theme preference automatically.",
+    title: "Built-in Dark Mode",
+    desc: "Looks great day or night. Automatically follows your system's theme preference.",
   },
   {
     icon: <Shield size={24} strokeWidth={1.8} />,
     title: "Secure & Private",
-    desc: "Your tasks are protected behind JWT auth. Only you can see your data.",
+    desc: "Your tasks are yours alone. Fully protected behind secure JWT authentication.",
   },
 ];
 
@@ -55,7 +57,7 @@ const steps = [
   {
     number: "01",
     title: "Create an account",
-    desc: "Sign up in under 30 seconds — no credit card needed.",
+    desc: "Sign up in seconds",
   },
   {
     number: "02",
