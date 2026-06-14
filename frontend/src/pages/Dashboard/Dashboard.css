@@ -363,3 +363,62 @@ body[data-theme="dark"] .scroll-top-btn {
   .empty-state { padding: 40px 14px; }
   .scroll-top-btn { right: 12px; bottom: 85px; width: 44px; height: 44px; font-size: 1.2rem; }
 }
+/* =======================
+   VIEW TOGGLE
+======================= */
+
+.view-toggle {
+  display: flex;
+  gap: 4px;
+  background: rgba(0,0,0,0.05);
+  border-radius: 10px;
+  padding: 3px;
+  width: fit-content;
+  margin-bottom: 16px;
+}
+
+body[data-theme="dark"] .view-toggle {
+  background: rgba(255,255,255,0.07);
+}
+
+.view-toggle-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.4;
+  transition: all 0.2s ease;
+}
+
+.view-toggle-btn.active {
+  background: #fff;
+  opacity: 1;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+body[data-theme="dark"] .view-toggle-btn.active {
+  background: rgba(255,255,255,0.12);
+}
+
+/* List view */
+.todo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 120px;
+}
+
+.todo-list .todo-card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 16px 24px;
+  border-radius: 18px;
+  gap: 16px;
+}

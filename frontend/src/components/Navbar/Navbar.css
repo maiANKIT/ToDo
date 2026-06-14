@@ -16,9 +16,7 @@
   border: 1px solid rgba(255, 255, 255, 0.6);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.10);
   z-index: 1000;
-  transition:
-    border-color  0.3s ease,
-    box-shadow    0.3s ease;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 body[data-theme="dark"] .navbar {
@@ -56,18 +54,34 @@ body[data-theme="dark"] .navbar--search {
 }
 
 /* ================= LOGO ================= */
-.logo-section { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  user-select: none;
+}
 
-.logo { width: 32px; height: 32px; object-fit: contain; transition: 0.3s; }
+.logo-section:hover .logo { transform: scale(1.05); }
+.logo-section:hover h2    { opacity: 0.8; }
+
+.logo { width: 32px; height: 32px; object-fit: contain; transition: transform 0.2s ease; }
 body[data-theme="dark"] .logo { filter: invert(1); }
 
-.logo-section h2 { font-size: 1.55rem; font-weight: 700; color: var(--text); white-space: nowrap; }
+.logo-section h2 {
+  font-size: 1.55rem;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  transition: opacity 0.2s ease;
+}
 
 /* ================= ACTIONS ================= */
 .nav-actions { display: flex; align-items: center; gap: 8px; }
 
-/* ================= SEARCH BUTTON ================= */
-.search-btn {
+/* ================= SHARED ICON BUTTON ================= */
+/* All icon buttons in navbar share the same base style */
+.nav-icon-btn {
   width: 40px;
   height: 40px;
   display: flex;
@@ -79,64 +93,143 @@ body[data-theme="dark"] .logo { filter: invert(1); }
   color: var(--text);
   background: rgba(0, 0, 0, 0.06);
   transition: all 0.22s ease;
-}
-.search-btn:hover  { transform: translateY(-2px) scale(1.06); background: rgba(0,0,0,0.1); }
-.search-btn:active { transform: scale(0.95); }
-body[data-theme="dark"] .search-btn { background: rgba(255,255,255,0.1); }
-body[data-theme="dark"] .search-btn:hover { background: rgba(255,255,255,0.16); }
-
-/* ================= THEME TOGGLE — force same size as search btn ================= */
-/*
-  ThemeToggle renders its own button. We constrain it here so it
-  always matches the search button's 40×40 circle exactly.
-*/
-.nav-actions :global(.theme-toggle),
-.nav-actions .theme-toggle {
-  width: 40px !important;
-  height: 40px !important;
-  min-width: 40px !important;
-  padding: 0 !important;
-  border-radius: 50% !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  background: rgba(0, 0, 0, 0.06) !important;
-  border: none !important;
-  box-shadow: none !important;
-}
-body[data-theme="dark"] .nav-actions :global(.theme-toggle),
-body[data-theme="dark"] .nav-actions .theme-toggle {
-  background: rgba(255,255,255,0.1) !important;
-}
-.nav-actions :global(.theme-toggle):hover,
-.nav-actions .theme-toggle:hover {
-  background: rgba(0,0,0,0.1) !important;
-  transform: translateY(-2px) scale(1.06) !important;
+  flex-shrink: 0;
 }
 
-/* Also constrain any svg/icon inside the toggle */
-.nav-actions :global(.theme-toggle) svg,
-.nav-actions .theme-toggle svg {
-  width: 18px !important;
-  height: 18px !important;
+.nav-icon-btn:hover  { transform: translateY(-2px) scale(1.06); background: rgba(0,0,0,0.1); }
+.nav-icon-btn:active { transform: scale(0.95); }
+
+body[data-theme="dark"] .nav-icon-btn { background: rgba(255,255,255,0.1); }
+body[data-theme="dark"] .nav-icon-btn:hover { background: rgba(255,255,255,0.16); }
+
+/* Active state (user menu open) */
+.nav-icon-btn--active {
+  background: #111 !important;
+  color: #fff !important;
+}
+body[data-theme="dark"] .nav-icon-btn--active {
+  background: #fff !important;
+  color: #111 !important;
 }
 
-/* ================= LOGOUT ================= */
-.logout-btn {
-  height: 40px;
-  padding: 0 18px;
+/* ================= USER MENU ================= */
+.nav-menu-wrapper { position: relative; }
+
+@keyframes dropdownPop {
+  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)   scale(1);    }
+}
+
+.nav-dropdown {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  width: 220px;
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 20px;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.14), 0 4px 12px rgba(0,0,0,0.06);
+  padding: 8px;
+  animation: dropdownPop 0.22s cubic-bezier(0.34,1.4,0.64,1);
+  z-index: 9999;
+}
+
+body[data-theme="dark"] .nav-dropdown {
+  background: #1a1a1a;
+  border-color: rgba(255,255,255,0.08);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.5), 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.nav-dropdown__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 10px 12px;
+}
+
+.nav-dropdown__avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(102,126,234,0.1);
+  color: #667eea;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1.5px solid rgba(102,126,234,0.2);
+}
+body[data-theme="dark"] .nav-dropdown__avatar {
+  background: rgba(167,139,250,0.12);
+  color: #a78bfa;
+  border-color: rgba(167,139,250,0.2);
+}
+
+.nav-dropdown__info { display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
+
+.nav-dropdown__name {
+  font-size: 0.85rem; font-weight: 700; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.nav-dropdown__email {
+  font-size: 0.72rem; opacity: 0.45;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.nav-dropdown__divider {
+  height: 1px; background: rgba(0,0,0,0.06); margin: 4px 0;
+}
+body[data-theme="dark"] .nav-dropdown__divider { background: rgba(255,255,255,0.06); }
+
+.nav-dropdown__item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 10px;
+  border-radius: 12px;
   border: none;
-  border-radius: 999px;
-  font-size: 0.88rem;
+  background: transparent;
+  color: var(--text);
+  font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
-  color: white;
-  background: #111;
-  transition: all 0.22s ease;
+  transition: background 0.18s ease;
+  text-align: left;
 }
-body[data-theme="dark"] .logout-btn { background: white; color: black; }
-.logout-btn:hover  { transform: translateY(-2px); opacity: 0.88; }
-.logout-btn:active { transform: scale(0.96); }
+.nav-dropdown__item:hover { background: rgba(0,0,0,0.05); }
+body[data-theme="dark"] .nav-dropdown__item:hover { background: rgba(255,255,255,0.07); }
+
+.nav-dropdown__item--active { background: rgba(102,126,234,0.08); color: #667eea; }
+body[data-theme="dark"] .nav-dropdown__item--active { background: rgba(167,139,250,0.1); color: #a78bfa; }
+
+.nav-dropdown__item--danger { color: #ef4444; }
+.nav-dropdown__item--danger:hover { background: rgba(239,68,68,0.07); }
+
+/* Dark Mode row inside dropdown */
+.nav-dropdown__theme-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+}
+
+.nav-dropdown__theme-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+  opacity: 0.75;
+}
+
+/* ThemeToggle inside dropdown — smaller */
+.nav-dropdown__theme-row .theme-toggle {
+  width: 34px;
+  height: 34px;
+}
+.nav-dropdown__theme-row .theme-toggle svg {
+  width: 16px;
+  height: 16px;
+}
 
 /* ================= SEARCH LAYER ================= */
 .nav-search-layer {
@@ -161,14 +254,10 @@ body[data-theme="dark"] .logout-btn { background: white; color: black; }
   pointer-events: all;
 }
 
-.nav-search-icon {
-  color: var(--text);
-  opacity: 0.4;
-  flex-shrink: 0;
-}
+.nav-search-icon { color: var(--text); opacity: 0.4; flex-shrink: 0; }
 
 .nav-search-layer--visible .nav-search-icon {
-  animation: icon-pop 0.35s cubic-bezier(0.34, 1.6, 0.64, 1) 0.12s both;
+  animation: icon-pop 0.35s cubic-bezier(0.34,1.6,0.64,1) 0.12s both;
 }
 
 @keyframes icon-pop {
@@ -177,29 +266,16 @@ body[data-theme="dark"] .logout-btn { background: white; color: black; }
 }
 
 .nav-search-input {
-  flex: 1;
-  height: 100%;
-  border: none;
-  outline: none;
-  background: transparent;
-  font-size: 1rem;
-  font-weight: 500;
-  color: var(--text);
-  caret-color: #667eea;
+  flex: 1; height: 100%; border: none; outline: none;
+  background: transparent; font-size: 1rem; font-weight: 500;
+  color: var(--text); caret-color: #667eea;
 }
 .nav-search-input::placeholder { color: rgba(120,120,120,0.6); font-weight: 400; }
 
 .nav-search-close {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(0,0,0,0.07);
-  color: var(--text);
-  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: 50%; border: none;
+  background: rgba(0,0,0,0.07); color: var(--text); cursor: pointer;
   flex-shrink: 0;
   transition: background 0.2s ease, transform 0.2s cubic-bezier(0.34,1.4,0.64,1);
 }
@@ -212,10 +288,7 @@ body[data-theme="dark"] .nav-search-close:hover { background: rgba(255,255,255,0
   .navbar { width: calc(100% - 20px); padding: 8px 16px; min-height: 50px; border-radius: 22px; top: 10px; }
   .logo { width: 26px; height: 26px; }
   .logo-section h2 { font-size: 1.2rem; }
-  .search-btn { width: 36px; height: 36px; }
-  .logout-btn { height: 36px; padding: 0 14px; font-size: 0.82rem; }
-  .nav-actions :global(.theme-toggle),
-  .nav-actions .theme-toggle { width: 36px !important; height: 36px !important; min-width: 36px !important; }
+  .nav-icon-btn { width: 36px; height: 36px; }
   .nav-search-layer { padding: 0 14px; gap: 10px; }
   .nav-search-input { font-size: 0.95rem; }
 }
@@ -227,13 +300,9 @@ body[data-theme="dark"] .nav-search-close:hover { background: rgba(255,255,255,0
   .logo { width: 22px; height: 22px; }
   .logo-section h2 { font-size: 0.95rem; }
   .nav-actions { gap: 5px; }
-  .search-btn { width: 32px; height: 32px; }
-  .logout-btn { height: 32px; padding: 0 10px; font-size: 0.7rem; }
-  .nav-actions :global(.theme-toggle),
-  .nav-actions .theme-toggle { width: 32px !important; height: 32px !important; min-width: 32px !important; }
-  .nav-actions :global(.theme-toggle) svg,
-  .nav-actions .theme-toggle svg { width: 15px !important; height: 15px !important; }
+  .nav-icon-btn { width: 32px; height: 32px; }
   .nav-search-layer { padding: 0 12px; gap: 8px; }
   .nav-search-input { font-size: 0.9rem; }
   .nav-search-close { width: 26px; height: 26px; }
+  .nav-dropdown { width: 200px; }
 }

@@ -60,11 +60,11 @@ const TodoModal = ({ onClose, onSubmit, editTodo }) => {
             required
           />
 
+          {/* Description is optional — no required attribute */}
           <textarea
-            placeholder="Description"
+            placeholder="Description (optional)"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            required
           />
 
           {/* Custom Dropdown */}

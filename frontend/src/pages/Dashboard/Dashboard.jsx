@@ -1,7 +1,10 @@
 import { useEffect, useState, useContext, useRef, useCallback } from "react";
 import "./Dashboard.css";
 
-import { Sun, Cloud, Moon, Flame, CheckCircle2, ListTodo, BarChart2, Search } from "lucide-react";
+import {
+  Sun, Cloud, Moon, Flame, CheckCircle2,
+  ListTodo, BarChart2, Search, LayoutGrid, List,
+} from "lucide-react";
 
 import Navbar from "../../components/Navbar/Navbar";
 import FloatingButton from "../../components/FloatingButton/FloatingButton";
@@ -17,12 +20,14 @@ const getGreeting = () => {
   if (h < 17) return "Good Afternoon";
   return "Good Evening";
 };
+
 const getGreetingIcon = () => {
   const h = new Date().getHours();
   if (h < 12) return <Sun size={30} strokeWidth={1.8} />;
   if (h < 17) return <Cloud size={30} strokeWidth={1.8} />;
   return <Moon size={30} strokeWidth={1.8} />;
 };
+
 const getStreak = (todos) => {
   if (!todos.length) return 0;
   const dates = [...new Set(
@@ -40,6 +45,7 @@ const getStreak = (todos) => {
   }
   return streak;
 };
+
 const getScore = (todos) => {
   if (!todos.length) return 0;
   return Math.round(todos.filter(t => t.status === "done").length / todos.length * 100);
@@ -49,17 +55,17 @@ const Dashboard = () => {
   const { user } = useContext(AuthContext);
   const userName = user?.name?.split(" ")[0] || "User";
 
-  const [todos,         setTodos]        = useState([]);
-  const [showModal,     setShowModal]    = useState(false);
-  const [editingTodo,   setEditingTodo]  = useState(null);
-  const [deleteId,      setDeleteId]     = useState(null);
-  const [searchTerm,    setSearchTerm]   = useState("");
-  const [showScrollTop, setShowScrollTop]= useState(false);
-  const [activeFilter,  setActiveFilter] = useState("all");
-  const [stripSticky,   setStripSticky]  = useState(false);
-  const [navbarBottom,  setNavbarBottom] = useState(80);
-  // "closed" | "opening" | "open" | "closing"
-  const [searchState,   setSearchState]  = useState("closed");
+  const [todos,          setTodos]         = useState([]);
+  const [showModal,      setShowModal]     = useState(false);
+  const [editingTodo,    setEditingTodo]   = useState(null);
+  const [deleteId,       setDeleteId]      = useState(null);
+  const [searchTerm,     setSearchTerm]    = useState("");
+  const [showScrollTop,  setShowScrollTop] = useState(false);
+  const [activeFilter,   setActiveFilter]  = useState("all");
+  const [stripSticky,    setStripSticky]   = useState(false);
+  const [navbarBottom,   setNavbarBottom]  = useState(80);
+  const [searchState,    setSearchState]   = useState("closed");
+  const [viewMode,       setViewMode]      = useState("grid");
 
   const heroRef   = useRef(null);
   const navbarRef = useRef(null);
@@ -112,9 +118,9 @@ const Dashboard = () => {
     setTimeout(() => { setSearchState("closed"); measureNavbar(); }, 320);
   };
 
-  const addTask    = async (d) => { try { await createTodo(d);    fetchTodos(); } catch(e){} };
-  const updateTask = async (id,d)=>{ try { await updateTodo(id,d); fetchTodos(); } catch(e){} };
-  const deleteTask = async (id) => {
+  const addTask    = async (d)    => { try { await createTodo(d);     fetchTodos(); } catch(e){} };
+  const updateTask = async (id,d) => { try { await updateTodo(id, d); fetchTodos(); } catch(e){} };
+  const deleteTask = async (id)   => {
     try { await deleteTodo(id); setTodos(p => p.filter(t => t._id !== id)); } catch(e){}
   };
 
@@ -137,13 +143,13 @@ const Dashboard = () => {
       const f = activeFilter === "all" || t.status === activeFilter;
       return s && f;
     })
-    .sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
   const filters = [
-    { key:"all",        label:"All",         count:todos.length,    dot:"dot-all"        },
-    { key:"pending",    label:"Pending",     count:pendingCount,    dot:"dot-pending"    },
-    { key:"inprogress", label:"In Progress", count:inProgressCount, dot:"dot-inprogress" },
-    { key:"done",       label:"Done",        count:doneCount,       dot:"dot-done"       },
+    { key: "all",        label: "All",         count: todos.length,    dot: "dot-all"        },
+    { key: "pending",    label: "Pending",     count: pendingCount,    dot: "dot-pending"    },
+    { key: "inprogress", label: "In Progress", count: inProgressCount, dot: "dot-inprogress" },
+    { key: "done",       label: "Done",        count: doneCount,       dot: "dot-done"       },
   ];
 
   const isSearchOpen = searchState === "open" || searchState === "opening" || searchState === "closing";
@@ -164,7 +170,7 @@ const Dashboard = () => {
             onSearchChange={setSearchTerm}
           />
 
-          {/* ── Hero — collapses when search opens ── */}
+          {/* ── Hero ── */}
           <div
             className={`hero-card neu-card${heroHidden ? " hero-card--hidden" : ""}`}
             ref={heroRef}
@@ -172,7 +178,10 @@ const Dashboard = () => {
             <div className="hero-top">
               <div className="hero-greeting">
                 <span className="hero-icon">{getGreetingIcon()}</span>
-                <h1>{getGreeting()}, <span className="hero-username">{userName}</span>!</h1>
+                <h1>
+                  {getGreeting()},{" "}
+                  <span className="hero-username">{userName}</span>!
+                </h1>
               </div>
               <p className="hero-sub">Here's your productivity snapshot for today</p>
             </div>
@@ -201,7 +210,7 @@ const Dashboard = () => {
                 <span className="stat-value">{score}%</span>
                 <span className="stat-label">Score</span>
                 <div className="score-bar">
-                  <div className="score-bar-fill" style={{ width:`${score}%` }} />
+                  <div className="score-bar-fill" style={{ width: `${score}%` }} />
                 </div>
               </div>
             </div>
@@ -232,7 +241,7 @@ const Dashboard = () => {
             ))}
           </div>
 
-          {/* ── Task Grid ── */}
+          {/* ── View Toggle + Task Area ── */}
           {filteredTodos.length === 0 ? (
             <div className="empty-state neu-card">
               {activeFilter === "all" && !searchTerm ? (
@@ -245,42 +254,80 @@ const Dashboard = () => {
                 <>
                   <Search size={48} strokeWidth={1.5} className="empty-icon" />
                   <h2>Nothing here</h2>
-                  <p>{searchTerm
-                    ? "No tasks match your search."
-                    : `No ${activeFilter === "inprogress" ? "in progress" : activeFilter} tasks yet.`}
+                  <p>
+                    {searchTerm
+                      ? "No tasks match your search."
+                      : `No ${activeFilter === "inprogress" ? "in progress" : activeFilter} tasks yet.`}
                   </p>
                 </>
               )}
             </div>
           ) : (
-            <div className="todo-grid">
-              {filteredTodos.map(todo => (
-                <TodoCard
-                  key={todo._id}
-                  todo={todo}
-                  onEdit={t => { setEditingTodo(t); setShowModal(true); }}
-                  onDelete={id => setDeleteId(id)}
-                />
-              ))}
-            </div>
+            <>
+              {/* View Toggle */}
+              <div className="view-toggle">
+                <button
+                  className={`view-toggle-btn ${viewMode === "grid" ? "active" : ""}`}
+                  onClick={() => setViewMode("grid")}
+                  title="Grid view"
+                >
+                  <LayoutGrid size={15} strokeWidth={1.8} />
+                </button>
+                <button
+                  className={`view-toggle-btn ${viewMode === "list" ? "active" : ""}`}
+                  onClick={() => setViewMode("list")}
+                  title="List view"
+                >
+                  <List size={15} strokeWidth={1.8} />
+                </button>
+              </div>
+
+              {/* Grid or List */}
+              <div className={viewMode === "grid" ? "todo-grid" : "todo-list"}>
+  {filteredTodos.map(todo => (
+    <TodoCard
+      key={todo._id}
+      todo={todo}
+      onEdit={t => { setEditingTodo(t); setShowModal(true); }}
+      onDelete={id => setDeleteId(id)}
+      isListView={viewMode === "list"}
+    />
+  ))}
+</div>
+            </>
           )}
 
-          <FloatingButton onClick={() => { setEditingTodo(null); setShowModal(true); }} />
+          <FloatingButton
+            onClick={() => { setEditingTodo(null); setShowModal(true); }}
+          />
+
         </div>
       </div>
 
       {showScrollTop && (
-        <button className="scroll-top-btn"
-          onClick={() => window.scrollTo({ top:0, behavior:"smooth" })}>↑</button>
+        <button
+          className="scroll-top-btn"
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        >
+          ↑
+        </button>
       )}
 
       {showModal && (
-        <TodoModal editTodo={editingTodo} onClose={() => setShowModal(false)} onSubmit={handleModalSubmit} />
+        <TodoModal
+          editTodo={editingTodo}
+          onClose={() => setShowModal(false)}
+          onSubmit={handleModalSubmit}
+        />
       )}
+
       {deleteId && (
         <DeleteModal
           onClose={() => setDeleteId(null)}
-          onConfirm={async () => { await deleteTask(deleteId); setDeleteId(null); }}
+          onConfirm={async () => {
+            await deleteTask(deleteId);
+            setDeleteId(null);
+          }}
         />
       )}
     </>
