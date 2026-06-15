@@ -4,286 +4,362 @@ import { AuthContext } from "../../context/AuthContext";
 import ThemeToggle from "../../components/ThemeToggle/ThemeToggle";
 import logo from "../../assets/images/logo.png";
 import {
-  BarChart2,
-  ListTodo,
-  Search,
-  Moon,
-  Zap,
-  Shield,
-  ArrowRight,
-  SlidersHorizontal,
-  Check,
-  Flame,
-  Circle,
-  Calendar // <-- Added Calendar icon
+  ArrowRight, LayoutGrid, List, CalendarDays,
+  BarChart2, Flame, CheckCircle2, Circle,
+  Clock, Zap, Shield, Search, ChevronRight,
 } from "lucide-react";
 import "./Home.css";
 
-// Updated features based on the core pillars!
-const features = [
+const FEATURES = [
   {
-    icon: <BarChart2 size={24} strokeWidth={1.8} />,
-    title: "Productivity Dashboard",
-    desc: "Track daily streaks, completion rates, and boost your overall productivity score.",
+    icon: <LayoutGrid size={22} strokeWidth={1.8} />,
+    title: "Grid & List Views",
+    desc: "Switch between card grid and compact list view. See your tasks the way you think.",
+    tag: "Dashboard",
   },
   {
-    icon: <Calendar size={24} strokeWidth={1.8} />,
-    title: "Deep Calendar Sync",
-    desc: "Plan your life, not just your day. View tasks seamlessly by month, week, or day.",
+    icon: <CalendarDays size={22} strokeWidth={1.8} />,
+    title: "Calendar View",
+    desc: "Month, Week, and Day views. See exactly when tasks were created and track your history.",
+    tag: "Calendar",
   },
   {
-    icon: <SlidersHorizontal size={24} strokeWidth={1.8} />,
-    title: "Flexible Workspaces",
-    desc: "Organize your way. Switch between Kanban boards, grid, or list views instantly.",
+    icon: <BarChart2 size={22} strokeWidth={1.8} />,
+    title: "Productivity Score",
+    desc: "Track completion rate, daily streaks, and your overall score — all in real time.",
+    tag: "Stats",
   },
   {
-    icon: <Search size={24} strokeWidth={1.8} />,
-    title: "Lightning Fast Search",
-    desc: "Find any task instantly with zero delays. Quick-edit modals keep you in the flow.",
+    icon: <Search size={22} strokeWidth={1.8} />,
+    title: "Instant Search",
+    desc: "Search tasks instantly from the navbar. Results update as you type.",
+    tag: "Search",
   },
   {
-    icon: <Moon size={24} strokeWidth={1.8} />,
-    title: "Built-in Dark Mode",
-    desc: "Looks great day or night. Automatically follows your system's theme preference.",
+    icon: <Shield size={22} strokeWidth={1.8} />,
+    title: "Secure Auth",
+    desc: "JWT-based authentication. Your tasks are private and only visible to you.",
+    tag: "Security",
   },
   {
-    icon: <Shield size={24} strokeWidth={1.8} />,
-    title: "Secure & Private",
-    desc: "Your tasks are yours alone. Fully protected behind secure JWT authentication.",
+    icon: <Zap size={22} strokeWidth={1.8} />,
+    title: "Status Filters",
+    desc: "Filter by Pending, In Progress, or Done with one click. Always stay focused.",
+    tag: "Focus",
   },
 ];
 
-const steps = [
-  {
-    number: "01",
-    title: "Create an account",
-    desc: "Sign up in seconds",
-  },
-  {
-    number: "02",
-    title: "Add your tasks",
-    desc: "Hit + and capture anything on your mind instantly.",
-  },
-  {
-    number: "03",
-    title: "Stay productive",
-    desc: "Track progress, hit streaks, and get things done.",
-  },
+const STEPS = [
+  { n: "01", title: "Sign up free",       desc: "Create your account in under 30 seconds." },
+  { n: "02", title: "Add your tasks",     desc: "Hit + and capture everything on your mind." },
+  { n: "03", title: "Track & complete",   desc: "Move tasks forward, build streaks, stay consistent." },
 ];
 
 const Home = () => {
   const { token } = useContext(AuthContext);
-  const navigate = useNavigate();
+  const navigate  = useNavigate();
   const [scrolled, setScrolled] = useState(false);
-  const [checked, setChecked] = useState([false, false, false]);
+  const [checked,  setChecked]  = useState([false, false, false]);
+  const [activeTab, setActiveTab] = useState(0);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 40);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    const fn = () => setScrolled(window.scrollY > 40);
+    window.addEventListener("scroll", fn);
+    return () => window.removeEventListener("scroll", fn);
   }, []);
 
-  // Auto-check tasks one by one
+  // Auto-cycle checklist
   useEffect(() => {
-    const timers = [
-      setTimeout(() => setChecked([true, false, false]), 1000),
-      setTimeout(() => setChecked([true, true, false]), 2200),
-      setTimeout(() => setChecked([true, true, true]), 3400),
-      setTimeout(() => setChecked([false, false, false]), 5000),
-    ];
-    const loop = setInterval(() => {
+    const run = () => {
       setChecked([false, false, false]);
-      setTimeout(() => setChecked([true, false, false]), 1000);
-      setTimeout(() => setChecked([true, true, false]), 2200);
-      setTimeout(() => setChecked([true, true, true]), 3400);
-    }, 6000);
-    return () => {
-      timers.forEach(clearTimeout);
-      clearInterval(loop);
+      setTimeout(() => setChecked([true, false, false]), 800);
+      setTimeout(() => setChecked([true, true,  false]), 1800);
+      setTimeout(() => setChecked([true, true,  true]),  2800);
     };
+    run();
+    const id = setInterval(run, 5000);
+    return () => clearInterval(id);
   }, []);
 
-  const handleCTA = () => {
-    navigate(token ? "/dashboard" : "/signup");
-  };
+  // Auto-cycle feature tabs
+  useEffect(() => {
+    const id = setInterval(() => setActiveTab(p => (p + 1) % FEATURES.length), 3000);
+    return () => clearInterval(id);
+  }, []);
+
+  const handleCTA = () => navigate(token ? "/dashboard" : "/signup");
+
+  const PREVIEW_TABS = ["Grid", "List", "Calendar"];
 
   return (
-    <div className="home-page">
+    <div className="hp">
 
       {/* ── Navbar ── */}
-      <nav className={`home-nav ${scrolled ? "home-nav--scrolled" : ""}`}>
-        <div className="home-nav__inner">
-          <div className="home-nav__logo">
-            <img src={logo} alt="logo" className="home-nav__logo-img" />
+      <nav className={`hp-nav ${scrolled ? "hp-nav--scrolled" : ""}`}>
+        <div className="hp-nav__inner">
+          <div className="hp-nav__logo">
+            <img src={logo} alt="logo" className="hp-nav__img" />
             <span>TodoFlow</span>
           </div>
-          <div className="home-nav__actions">
+          <div className="hp-nav__actions">
             <ThemeToggle />
             {token ? (
-              <button className="home-nav__btn home-nav__btn--primary" onClick={() => navigate("/dashboard")}>
+              <button className="hp-btn hp-btn--primary" onClick={() => navigate("/dashboard")}>
                 Dashboard
               </button>
             ) : (
               <>
-                <Link to="/login" className="home-nav__btn home-nav__btn--ghost">Login</Link>
-                <Link to="/signup" className="home-nav__btn home-nav__btn--primary">Sign Up</Link>
+                <Link to="/login"  className="hp-btn hp-btn--ghost">Login</Link>
+                <Link to="/signup" className="hp-btn hp-btn--primary">Sign Up</Link>
               </>
             )}
           </div>
         </div>
       </nav>
 
-      {/* ── Hero ── */}
-      <section className="home-hero">
-        <div className="home-hero__left">
-          <div className="home-hero__badge">
-            <Zap size={13} strokeWidth={2.5} />
-            Simple. Fast. Focused.
+      {/* ══════════════════════════════
+          HERO
+      ══════════════════════════════ */}
+      <section className="hp-hero">
+        {/* Left */}
+        <div className="hp-hero__left">
+          <div className="hp-badge">
+            <Zap size={12} strokeWidth={2.5} /> Simple · Fast · Focused
           </div>
 
-          <h1 className="home-hero__title">
-            The task manager
-            <br />
-            <span className="home-hero__accent">that stays out of your way</span>
+          <h1 className="hp-hero__h1">
+            Your tasks,<br />
+            <span className="hp-grad">finally organised</span>
           </h1>
 
-          <p className="home-hero__sub">
-            Capture tasks, track progress, and build streaks — without the clutter of bloated project tools.
+          <p className="hp-hero__sub">
+            TodoFlow is a clean, fast task manager with calendar views,
+            productivity streaks, and smart filtering — built to keep
+            you in flow, not fighting your tools.
           </p>
 
-          <div className="home-hero__actions">
-            <button className="home-cta-btn" onClick={handleCTA}>
-              {token ? "Go to Dashboard" : "Get started free"}
-              <ArrowRight size={17} strokeWidth={2.2} />
+          <div className="hp-hero__ctas">
+            <button className="hp-cta-btn" onClick={handleCTA}>
+              {token ? "Go to Dashboard" : "Start for free"}
+              <ArrowRight size={16} strokeWidth={2.2} />
             </button>
             {!token && (
-              <Link to="/login" className="home-secondary-btn">
-                I already have an account
+              <Link to="/login" className="hp-link-btn">
+                Already have an account <ChevronRight size={14} strokeWidth={2.5} />
               </Link>
             )}
           </div>
+
+          {/* Mini stats */}
+          <div className="hp-mini-stats">
+            <div className="hp-mini-stat">
+              <span className="hp-mini-val">3</span>
+              <span className="hp-mini-label">View modes</span>
+            </div>
+            <div className="hp-mini-div" />
+            <div className="hp-mini-stat">
+              <span className="hp-mini-val">
+                <Flame size={16} strokeWidth={2} className="hp-flame" /> Streaks
+              </span>
+              <span className="hp-mini-label">Daily tracking</span>
+            </div>
+            <div className="hp-mini-div" />
+            <div className="hp-mini-stat">
+              <span className="hp-mini-val">100%</span>
+              <span className="hp-mini-label">Free to use</span>
+            </div>
+          </div>
         </div>
 
-        {/* ── 4-card floating grid ── */}
-        <div className="home-hero__right">
-
-          {/* Card 1 — Kanban */}
-          <div className="hero-card-float hero-card-float--1">
-            <p className="hcard-label">Board</p>
-            <div className="kanban-cols">
-              <div className="kanban-col">
-                <span className="kanban-col-title dot-pending">Pending</span>
-                <div className="kanban-item">Plan API</div>
-                <div className="kanban-item">Write docs</div>
-              </div>
-              <div className="kanban-col">
-                <span className="kanban-col-title dot-inprogress">Active</span>
-                <div className="kanban-item">Build UI</div>
-              </div>
-              <div className="kanban-col">
-                <span className="kanban-col-title dot-done">Done</span>
-                <div className="kanban-item kanban-item--done">Setup DB</div>
-                <div className="kanban-item kanban-item--done">Auth flow</div>
-              </div>
-            </div>
+        {/* Right — App Preview */}
+        <div className="hp-hero__right">
+          {/* Tab switcher */}
+          <div className="hp-preview-tabs">
+            {PREVIEW_TABS.map((t, i) => (
+              <button
+                key={t}
+                className={`hp-preview-tab ${activeTab === i ? "hp-preview-tab--active" : ""}`}
+                onClick={() => setActiveTab(i)}
+              >
+                {t}
+              </button>
+            ))}
           </div>
 
-          {/* Card 2 — Progress bars */}
-          <div className="hero-card-float hero-card-float--2">
-            <p className="hcard-label">This week</p>
-            <div className="prog-rows">
-              <div className="prog-row">
-                <span>Design</span>
-                <div className="prog-bar"><div className="prog-fill" style={{ width: "85%", animationDelay: "0.2s" }} /></div>
-                <span className="prog-pct">85%</span>
+          {/* Preview window */}
+          <div className="hp-preview-window">
+            {/* Window chrome */}
+            <div className="hp-preview-chrome">
+              <div className="hp-chrome-dots">
+                <span /><span /><span />
               </div>
-              <div className="prog-row">
-                <span>Dev</span>
-                <div className="prog-bar"><div className="prog-fill" style={{ width: "62%", animationDelay: "0.4s" }} /></div>
-                <span className="prog-pct">62%</span>
-              </div>
-              <div className="prog-row">
-                <span>Review</span>
-                <div className="prog-bar"><div className="prog-fill prog-fill--purple" style={{ width: "40%", animationDelay: "0.6s" }} /></div>
-                <span className="prog-pct">40%</span>
-              </div>
+              <span className="hp-chrome-url">localhost:5173/dashboard</span>
             </div>
-            <div className="prog-stats">
-              <div className="prog-stat">
-                <Flame size={14} strokeWidth={2} className="flame-icon" />
-                <span>5 day streak</span>
-              </div>
-              <div className="prog-stat">
-                <span className="prog-score">67%</span>
-                <span>score</span>
-              </div>
-            </div>
-          </div>
 
-          {/* Card 3 — Checklist */}
-          <div className="hero-card-float hero-card-float--3">
-            <p className="hcard-label">Today's tasks</p>
-            <div className="checklist">
-              {[
-                "Ship landing page",
-                "Review PRs",
-                "Update README",
-              ].map((task, i) => (
-                <div key={i} className={`check-item ${checked[i] ? "check-item--done" : ""}`}>
-                  <div className={`check-box ${checked[i] ? "check-box--checked" : ""}`}>
-                    {checked[i] && <Check size={11} strokeWidth={3} />}
+            {/* Grid preview */}
+            {activeTab === 0 && (
+              <div className="hp-preview-body">
+                <div className="hp-preview-hero-bar">
+                  <div>
+                    <div className="hp-ph-greeting">Good Morning, <span className="hp-grad-sm">Ankit</span>!</div>
+                    <div className="hp-ph-sub">Here's your productivity snapshot</div>
                   </div>
-                  <span>{task}</span>
+                  <div className="hp-ph-stats">
+                    <div className="hp-ph-stat"><span>14</span><span>Tasks</span></div>
+                    <div className="hp-ph-stat"><span>4</span><span>Done</span></div>
+                    <div className="hp-ph-stat flame-stat"><span><Flame size={12} />1</span><span>Streak</span></div>
+                    <div className="hp-ph-stat"><span>29%</span><span>Score</span></div>
+                  </div>
                 </div>
-              ))}
-            </div>
+                <div className="hp-preview-filter-row">
+                  {["All 14","Pending 9","In Progress 1","Done 4"].map((f, i) => (
+                    <span key={i} className={`hp-pf ${i === 0 ? "hp-pf--active" : ""}`}>{f}</span>
+                  ))}
+                </div>
+                <div className="hp-preview-grid">
+                  {[
+                    { title: "503. Next Greater Element II", status: "pending" },
+                    { title: "npm cors", status: "pending" },
+                    { title: "Number Theory", status: "inprogress" },
+                  ].map((t, i) => (
+                    <div key={i} className="hp-preview-card">
+                      <span className={`hp-pc-badge hp-pc-badge--${t.status}`}>
+                        {t.status === "inprogress" ? "In Progress" : t.status.charAt(0).toUpperCase() + t.status.slice(1)}
+                      </span>
+                      <p className="hp-pc-title">{t.title}</p>
+                      <div className="hp-pc-actions">
+                        <span>Edit</span>
+                        <span className="hp-pc-del">Delete</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* List preview */}
+            {activeTab === 1 && (
+              <div className="hp-preview-body">
+                <div className="hp-preview-list">
+                  {[
+                    { title: "503. Next Greater Element II", status: "pending",    date: "12/6/2026" },
+                    { title: "npm cors",                     status: "pending",    date: "12/6/2026" },
+                    { title: "Number Theory",                status: "inprogress", date: "12/6/2026" },
+                    { title: "Leetcode 234",                 status: "done",       date: "9/6/2026"  },
+                    { title: "Prime List",                   status: "pending",    date: "10/6/2026" },
+                  ].map((t, i) => (
+                    <div key={i} className="hp-list-row">
+                      <span className={`hp-pc-badge hp-pc-badge--${t.status}`}>
+                        {t.status === "inprogress" ? "In Progress" : t.status.charAt(0).toUpperCase() + t.status.slice(1)}
+                      </span>
+                      <span className="hp-list-title">{t.title}</span>
+                      <span className="hp-list-date">{t.date}</span>
+                      <span className="hp-list-edit">Edit</span>
+                      <span className="hp-list-del">Delete</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Calendar preview */}
+            {activeTab === 2 && (
+              <div className="hp-preview-body">
+                <div className="hp-preview-cal">
+                  <div className="hp-cal-header">
+                    <span className="hp-cal-title">June 2026</span>
+                    <div className="hp-cal-views">
+                      {["Month","Week","Day"].map(v => (
+                        <span key={v} className={`hp-cal-view ${v === "Month" ? "hp-cal-view--active" : ""}`}>{v}</span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="hp-cal-grid">
+                    {["S","M","T","W","T","F","S"].map((d, i) => (
+                      <div key={i} className="hp-cal-wd">{d}</div>
+                    ))}
+                    {[...Array(30)].map((_, i) => {
+                      const day = i + 1;
+                      const hasTasks = [9, 10, 12].includes(day);
+                      const isToday  = day === 14;
+                      return (
+                        <div key={i} className={`hp-cal-day ${isToday ? "hp-cal-day--today" : ""}`}>
+                          <span>{day}</span>
+                          {hasTasks && (
+                            <div className="hp-cal-dots">
+                              <span className="hp-cal-dot hp-cal-dot--done" />
+                              <span className="hp-cal-dot hp-cal-dot--pending" />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Card 4 — Task card with glow */}
-          <div className="hero-card-float hero-card-float--4">
-            <p className="hcard-label">Latest task</p>
-            <div className="task-glow-card">
-              <span className="tgc-badge tgc-badge--inprogress">In Progress</span>
-              <p className="tgc-title">Redesign dashboard</p>
-              <div className="tgc-bar">
-                <div className="tgc-bar-fill" />
-              </div>
-              <div className="tgc-meta">
-                <span>Due tomorrow</span>
-                <span className="tgc-pct">70%</span>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      {/* ── Features ── */}
-      <section className="home-features">
-        <div className="home-section-inner">
-          <p className="home-section-eyebrow">What's inside</p>
-          <h2 className="home-section-title">Everything you need, nothing you don't</h2>
-          <div className="home-features__grid">
-            {features.map((f, i) => (
-              <div key={i} className="home-feature-card">
-                <div className="home-feature-icon">{f.icon}</div>
-                <h3>{f.title}</h3>
-                <p>{f.desc}</p>
+          {/* Checklist floating card */}
+          <div className="hp-float-card">
+            <p className="hp-float-label">Today's tasks</p>
+            {["Ship landing page", "Review PRs", "Push to prod"].map((t, i) => (
+              <div key={i} className={`hp-check-row ${checked[i] ? "hp-check-row--done" : ""}`}>
+                <div className={`hp-check-box ${checked[i] ? "hp-check-box--checked" : ""}`}>
+                  {checked[i] && <CheckCircle2 size={11} strokeWidth={3} />}
+                </div>
+                <span>{t}</span>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── How it works ── */}
-      <section className="home-steps">
-        <div className="home-section-inner">
-          <p className="home-section-eyebrow">How it works</p>
-          <h2 className="home-section-title">Up and running in minutes</h2>
-          <div className="home-steps__row">
-            {steps.map((s, i) => (
-              <div key={i} className="home-step">
-                <span className="home-step__number">{s.number}</span>
+      {/* ══════════════════════════════
+          FEATURES
+      ══════════════════════════════ */}
+      <section className="hp-section">
+        <div className="hp-section__inner">
+          <div className="hp-section__head">
+            <span className="hp-eyebrow">Features</span>
+            <h2 className="hp-section__h2">Everything you need,<br />nothing you don't</h2>
+          </div>
+
+          <div className="hp-features">
+            {FEATURES.map((f, i) => (
+              <div
+                key={i}
+                className={`hp-feature ${activeTab === i ? "hp-feature--active" : ""}`}
+                onMouseEnter={() => setActiveTab(i)}
+              >
+                <div className="hp-feature__icon">{f.icon}</div>
+                <div className="hp-feature__body">
+                  <div className="hp-feature__top">
+                    <h3>{f.title}</h3>
+                    <span className="hp-feature__tag">{f.tag}</span>
+                  </div>
+                  <p>{f.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════
+          HOW IT WORKS
+      ══════════════════════════════ */}
+      <section className="hp-section hp-section--alt">
+        <div className="hp-section__inner">
+          <div className="hp-section__head">
+            <span className="hp-eyebrow">How it works</span>
+            <h2 className="hp-section__h2">Up and running in minutes</h2>
+          </div>
+          <div className="hp-steps">
+            {STEPS.map((s, i) => (
+              <div key={i} className="hp-step">
+                <span className="hp-step__n">{s.n}</span>
+                <div className="hp-step__line" />
                 <h3>{s.title}</h3>
                 <p>{s.desc}</p>
               </div>
@@ -292,12 +368,15 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ── CTA ── */}
-      <section className="home-cta-section">
-        <div className="home-section-inner home-cta-inner">
+      {/* ══════════════════════════════
+          CTA
+      ══════════════════════════════ */}
+      <section className="hp-cta-section">
+        <div className="hp-cta-inner">
+          <div className="hp-cta-glow" />
           <h2>Ready to get things done?</h2>
-          <p>Join TodoFlow and start building better habits today.</p>
-          <button className="home-cta-btn home-cta-btn--large" onClick={handleCTA}>
+          <p>Join TodoFlow — free, fast, and built for focus.</p>
+          <button className="hp-cta-btn hp-cta-btn--lg" onClick={handleCTA}>
             {token ? "Go to Dashboard" : "Create free account"}
             <ArrowRight size={18} strokeWidth={2.2} />
           </button>
@@ -305,9 +384,9 @@ const Home = () => {
       </section>
 
       {/* ── Footer ── */}
-      <footer className="home-footer">
-        <div className="home-nav__logo">
-          <img src={logo} alt="logo" className="home-nav__logo-img" />
+      <footer className="hp-footer">
+        <div className="hp-nav__logo">
+          <img src={logo} alt="logo" className="hp-nav__img" />
           <span>TodoFlow</span>
         </div>
         <p>© {new Date().getFullYear()} TodoFlow. Built for focus.</p>

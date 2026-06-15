@@ -1,72 +1,75 @@
 .floating-btn {
   position: fixed;
-
   right: 32px;
   bottom: 32px;
-
-  width: 68px;
-  height: 68px;
-
+  width: 60px;
+  height: 60px;
   border: none;
   border-radius: 50%;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
-  font-size: 2.2rem;
+  font-size: 2rem;
   font-weight: 900;
-
-  color: var(--text);
-
+  color: #111;
   cursor: pointer;
-
-  background: rgba(255, 255, 255, 0.88);
-
-  backdrop-filter: blur(25px);
-  -webkit-backdrop-filter: blur(25px);
-
-  border: 1px solid rgba(255, 255, 255, 0.6);
-
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.8);
   box-shadow:
-    0 10px 35px rgba(0, 0, 0, 0.12);
-
-  transition: all 0.3s ease;
-
+    0 10px 35px rgba(0, 0, 0, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  transition: all 0.28s cubic-bezier(0.34, 1.4, 0.64, 1);
   z-index: 999;
 }
 
 body[data-theme="dark"] .floating-btn {
-  background: rgba(30, 30, 30, 0.88);
-
-  border: 1px solid rgba(255, 255, 255, 0.08);
-
+  background: rgba(18, 18, 18, 0.65);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow:
-    0 10px 35px rgba(0, 0, 0, 0.35);
+    0 10px 35px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  color: #fff;
 }
 
 .floating-btn:hover {
-  transform: translateY(-4px) scale(1.06);
-
-  background: rgba(255, 255, 255, 0.96);
+  transform: translateY(-4px) scale(1.08);
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow:
+    0 18px 42px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
 }
 
 body[data-theme="dark"] .floating-btn:hover {
-  background: rgba(50, 50, 50, 0.92);
+  background: rgba(30, 30, 30, 0.85);
+  box-shadow:
+    0 18px 42px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .floating-btn:active {
-  transform: scale(0.95);
+  transform: scale(0.94);
 }
 
 @media (max-width: 768px) {
   .floating-btn {
-    width: 62px;
-    height: 62px;
-
+    width: 54px;
+    height: 54px;
     right: 16px;
-    bottom: 16px;
+    bottom: 20px;
+    font-size: 1.8rem;
+  }
+}
 
-    font-size: 2rem;
+@media (max-width: 480px) {
+  .floating-btn {
+    width: 50px;
+    height: 50px;
+    right: 14px;
+    bottom: 16px;
+    font-size: 1.6rem;
   }
 }

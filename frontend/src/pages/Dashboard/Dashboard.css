@@ -160,17 +160,24 @@ body[data-theme="dark"] .score-bar { background: rgba(255,255,255,0.1); }
   margin-bottom: 0;
   padding: 8px 14px;
   border-radius: 28px;
-  background: rgba(255,255,255,0.82);
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
-  border: 1px solid rgba(255,255,255,0.6);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.10);
-  animation: strip-in 0.28s cubic-bezier(0.34,1.4,0.64,1) both;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  animation: strip-in 0.28s cubic-bezier(0.34, 1.4, 0.64, 1) both;
 }
+
 body[data-theme="dark"] .status-strip--sticky {
-  background: rgba(20,20,20,0.82);
-  border: 1px solid rgba(255,255,255,0.08);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  background: rgba(18, 18, 18, 0.65);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .status-strip--sticky.status-strip--hidden {
@@ -295,22 +302,76 @@ body[data-theme="dark"] .status-pill.active .pill-count { background: rgba(0,0,0
    SCROLL TOP
 ======================= */
 .scroll-top-btn {
-  position: fixed; right: 36px; bottom: 110px;
-  width: 52px; height: 52px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  background: rgba(255,255,255,0.22);
-  backdrop-filter: blur(25px);
-  border: 1px solid rgba(255,255,255,0.25);
-  color: var(--text); font-size: 1.5rem; font-weight: 900;
-  cursor: pointer; z-index: 999;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.12);
-  transition: all 0.3s ease;
+  position: fixed;
+  right: 36px;
+  bottom: 110px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  color: #111;
+  font-size: 1.2rem;
+  font-weight: 900;
+  cursor: pointer;
+  z-index: 999;
+  transition: all 0.28s cubic-bezier(0.34, 1.4, 0.64, 1);
 }
-.scroll-top-btn:hover  { transform: translateY(-4px) scale(1.08); background: rgba(255,255,255,0.35); }
-.scroll-top-btn:active { transform: scale(0.95); }
+
+.scroll-top-btn:hover {
+  transform: translateY(-4px) scale(1.1);
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow:
+    0 16px 36px rgba(0, 0, 0, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+}
+
+.scroll-top-btn:active { transform: scale(0.94); }
+
 body[data-theme="dark"] .scroll-top-btn {
-  background: rgba(20,20,20,0.45);
-  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(18, 18, 18, 0.65);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+
+body[data-theme="dark"] .scroll-top-btn:hover {
+  background: rgba(30, 30, 30, 0.85);
+  box-shadow:
+    0 16px 36px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+@media (max-width: 768px) {
+  .scroll-top-btn {
+    right: 16px;
+    bottom: 90px;
+    width: 40px;
+    height: 40px;
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 500px) {
+  .scroll-top-btn {
+    right: 12px;
+    bottom: 82px;
+    width: 38px;
+    height: 38px;
+    font-size: 1rem;
+  }
 }
 
 /* =======================
