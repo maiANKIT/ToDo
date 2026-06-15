@@ -1,3 +1,18 @@
+/* Force GPU compositing — required for backdrop-filter in production */
+* {
+  -webkit-transform: translateZ(0);
+}
+
+/* Ensure backdrop-filter works in all browsers */
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .navbar,
+  .status-strip--sticky,
+  .floating-btn,
+  .scroll-top-btn {
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+  }
+}
 * {
   margin: 0;
   padding: 0;
