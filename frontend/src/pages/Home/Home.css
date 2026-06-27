@@ -187,11 +187,20 @@ body[data-theme="dark"] .hp-badge {
   margin-bottom: 20px;
 }
 
+/* Masks the word while it animates up from below, so it doesn't
+   spill outside the heading's line box mid-animation */
+.hp-word-mask {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+}
+
 .hp-grad {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  display: inline-block;
 }
 
 body[data-theme="dark"] .hp-grad {
@@ -245,13 +254,12 @@ body[data-theme="dark"] .hp-grad-sm {
   font-weight: 700;
   border: none;
   cursor: pointer;
-  transition: all 0.25s ease;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.18);
+  /* hover/tap motion is handled by Framer Motion (whileHover / whileTap)
+     in Home.jsx — no CSS :hover transform here to avoid double-animating */
 }
 
 body[data-theme="dark"] .hp-cta-btn { background: #fff; color: #111; }
-.hp-cta-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,0,0,0.22); }
-.hp-cta-btn:active { transform: scale(0.97); }
 .hp-cta-btn--lg { height: 54px; padding: 0 32px; font-size: 1rem; }
 
 .hp-link-btn {
@@ -344,6 +352,8 @@ body[data-theme="dark"] .hp-preview-tabs {
   cursor: pointer;
   opacity: 0.45;
   transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
 }
 
 .hp-preview-tab--active {
@@ -364,6 +374,8 @@ body[data-theme="dark"] .hp-preview-tab--active {
   box-shadow:
     0 24px 64px rgba(0,0,0,0.12),
     0 4px 12px rgba(0,0,0,0.06);
+  transform-style: preserve-3d;
+  will-change: transform;
 }
 
 body[data-theme="dark"] .hp-preview-window {
@@ -738,7 +750,8 @@ body[data-theme="dark"] .hp-cal-view--active {
 .hp-cal-dot--done    { background: #10b981; }
 .hp-cal-dot--pending { background: #f59e0b; }
 
-/* Floating checklist card */
+/* Floating checklist card — kept as a plain CSS ambient float since it's
+   not scroll- or interaction-triggered */
 .hp-float-card {
   position: absolute;
   bottom: -16px;
@@ -871,18 +884,17 @@ body[data-theme="dark"] .hp-eyebrow { color: #a78bfa; }
   border-radius: 18px;
   border: 1px solid transparent;
   cursor: default;
-  transition: all 0.25s ease;
+  transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+  /* vertical lift on hover is handled by Framer Motion's whileHover in Home.jsx */
 }
 
-.hp-feature:hover,
-.hp-feature--active {
+.hp-feature:hover {
   background: rgba(255,255,255,0.8);
   border-color: rgba(0,0,0,0.07);
   box-shadow: 0 4px 20px rgba(0,0,0,0.06);
 }
 
-body[data-theme="dark"] .hp-feature:hover,
-body[data-theme="dark"] .hp-feature--active {
+body[data-theme="dark"] .hp-feature:hover {
   background: rgba(255,255,255,0.05);
   border-color: rgba(255,255,255,0.07);
   box-shadow: 0 4px 20px rgba(0,0,0,0.3);
@@ -980,6 +992,7 @@ body[data-theme="dark"] .hp-step__n {
   background: rgba(102,126,234,0.3);
   border-radius: 999px;
   margin-bottom: 6px;
+  /* scaleX(0 -> 1) draw-in is animated by Framer Motion in Home.jsx */
 }
 
 .hp-step h3 {
@@ -1015,13 +1028,16 @@ body[data-theme="dark"] .hp-cta-section { border-top-color: rgba(255,255,255,0.0
   gap: 16px;
 }
 
+/* Centered with margins (not transform: translate) so Framer Motion's
+   animated x/y/scale on this element don't fight a static CSS transform */
 .hp-cta-glow {
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
   width: 400px;
   height: 200px;
+  margin-top: -100px;
+  margin-left: -200px;
   background: radial-gradient(ellipse, rgba(102,126,234,0.15) 0%, transparent 70%);
   pointer-events: none;
   z-index: 0;
