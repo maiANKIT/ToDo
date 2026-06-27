@@ -8,7 +8,7 @@
 }
 
 /* =======================
-   HERO — with collapse animation
+   HERO
 ======================= */
 .hero-card {
   padding: 30px 36px;
@@ -16,7 +16,6 @@
   display: flex;
   flex-direction: column;
   gap: 22px;
-  /* Animate height collapse when search opens */
   max-height: 600px;
   overflow: hidden;
   opacity: 1;
@@ -101,9 +100,7 @@ body[data-theme="dark"] .hero-stats {
 body[data-theme="dark"] .hero-stat-divider { background: rgba(255,255,255,0.08); }
 
 .stat-icon { opacity: 0.35; margin-bottom: 2px; }
-
 .stat-value { font-size: 1.75rem; font-weight: 800; line-height: 1; color: var(--text); }
-
 .stat-label {
   font-size: 0.7rem; font-weight: 600; opacity: 0.45;
   text-transform: uppercase; letter-spacing: 0.06em;
@@ -122,7 +119,7 @@ body[data-theme="dark"] .score-bar { background: rgba(255,255,255,0.1); }
 }
 
 /* =======================
-   STATUS STRIP — normal
+   STATUS STRIP — normal flow
 ======================= */
 .status-strip {
   display: grid;
@@ -130,8 +127,8 @@ body[data-theme="dark"] .score-bar { background: rgba(255,255,255,0.1); }
   gap: 10px;
   margin-bottom: 24px;
   transition:
-    opacity   0.25s ease,
-    transform 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity    0.25s ease,
+    transform  0.28s cubic-bezier(0.4, 0, 0.2, 1),
     visibility 0.25s;
   opacity: 1;
   transform: translateY(0);
@@ -145,11 +142,21 @@ body[data-theme="dark"] .score-bar { background: rgba(255,255,255,0.1); }
   pointer-events: none;
 }
 
-/* spacer: pill height ~42px + margin 24px */
+/* spacer so content doesn't jump when strip goes sticky */
 .status-strip-spacer { height: 66px; margin-bottom: 24px; }
 
 /* =======================
-   STATUS STRIP — sticky
+   STATUS STRIP — sticky (glassmorphism)
+   
+   KEY PRODUCTION FIX:
+   The strip itself must NOT have backdrop-filter when its children
+   (pills) also use it — nested backdrop-filter is ignored by browsers.
+   Instead we put the glass effect only on the strip wrapper,
+   and remove backdrop-filter from the pills entirely.
+   On production (Vercel) backdrop-filter needs:
+     - will-change: transform  → forces GPU compositing layer
+     - isolation: isolate      → creates new stacking context
+     - explicit -webkit- prefix
 ======================= */
 .status-strip--sticky {
   position: fixed;
@@ -160,23 +167,30 @@ body[data-theme="dark"] .score-bar { background: rgba(255,255,255,0.1); }
   margin-bottom: 0;
   padding: 8px 14px;
   border-radius: 28px;
-  background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(40px) saturate(180%);
-  -webkit-backdrop-filter: blur(40px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.8);
+
+  /* Glass effect */
+  background: rgba(255, 255, 255, 0.60);
+  -webkit-backdrop-filter: blur(40px) saturate(200%) brightness(1.05);
+          backdrop-filter: blur(40px) saturate(200%) brightness(1.05);
+  border: 1px solid rgba(255, 255, 255, 0.85);
   box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.10),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+
+  /* Critical for production */
+  will-change: transform;
+  isolation: isolate;
+
   animation: strip-in 0.28s cubic-bezier(0.34, 1.4, 0.64, 1) both;
 }
 
 body[data-theme="dark"] .status-strip--sticky {
-  background: rgba(18, 18, 18, 0.65);
-  backdrop-filter: blur(40px) saturate(180%);
-  -webkit-backdrop-filter: blur(40px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(15, 15, 20, 0.65);
+  -webkit-backdrop-filter: blur(40px) saturate(180%) brightness(0.9);
+          backdrop-filter: blur(40px) saturate(180%) brightness(0.9);
+  border: 1px solid rgba(255, 255, 255, 0.09);
   box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.45),
+    0 8px 32px rgba(0, 0, 0, 0.50),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
@@ -193,10 +207,16 @@ body[data-theme="dark"] .status-strip--sticky {
   to   { opacity:1; transform: translateX(-50%) translateY(0) scaleX(1); }
 }
 
-.status-strip--sticky .status-pill { padding: 8px 12px; font-size: 0.82rem; }
+/* Slightly smaller pills when sticky */
+.status-strip--sticky .status-pill { padding: 7px 12px; font-size: 0.82rem; }
 
 /* =======================
-   PILLS — with active indicator animation
+   PILLS
+   
+   IMPORTANT: Pills must NOT use backdrop-filter when inside
+   a sticky strip that already has backdrop-filter — it'll be
+   ignored. Pills get a solid semi-transparent background instead,
+   which looks equally good and works everywhere including production.
 ======================= */
 .status-pill {
   position: relative;
@@ -206,21 +226,22 @@ body[data-theme="dark"] .status-strip--sticky {
   gap: 6px;
   padding: 10px 14px;
   border-radius: 16px;
-  border: 1.5px solid rgba(0,0,0,0.1);
-  background: rgba(255,255,255,0.7);
-  backdrop-filter: blur(10px);
+  border: 1.5px solid rgba(0,0,0,0.08);
+
+  /* Solid semi-transparent — works in ALL contexts, no backdrop-filter needed */
+  background: rgba(255, 255, 255, 0.80);
+
   color: var(--text);
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
-  /* smooth all property changes for tab switching */
   transition:
     background    0.22s ease,
     color         0.22s ease,
     border-color  0.22s ease,
     box-shadow    0.22s ease,
-    transform     0.18s ease;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    transform     0.18s cubic-bezier(0.34, 1.4, 0.64, 1);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
   width: 100%;
   white-space: nowrap;
   overflow: hidden;
@@ -229,8 +250,8 @@ body[data-theme="dark"] .status-strip--sticky {
 .status-pill:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+  background: rgba(255, 255, 255, 0.95);
 }
-
 .status-pill:active { transform: scale(0.97); }
 
 .status-pill.active {
@@ -241,11 +262,17 @@ body[data-theme="dark"] .status-strip--sticky {
 }
 
 body[data-theme="dark"] .status-pill {
-  background: rgba(255,255,255,0.07);
-  border-color: rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.09);
+  border-color: rgba(255,255,255,0.10);
 }
-body[data-theme="dark"] .status-pill:hover { background: rgba(255,255,255,0.12); }
-body[data-theme="dark"] .status-pill.active { background:#fff; color:#111; border-color:#fff; }
+body[data-theme="dark"] .status-pill:hover {
+  background: rgba(255,255,255,0.15);
+}
+body[data-theme="dark"] .status-pill.active {
+  background: #fff;
+  color: #111;
+  border-color: #fff;
+}
 
 /* Pill dot */
 .pill-dot {
@@ -261,19 +288,17 @@ body[data-theme="dark"] .status-pill.active { background:#fff; color:#111; borde
 
 /* Pill count badge */
 .pill-count {
-  background: rgba(0,0,0,0.08);
+  background: rgba(0,0,0,0.07);
   color: inherit;
   font-size: 0.72rem; font-weight: 700;
   padding: 1px 6px; border-radius: 999px;
   min-width: 20px; text-align: center;
   transition: background 0.22s ease, transform 0.22s cubic-bezier(0.34,1.4,0.64,1);
 }
-/* count badge bounces when switching tabs */
 .status-pill.active .pill-count {
   background: rgba(255,255,255,0.22);
   transform: scale(1.08);
 }
-
 body[data-theme="dark"] .pill-count { background: rgba(255,255,255,0.1); }
 body[data-theme="dark"] .status-pill.active .pill-count { background: rgba(0,0,0,0.15); }
 
@@ -289,7 +314,7 @@ body[data-theme="dark"] .status-pill.active .pill-count { background: rgba(0,0,0
 .empty-state p  { font-size: 0.95rem; opacity: 0.55; margin: 0; }
 
 /* =======================
-   TODO GRID
+   TODO GRID / LIST
 ======================= */
 .todo-grid {
   display: grid;
@@ -298,80 +323,87 @@ body[data-theme="dark"] .status-pill.active .pill-count { background: rgba(0,0,0
   padding-bottom: 120px;
 }
 
+.todo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 120px;
+}
+
+.todo-list .todo-card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 16px 24px;
+  border-radius: 18px;
+  gap: 16px;
+}
+
+/* =======================
+   VIEW TOGGLE
+======================= */
+.view-toggle {
+  display: flex;
+  gap: 4px;
+  background: rgba(0,0,0,0.05);
+  border-radius: 10px;
+  padding: 3px;
+  width: fit-content;
+  margin-bottom: 16px;
+}
+body[data-theme="dark"] .view-toggle { background: rgba(255,255,255,0.07); }
+
+.view-toggle-btn {
+  width: 32px; height: 32px;
+  border-radius: 7px; border: none;
+  background: transparent; color: var(--text);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0.4;
+  transition: all 0.2s ease;
+}
+.view-toggle-btn.active {
+  background: #fff; opacity: 1;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+body[data-theme="dark"] .view-toggle-btn.active { background: rgba(255,255,255,0.12); }
+
 /* =======================
    SCROLL TOP
 ======================= */
 .scroll-top-btn {
-  position: fixed;
-  right: 36px;
-  bottom: 110px;
-  width: 44px;
-  height: 44px;
+  position: fixed; right: 36px; bottom: 110px;
+  width: 44px; height: 44px;
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(40px) saturate(180%);
-  -webkit-backdrop-filter: blur(40px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  box-shadow:
-    0 8px 24px rgba(0, 0, 0, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  color: #111;
-  font-size: 1.2rem;
-  font-weight: 900;
-  cursor: pointer;
-  z-index: 999;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255, 255, 255, 0.80);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.9);
+  color: #111; font-size: 1.2rem; font-weight: 900;
+  cursor: pointer; z-index: 999;
   transition: all 0.28s cubic-bezier(0.34, 1.4, 0.64, 1);
+  /* Glass on scroll btn works because it's a direct child of body (fixed),
+     not nested inside another backdrop-filter element */
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+          backdrop-filter: blur(20px) saturate(180%);
+  will-change: transform;
 }
-
 .scroll-top-btn:hover {
   transform: translateY(-4px) scale(1.1);
-  background: rgba(255, 255, 255, 0.85);
-  box-shadow:
-    0 16px 36px rgba(0, 0, 0, 0.16),
-    inset 0 1px 0 rgba(255, 255, 255, 1);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 16px 36px rgba(0,0,0,0.16), inset 0 1px 0 rgba(255,255,255,1);
 }
-
 .scroll-top-btn:active { transform: scale(0.94); }
 
 body[data-theme="dark"] .scroll-top-btn {
-  background: rgba(18, 18, 18, 0.65);
-  backdrop-filter: blur(40px) saturate(180%);
-  -webkit-backdrop-filter: blur(40px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow:
-    0 8px 24px rgba(0, 0, 0, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  background: rgba(20, 20, 28, 0.80);
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06);
   color: #fff;
 }
-
 body[data-theme="dark"] .scroll-top-btn:hover {
-  background: rgba(30, 30, 30, 0.85);
-  box-shadow:
-    0 16px 36px rgba(0, 0, 0, 0.55),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
-}
-
-@media (max-width: 768px) {
-  .scroll-top-btn {
-    right: 16px;
-    bottom: 90px;
-    width: 40px;
-    height: 40px;
-    font-size: 1.1rem;
-  }
-}
-
-@media (max-width: 500px) {
-  .scroll-top-btn {
-    right: 12px;
-    bottom: 82px;
-    width: 38px;
-    height: 38px;
-    font-size: 1rem;
-  }
+  background: rgba(30, 30, 40, 0.95);
+  box-shadow: 0 16px 36px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.08);
 }
 
 /* =======================
@@ -387,13 +419,20 @@ body[data-theme="dark"] .scroll-top-btn:hover {
   .status-strip { gap: 8px; }
   .status-strip--sticky { width: calc(100% - 20px); border-radius: 22px; padding: 7px 11px; }
   .status-strip-spacer { height: 60px; }
+
+  /* Tablet pills — keep normal row layout, just slightly smaller */
   .status-pill { padding: 9px 10px; font-size: 0.8rem; gap: 5px; border-radius: 14px; }
+
   .todo-grid { grid-template-columns: 1fr; gap: 18px; }
-  .scroll-top-btn { right: 16px; bottom: 90px; width: 48px; height: 48px; }
+  .scroll-top-btn { right: 16px; bottom: 90px; width: 40px; height: 40px; font-size: 1.1rem; }
 }
 
 /* =======================
    MOBILE ≤500px
+   
+   KEY FIX: Pills stay as a SINGLE thin row (flexbox, not column layout).
+   Remove flex-direction:column which was making them fat.
+   Use compact horizontal layout like the desktop version.
 ======================= */
 @media (max-width: 500px) {
   .dashboard-page { padding: 76px 10px 16px; }
@@ -408,78 +447,40 @@ body[data-theme="dark"] .scroll-top-btn:hover {
   .score-bar { width: 42px; }
   .hero-stat-divider { height: 34px; }
 
-  /* Single row — 4 cols always */
-  .status-strip { grid-template-columns: repeat(4,1fr); gap: 5px; }
-  .status-strip--sticky { width: calc(100% - 12px); border-radius: 16px; padding: 5px 8px; }
-  .status-strip-spacer { height: 52px; }
+  /* Strip: 4 equal columns, compact */
+  .status-strip { grid-template-columns: repeat(4, 1fr); gap: 5px; }
+  .status-strip--sticky { width: calc(100% - 12px); border-radius: 16px; padding: 5px 6px; }
+  .status-strip-spacer { height: 50px; }
 
+  /* Pills: thin horizontal — NO flex-direction:column, NO stacking */
   .status-pill {
-    padding: 7px 4px; font-size: 0.68rem; gap: 3px;
-    border-radius: 11px; flex-direction: column; justify-content: center;
+    padding: 6px 4px;
+    font-size: 0.66rem;
+    gap: 3px;
+    border-radius: 10px;
+    /* Horizontal layout like desktop, just compressed */
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    /* Let label truncate rather than wrap */
+    white-space: nowrap;
+    overflow: hidden;
   }
-  .status-strip--sticky .status-pill { padding: 5px 4px; font-size: 0.65rem; }
-  .pill-dot { width: 6px; height: 6px; }
-  .pill-count { padding: 1px 4px; font-size: 0.62rem; min-width: 16px; }
+  .status-strip--sticky .status-pill { padding: 5px 4px; font-size: 0.63rem; }
+
+  /* Hide count badge on very small screens to save space */
+  .pill-count { display: none; }
+
+  /* Dot stays tiny */
+  .pill-dot { width: 5px; height: 5px; flex-shrink: 0; }
+
   .todo-grid { gap: 12px; }
   .empty-state { padding: 40px 14px; }
-  .scroll-top-btn { right: 12px; bottom: 85px; width: 44px; height: 44px; font-size: 1.2rem; }
-}
-/* =======================
-   VIEW TOGGLE
-======================= */
-
-.view-toggle {
-  display: flex;
-  gap: 4px;
-  background: rgba(0,0,0,0.05);
-  border-radius: 10px;
-  padding: 3px;
-  width: fit-content;
-  margin-bottom: 16px;
+  .scroll-top-btn { right: 12px; bottom: 85px; width: 38px; height: 38px; font-size: 1rem; }
 }
 
-body[data-theme="dark"] .view-toggle {
-  background: rgba(255,255,255,0.07);
-}
-
-.view-toggle-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 7px;
-  border: none;
-  background: transparent;
-  color: var(--text);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0.4;
-  transition: all 0.2s ease;
-}
-
-.view-toggle-btn.active {
-  background: #fff;
-  opacity: 1;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-body[data-theme="dark"] .view-toggle-btn.active {
-  background: rgba(255,255,255,0.12);
-}
-
-/* List view */
-.todo-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding-bottom: 120px;
-}
-
-.todo-list .todo-card {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  padding: 16px 24px;
-  border-radius: 18px;
-  gap: 16px;
+/* Extra small — hide label text, show only dot + count */
+@media (max-width: 360px) {
+  .status-pill { padding: 6px 2px; font-size: 0.6rem; gap: 2px; }
+  .pill-count { display: inline; font-size: 0.58rem; padding: 0 3px; }
 }

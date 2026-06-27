@@ -65,7 +65,11 @@ const Dashboard = () => {
   const [stripSticky,    setStripSticky]   = useState(false);
   const [navbarBottom,   setNavbarBottom]  = useState(80);
   const [searchState,    setSearchState]   = useState("closed");
-  const [viewMode,       setViewMode]      = useState("grid");
+
+  // ── Persist viewMode to localStorage so it survives refreshes ──
+  const [viewMode, setViewMode] = useState(
+    () => localStorage.getItem("todoflow-view-mode") || "grid"
+  );
 
   const heroRef   = useRef(null);
   const navbarRef = useRef(null);
@@ -116,6 +120,12 @@ const Dashboard = () => {
     setSearchState("closing");
     setSearchTerm("");
     setTimeout(() => { setSearchState("closed"); measureNavbar(); }, 320);
+  };
+
+  // ── Save viewMode to localStorage whenever it changes ──
+  const handleSetViewMode = (mode) => {
+    setViewMode(mode);
+    localStorage.setItem("todoflow-view-mode", mode);
   };
 
   const addTask    = async (d)    => { try { await createTodo(d);     fetchTodos(); } catch(e){} };
@@ -264,36 +274,35 @@ const Dashboard = () => {
             </div>
           ) : (
             <>
-              {/* View Toggle */}
+              {/* View Toggle — uses handleSetViewMode to persist */}
               <div className="view-toggle">
                 <button
                   className={`view-toggle-btn ${viewMode === "grid" ? "active" : ""}`}
-                  onClick={() => setViewMode("grid")}
+                  onClick={() => handleSetViewMode("grid")}
                   title="Grid view"
                 >
                   <LayoutGrid size={15} strokeWidth={1.8} />
                 </button>
                 <button
                   className={`view-toggle-btn ${viewMode === "list" ? "active" : ""}`}
-                  onClick={() => setViewMode("list")}
+                  onClick={() => handleSetViewMode("list")}
                   title="List view"
                 >
                   <List size={15} strokeWidth={1.8} />
                 </button>
               </div>
 
-              {/* Grid or List */}
               <div className={viewMode === "grid" ? "todo-grid" : "todo-list"}>
-  {filteredTodos.map(todo => (
-    <TodoCard
-      key={todo._id}
-      todo={todo}
-      onEdit={t => { setEditingTodo(t); setShowModal(true); }}
-      onDelete={id => setDeleteId(id)}
-      isListView={viewMode === "list"}
-    />
-  ))}
-</div>
+                {filteredTodos.map(todo => (
+                  <TodoCard
+                    key={todo._id}
+                    todo={todo}
+                    onEdit={t => { setEditingTodo(t); setShowModal(true); }}
+                    onDelete={id => setDeleteId(id)}
+                    isListView={viewMode === "list"}
+                  />
+                ))}
+              </div>
             </>
           )}
 
