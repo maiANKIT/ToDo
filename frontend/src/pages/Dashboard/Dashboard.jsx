@@ -55,18 +55,21 @@ const Dashboard = () => {
   const { user } = useContext(AuthContext);
   const userName = user?.name?.split(" ")[0] || "User";
 
-  const [todos,          setTodos]         = useState([]);
-  const [showModal,      setShowModal]     = useState(false);
-  const [editingTodo,    setEditingTodo]   = useState(null);
-  const [deleteId,       setDeleteId]      = useState(null);
-  const [searchTerm,     setSearchTerm]    = useState("");
-  const [showScrollTop,  setShowScrollTop] = useState(false);
-  const [activeFilter,   setActiveFilter]  = useState("all");
-  const [stripSticky,    setStripSticky]   = useState(false);
-  const [navbarBottom,   setNavbarBottom]  = useState(80);
-  const [searchState,    setSearchState]   = useState("closed");
+  const [todos,         setTodos]        = useState([]);
+  const [showModal,     setShowModal]    = useState(false);
+  const [editingTodo,   setEditingTodo]  = useState(null);
+  const [deleteId,      setDeleteId]     = useState(null);
+  const [searchTerm,    setSearchTerm]   = useState("");
+  const [showScrollTop, setShowScrollTop]= useState(false);
+  const [activeFilter,  setActiveFilter] = useState("all");
+  const [stripSticky,   setStripSticky]  = useState(false);
+  const [searchState,   setSearchState]  = useState("closed");
 
-  // ── Persist viewMode to localStorage so it survives refreshes ──
+  // navbarBottom: the pixel distance from viewport top to the bottom edge of the navbar.
+  // The sticky strip's `top` is set to this value so it always hugs below the navbar.
+  const [navbarBottom, setNavbarBottom] = useState(84);
+
+  // Persist view mode across refreshes
   const [viewMode, setViewMode] = useState(
     () => localStorage.getItem("todoflow-view-mode") || "grid"
   );
@@ -74,10 +77,12 @@ const Dashboard = () => {
   const heroRef   = useRef(null);
   const navbarRef = useRef(null);
 
+  // Measure the navbar's bottom edge in viewport coordinates (works with fixed positioning)
   const measureNavbar = useCallback(() => {
     if (navbarRef.current) {
       const r = navbarRef.current.getBoundingClientRect();
-      setNavbarBottom(r.bottom + 8);
+      // Add 10px breathing room between navbar and strip
+      setNavbarBottom(r.bottom + 10);
     }
   }, []);
 
@@ -88,6 +93,7 @@ const Dashboard = () => {
 
   useEffect(() => { fetchTodos(); }, []);
 
+  // Re-measure on mount, resize, and after search open/close
   useEffect(() => {
     measureNavbar();
     window.addEventListener("resize", measureNavbar);
@@ -100,6 +106,7 @@ const Dashboard = () => {
     return () => window.removeEventListener("scroll", fn);
   }, []);
 
+  // Watch hero card exit — when it leaves viewport the strip goes sticky
   useEffect(() => {
     const hero = heroRef.current;
     if (!hero) return;
@@ -122,14 +129,13 @@ const Dashboard = () => {
     setTimeout(() => { setSearchState("closed"); measureNavbar(); }, 320);
   };
 
-  // ── Save viewMode to localStorage whenever it changes ──
   const handleSetViewMode = (mode) => {
     setViewMode(mode);
     localStorage.setItem("todoflow-view-mode", mode);
   };
 
   const addTask    = async (d)    => { try { await createTodo(d);     fetchTodos(); } catch(e){} };
-  const updateTask = async (id,d) => { try { await updateTodo(id, d); fetchTodos(); } catch(e){} };
+  const updateTask = async (id,d) => { try { await updateTodo(id,d);  fetchTodos(); } catch(e){} };
   const deleteTask = async (id)   => {
     try { await deleteTodo(id); setTodos(p => p.filter(t => t._id !== id)); } catch(e){}
   };
@@ -163,8 +169,10 @@ const Dashboard = () => {
   ];
 
   const isSearchOpen = searchState === "open" || searchState === "opening" || searchState === "closing";
-  const heroHidden   = searchState === "open" || searchState === "opening" || searchState === "closing";
-  const stickyStyle  = stripSticky ? { top: `${navbarBottom}px` } : {};
+  const heroHidden   = isSearchOpen;
+
+  // Sticky strip: top = navbarBottom (viewport px), transform handles centering
+  const stickyStyle = stripSticky ? { top: `${navbarBottom}px` } : {};
 
   return (
     <>
@@ -226,7 +234,7 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Spacer when strip is sticky */}
+          {/* Spacer so content doesn't jump when strip goes sticky */}
           {stripSticky && <div className="status-strip-spacer" />}
 
           {/* ── Status Strip ── */}
@@ -251,7 +259,7 @@ const Dashboard = () => {
             ))}
           </div>
 
-          {/* ── View Toggle + Task Area ── */}
+          {/* ── View Toggle + Tasks ── */}
           {filteredTodos.length === 0 ? (
             <div className="empty-state neu-card">
               {activeFilter === "all" && !searchTerm ? (
@@ -274,7 +282,6 @@ const Dashboard = () => {
             </div>
           ) : (
             <>
-              {/* View Toggle — uses handleSetViewMode to persist */}
               <div className="view-toggle">
                 <button
                   className={`view-toggle-btn ${viewMode === "grid" ? "active" : ""}`}
@@ -306,10 +313,7 @@ const Dashboard = () => {
             </>
           )}
 
-          <FloatingButton
-            onClick={() => { setEditingTodo(null); setShowModal(true); }}
-          />
-
+          <FloatingButton onClick={() => { setEditingTodo(null); setShowModal(true); }} />
         </div>
       </div>
 
@@ -333,10 +337,7 @@ const Dashboard = () => {
       {deleteId && (
         <DeleteModal
           onClose={() => setDeleteId(null)}
-          onConfirm={async () => {
-            await deleteTask(deleteId);
-            setDeleteId(null);
-          }}
+          onConfirm={async () => { await deleteTask(deleteId); setDeleteId(null); }}
         />
       )}
     </>
