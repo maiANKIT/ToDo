@@ -20,6 +20,15 @@
 
 .todo-content { flex: 1; }
 
+/* ── Top row: status badge + star (grid view) ── */
+.todo-card-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.todo-card-top-row .status-badge { margin-bottom: 0; }
+
 .todo-card h3 {
   font-size: 1.4rem;
   font-weight: 700;
@@ -42,6 +51,44 @@
   overflow: hidden;
   margin-bottom: 12px;
 }
+
+/* ── Star toggle button ── */
+.star-btn {
+  background: rgba(0, 0, 0, 0.05);
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+.star-btn:hover { transform: scale(1.15); background: rgba(0, 0, 0, 0.09); }
+.star-btn--active { color: #f5a623; background: rgba(245, 166, 35, 0.13); }
+body[data-theme="dark"] .star-btn { background: rgba(255, 255, 255, 0.08); }
+body[data-theme="dark"] .star-btn:hover { background: rgba(255, 255, 255, 0.14); }
+body[data-theme="dark"] .star-btn--active { color: #fbbf24; background: rgba(251, 191, 36, 0.16); }
+
+/* ── Due date badge ── */
+.due-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+.due-overdue  { background: rgba(239, 68, 68, 0.12);  color: #dc2626; }
+.due-today    { background: rgba(245, 166, 35, 0.14); color: #b45309; }
+.due-upcoming { background: rgba(107, 114, 128, 0.10); color: #4b5563; }
+
+body[data-theme="dark"] .due-overdue  { background: rgba(239, 68, 68, 0.18); color: #f87171; }
+body[data-theme="dark"] .due-today    { background: rgba(245, 166, 35, 0.20); color: #fbbf24; }
+body[data-theme="dark"] .due-upcoming { background: rgba(107, 114, 128, 0.18); color: #9ca3af; }
 
 /* ── Link pill (grid view) ── */
 .todo-link-pill {
@@ -191,6 +238,11 @@ body[data-theme="dark"] .status-done     { background: rgba(34, 197, 94, 0.18); 
   padding: 0 11px;
   font-size: 0.72rem;
 }
+.todo-list-left .star-btn {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+}
 .todo-list-left h3 {
   font-size: 0.95rem !important;
   font-weight: 600 !important;
@@ -200,6 +252,11 @@ body[data-theme="dark"] .status-done     { background: rgba(34, 197, 94, 0.18); 
   text-overflow: ellipsis;
   flex: 1;
   min-width: 0;
+}
+.todo-list-left .due-badge {
+  margin-bottom: 0;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 .todo-list-left .todo-date {
   margin-bottom: 0;

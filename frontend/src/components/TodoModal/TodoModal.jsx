@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { FiLink } from "react-icons/fi";
+import { FiLink, FiStar, FiCalendar } from "react-icons/fi";
 import "./TodoModal.css";
 
 const TodoModal = ({ onClose, onSubmit, editTodo }) => {
@@ -8,6 +8,8 @@ const TodoModal = ({ onClose, onSubmit, editTodo }) => {
   const [description, setDescription] = useState("");
   const [link,        setLink]        = useState("");
   const [status,      setStatus]      = useState("pending");
+  const [dueDate,     setDueDate]     = useState("");
+  const [star,        setStar]        = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const statusOptions = [
@@ -22,6 +24,12 @@ const TodoModal = ({ onClose, onSubmit, editTodo }) => {
       setDescription(editTodo.description || "");
       setLink(editTodo.link         || "");
       setStatus(editTodo.status     || "pending");
+      setStar(editTodo.star         || false);
+      setDueDate(
+        editTodo.dueDate
+          ? new Date(editTodo.dueDate).toISOString().split("T")[0]
+          : ""
+      );
     }
   }, [editTodo]);
 
@@ -41,15 +49,32 @@ const TodoModal = ({ onClose, onSubmit, editTodo }) => {
 
   const submitHandler = (e) => {
     e.preventDefault();
-    // Send link as empty string if blank so backend stores nothing
-    onSubmit({ title, description, link: link.trim(), status });
+    onSubmit({
+      title,
+      description,
+      link: link.trim(),
+      status,
+      dueDate: dueDate || null,
+      star,
+    });
     onClose();
   };
 
   return createPortal(
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-        <h2>{editTodo ? "Edit Task" : "Create Task"}</h2>
+
+        <div className="modal-header-row">
+          <h2>{editTodo ? "Edit Task" : "Create Task"}</h2>
+          <button
+            type="button"
+            className={`modal-star-toggle ${star ? "modal-star-toggle--active" : ""}`}
+            onClick={() => setStar((p) => !p)}
+            title={star ? "Unmark important" : "Mark as important"}
+          >
+            <FiStar size={20} fill={star ? "currentColor" : "none"} />
+          </button>
+        </div>
 
         <form onSubmit={submitHandler}>
           {/* Title */}
@@ -84,6 +109,27 @@ const TodoModal = ({ onClose, onSubmit, editTodo }) => {
                 className="modal-link-clear"
                 onClick={() => setLink("")}
                 title="Clear link"
+              >
+                ×
+              </button>
+            )}
+          </div>
+
+          {/* Due date — optional */}
+          <div className="modal-link-wrap modal-date-wrap">
+            <span className="modal-link-icon modal-date-icon"><FiCalendar size={15} /></span>
+            <input
+              type="date"
+              className="modal-link-input modal-date-input"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+            />
+            {dueDate && (
+              <button
+                type="button"
+                className="modal-link-clear"
+                onClick={() => setDueDate("")}
+                title="Clear due date"
               >
                 ×
               </button>

@@ -14,6 +14,13 @@ const todoSchema = new mongoose.Schema({
     link:{
         type: String
     },
+    dueDate:{
+        type: Date
+    },
+    star:{
+        type: Boolean,
+        default: false
+    },
     status:{
         type: String,
         enum: ['pending', 'done', 'inprogress'],

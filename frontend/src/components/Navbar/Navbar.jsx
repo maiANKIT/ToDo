@@ -4,7 +4,7 @@ import { AuthContext } from "../../context/AuthContext";
 import ThemeToggle from "../ThemeToggle/ThemeToggle";
 import logo from "../../assets/images/logo.png";
 import {
-  FiSearch, FiX, FiUser, FiMoon,
+  FiSearch, FiX, FiUser, FiMoon, FiBell, FiStar,
 } from "react-icons/fi";
 import { RiDashboardLine } from "react-icons/ri";
 import { HiOutlineUser } from "react-icons/hi2";
@@ -14,9 +14,6 @@ import { PiSignOutBold } from "react-icons/pi";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./Navbar.css";
 
-/* ── Dropdown rendered via Portal so it escapes the navbar's
-   backdrop-filter stacking context, allowing its own
-   backdrop-filter to work correctly in production. ── */
 const DropdownPortal = ({ anchorRef, children }) => {
   const [pos, setPos] = useState({ top: 0, right: 0 });
 
@@ -25,13 +22,12 @@ const DropdownPortal = ({ anchorRef, children }) => {
       if (!anchorRef.current) return;
       const rect = anchorRef.current.getBoundingClientRect();
       setPos({
-        top:   rect.bottom + 12,               // viewport-relative, no scrollY needed
+        top:   rect.bottom + 12,
         right: window.innerWidth - rect.right,
       });
     };
     recalc();
     window.addEventListener("resize", recalc);
-    // No scroll listener — position:fixed locks to viewport automatically
     return () => {
       window.removeEventListener("resize", recalc);
     };
@@ -56,14 +52,19 @@ const Navbar = ({
   searchTerm,
   onSearchChange,
   hideSearch = false,
+  overdueTasks = [],
 }) => {
   const { logout, user } = useContext(AuthContext);
-  const inputRef    = useRef(null);
-  const menuRef     = useRef(null);
-  const dropdownRef = useRef(null);
-  const navigate    = useNavigate();
-  const location    = useLocation();
+  const inputRef     = useRef(null);
+  const menuRef       = useRef(null);
+  const dropdownRef   = useRef(null);
+  const notifRef      = useRef(null);
+  const notifDropRef  = useRef(null);
+  const navigate      = useNavigate();
+  const location      = useLocation();
+
   const [menuOpen, setMenuOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
 
   const isSearchOpen = searchState === "open" || searchState === "opening";
 
@@ -81,16 +82,24 @@ const Navbar = ({
       ) {
         setMenuOpen(false);
       }
+      if (
+        notifRef.current     && !notifRef.current.contains(e.target) &&
+        notifDropRef.current && !notifDropRef.current.contains(e.target)
+      ) {
+        setNotifOpen(false);
+      }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
   const menuItems = [
-    { icon: <RiDashboardLine size={14} />, label: "Dashboard",    path: "/dashboard"     },
-    { icon: <HiOutlineUser   size={14} />, label: "Profile",      path: "/profile"       },
-    { icon: <LuCalendarDays  size={14} />, label: "Calendar",     path: "/calendar"      },
+    { icon: <RiDashboardLine size={14} />, label: "Dashboard",     path: "/dashboard"     },
+    { icon: <HiOutlineUser   size={14} />, label: "Profile",       path: "/profile"       },
+    { icon: <LuCalendarDays  size={14} />, label: "Calendar",      path: "/calendar"      },
     { icon: <TbUsers         size={14} />, label: "Collaboration", path: "/collaboration", collab: true },
+    { icon: <LuCalendarDays  size={14} />, label: "Today's Tasks", path: "/today"         },
+    { icon: <FiStar          size={14} />, label: "Starred Tasks", path: "/starred"       },
   ];
 
   const handleLogoClick = () => navigate(user ? "/dashboard" : "/");
@@ -122,6 +131,20 @@ const Navbar = ({
             </button>
           )}
 
+          {/* Notification bell */}
+          <div ref={notifRef} style={{ position: "relative" }}>
+            <button
+              className={`nav-icon-btn ${notifOpen ? "nav-icon-btn--active" : ""}`}
+              onClick={() => setNotifOpen((p) => !p)}
+              aria-label="Notifications"
+            >
+              <FiBell size={16} />
+              {overdueTasks.length > 0 && (
+                <span className="nav-badge">{overdueTasks.length}</span>
+              )}
+            </button>
+          </div>
+
           <div ref={menuRef} style={{ position: "relative" }}>
             <button
               className={`nav-icon-btn ${menuOpen ? "nav-icon-btn--active" : ""}`}
@@ -152,7 +175,43 @@ const Navbar = ({
         </div>
       )}
 
-      {/* Dropdown via Portal — lives directly on <body>, outside navbar stacking context */}
+      {/* Notification dropdown */}
+      {notifOpen && (
+        <DropdownPortal anchorRef={notifRef}>
+          <div className="nav-dropdown nav-dropdown--notif" ref={notifDropRef}>
+            <div className="nav-dropdown__header">
+              <div className="nav-dropdown__avatar nav-dropdown__avatar--notif">
+                <FiBell size={16} />
+              </div>
+              <div className="nav-dropdown__info">
+                <span className="nav-dropdown__name">Notifications</span>
+                <span className="nav-dropdown__email">
+                  {overdueTasks.length} overdue task{overdueTasks.length === 1 ? "" : "s"}
+                </span>
+              </div>
+            </div>
+
+            <div className="nav-dropdown__divider" />
+
+            {overdueTasks.length === 0 ? (
+              <p className="nav-notif-empty">You're all caught up</p>
+            ) : (
+              <div className="nav-notif-list">
+                {overdueTasks.map((t) => (
+                  <div key={t._id} className="nav-notif-item">
+                    <span className="nav-notif-title">{t.title}</span>
+                    <span className="nav-notif-due">
+                      Due {new Date(t.dueDate).toLocaleDateString()}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </DropdownPortal>
+      )}
+
+      {/* Profile dropdown */}
       {menuOpen && (
         <DropdownPortal anchorRef={menuRef}>
           <div className="nav-dropdown" ref={dropdownRef}>

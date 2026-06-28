@@ -1,0 +1,154 @@
+/* =====================
+   SHARED PAGE SHELL
+   Used by TodayTasks & StarredTasks
+===================== */
+.page-shell {
+  min-height: 100vh;
+  padding: 100px 40px 60px;
+  background: var(--bg);
+}
+
+.page-shell .todo-grid {
+  max-width: 1300px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
+  padding-bottom: 60px;
+}
+
+/* =====================
+   PAGE HEADER
+===================== */
+.page-header {
+  max-width: 1300px;
+  margin: 0 auto 32px;
+  position: relative;
+}
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(0,0,0,0.10);
+  background: rgba(255,255,255,0.70);
+  -webkit-backdrop-filter: blur(12px);
+          backdrop-filter: blur(12px);
+  color: var(--text);
+  cursor: pointer;
+  margin-bottom: 20px;
+  transition: all 0.22s cubic-bezier(0.34,1.4,0.64,1);
+}
+.back-btn:hover {
+  transform: translateX(-3px) scale(1.08);
+  background: rgba(255,255,255,0.92);
+  border-color: rgba(0,0,0,0.18);
+}
+.back-btn:active { transform: scale(0.94); }
+
+body[data-theme="dark"] .back-btn {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.10);
+}
+body[data-theme="dark"] .back-btn:hover {
+  background: rgba(255,255,255,0.14);
+}
+
+.page-header-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.page-header-title h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.page-header-title svg {
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.page-header-sub {
+  font-size: 0.92rem;
+  font-weight: 500;
+  opacity: 0.48;
+  margin: 0;
+  color: var(--text);
+  padding-left: 2px;
+}
+
+/* =====================
+   LOADING
+===================== */
+.page-loading {
+  text-align: center;
+  padding: 80px 20px;
+  font-size: 1rem;
+  opacity: 0.45;
+  color: var(--text);
+}
+
+/* =====================
+   EMPTY STATE
+   (reuses .empty-state from Dashboard.css,
+    but scoped here for standalone pages)
+===================== */
+.page-shell .empty-state {
+  max-width: 480px;
+  margin: 40px auto 0;
+  padding: 60px 40px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  border-radius: 28px;
+}
+
+.page-shell .empty-icon { opacity: 0.2; margin-bottom: 6px; }
+.page-shell .empty-state h2 { font-size: 1.5rem; font-weight: 700; margin: 0; }
+.page-shell .empty-state p  { font-size: 0.95rem; opacity: 0.55; margin: 0; }
+
+/* =====================
+   TABLET ≤768px
+===================== */
+@media (max-width: 768px) {
+  .page-shell { padding: 90px 16px 40px; }
+
+  .page-header-title h1 { font-size: 1.8rem; }
+
+  .page-shell .todo-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+/* =====================
+   MOBILE ≤500px
+===================== */
+@media (max-width: 500px) {
+  .page-shell { padding: 80px 10px 32px; }
+
+  .page-header { margin-bottom: 20px; }
+
+  .back-btn { width: 36px; height: 36px; margin-bottom: 16px; }
+
+  .page-header-title h1 { font-size: 1.5rem; }
+  .page-header-title svg { width: 20px; height: 20px; }
+
+  .page-header-sub { font-size: 0.82rem; }
+
+  .page-shell .empty-state { padding: 40px 20px; }
+
+  .page-shell .todo-grid { gap: 12px; }
+}

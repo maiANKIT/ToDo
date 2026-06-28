@@ -6,7 +6,7 @@ exports.updateToDo = async(req, res)=>{
     try{
 
         const {id} = req.params;
-        const {title, description, link, status} = req.body;
+        const {title, description, link, dueDate,  star, status} = req.body;
 
         const todo = await ToDo.findOneAndUpdate(
             {
@@ -17,6 +17,8 @@ exports.updateToDo = async(req, res)=>{
                 title,
                 description,
                 link,
+                dueDate,
+                star,
                 status,
                 updatedAt: Date.now()
             },

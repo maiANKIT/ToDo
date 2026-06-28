@@ -140,6 +140,14 @@ const Dashboard = () => {
     try { await deleteTodo(id); setTodos(p => p.filter(t => t._id !== id)); } catch(e){}
   };
 
+  // ── Star toggle (used by TodoCard's quick-star button) ──
+  const toggleStar = async (id, value) => {
+    try {
+      await updateTodo(id, { star: value });
+      setTodos((prev) => prev.map((t) => (t._id === id ? { ...t, star: value } : t)));
+    } catch (e) { console.log(e); }
+  };
+
   const handleModalSubmit = async (data) => {
     if (editingTodo) await updateTask(editingTodo._id, data);
     else await addTask(data);
@@ -151,6 +159,24 @@ const Dashboard = () => {
   const doneCount       = todos.filter(t => t.status === "done").length;
   const streak          = getStreak(todos);
   const score           = getScore(todos);
+
+  // ── Notification / Today / Starred derived data ──
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const endOfToday = new Date(startOfToday);
+  endOfToday.setDate(endOfToday.getDate() + 1);
+
+  const overdueTasks = todos.filter(
+    (t) => t.dueDate && new Date(t.dueDate) < now && t.status !== "done"
+  );
+  const todayTasks = todos.filter(
+    (t) =>
+      t.dueDate &&
+      new Date(t.dueDate) >= startOfToday &&
+      new Date(t.dueDate) < endOfToday &&
+      t.status !== "done"
+  );
+  const starredTasks = todos.filter((t) => t.star);
 
   const filteredTodos = todos
     .filter(t => {
@@ -186,6 +212,7 @@ const Dashboard = () => {
             onSearchClose={closeSearch}
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
+            overdueTasks={overdueTasks}
           />
 
           {/* ── Hero ── */}
@@ -306,6 +333,7 @@ const Dashboard = () => {
                     todo={todo}
                     onEdit={t => { setEditingTodo(t); setShowModal(true); }}
                     onDelete={id => setDeleteId(id)}
+                    onToggleStar={toggleStar}
                     isListView={viewMode === "list"}
                   />
                 ))}
