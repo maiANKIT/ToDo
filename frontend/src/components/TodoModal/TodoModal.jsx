@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { FiLink, FiStar, FiCalendar } from "react-icons/fi";
+import { FiLink, FiStar } from "react-icons/fi";
+import DateTimePicker from "../DateTimePicker/DateTimePicker";
 import "./TodoModal.css";
 
 const TodoModal = ({ onClose, onSubmit, editTodo }) => {
@@ -25,11 +26,7 @@ const TodoModal = ({ onClose, onSubmit, editTodo }) => {
       setLink(editTodo.link         || "");
       setStatus(editTodo.status     || "pending");
       setStar(editTodo.star         || false);
-      setDueDate(
-        editTodo.dueDate
-          ? new Date(editTodo.dueDate).toISOString().split("T")[0]
-          : ""
-      );
+      setDueDate(editTodo.dueDate || "");
     }
   }, [editTodo]);
 
@@ -115,26 +112,11 @@ const TodoModal = ({ onClose, onSubmit, editTodo }) => {
             )}
           </div>
 
-          {/* Due date — optional */}
-          <div className="modal-link-wrap modal-date-wrap">
-            <span className="modal-link-icon modal-date-icon"><FiCalendar size={15} /></span>
-            <input
-              type="date"
-              className="modal-link-input modal-date-input"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-            />
-            {dueDate && (
-              <button
-                type="button"
-                className="modal-link-clear"
-                onClick={() => setDueDate("")}
-                title="Clear due date"
-              >
-                ×
-              </button>
-            )}
-          </div>
+         {/* Due date + time — optional */}
+<DateTimePicker
+  value={dueDate}
+  onChange={(iso) => setDueDate(iso || "")}
+/>
 
           {/* Status dropdown */}
           <div className="custom-select-wrapper">

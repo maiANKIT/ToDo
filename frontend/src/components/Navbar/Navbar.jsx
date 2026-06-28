@@ -1,7 +1,6 @@
 import { useContext, useRef, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { AuthContext } from "../../context/AuthContext";
-import ThemeToggle from "../ThemeToggle/ThemeToggle";
 import logo from "../../assets/images/logo.png";
 import {
   FiSearch, FiX, FiUser, FiMoon, FiBell, FiStar,
@@ -13,6 +12,8 @@ import { TbUsers } from "react-icons/tb";
 import { PiSignOutBold } from "react-icons/pi";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./Navbar.css";
+import ThemePicker from "../ThemePicker/ThemePicker";
+
 
 const DropdownPortal = ({ anchorRef, children }) => {
   const [pos, setPos] = useState({ top: 0, right: 0 });
@@ -243,15 +244,15 @@ const Navbar = ({
 
             <div className="nav-dropdown__divider" />
 
-            <div className="nav-dropdown__theme-row">
-              <span className="nav-dropdown__theme-label">
-                <span className="nav-dropdown__theme-icon">
-                  <FiMoon size={13} />
-                </span>
-                Dark Mode
-              </span>
-              <ThemeToggle />
-            </div>
+            <div className="nav-dropdown__theme-section">
+  <span className="nav-dropdown__theme-label">
+    <span className="nav-dropdown__theme-icon">
+      <FiMoon size={13} />
+    </span>
+    Theme
+  </span>
+  <ThemePicker />
+</div>
 
             <div className="nav-dropdown__divider" />
 

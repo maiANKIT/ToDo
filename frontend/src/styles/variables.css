@@ -10,6 +10,7 @@
   --shadow-light: #ffffff;
 }
 
+/* ── Dark ── */
 body[data-theme="dark"] {
   --bg: #111111;
   --card: #1b1b1b;
@@ -18,4 +19,48 @@ body[data-theme="dark"] {
 
   --shadow-dark: #0a0a0a;
   --shadow-light: #252525;
+}
+
+/* ── Ocean ── */
+body[data-theme="ocean"] {
+  --bg: #eef6f8;
+  --card: #ffffff;
+  --text: #0f3a4a;
+  --primary: #0e7490;
+
+  --shadow-dark: #c9e3e9;
+  --shadow-light: #ffffff;
+}
+
+/* ── Sunset ── */
+body[data-theme="sunset"] {
+  --bg: #fdf0e8;
+  --card: #ffffff;
+  --text: #5a2e1f;
+  --primary: #ea580c;
+
+  --shadow-dark: #f0d6c2;
+  --shadow-light: #ffffff;
+}
+
+/* ── Forest ── */
+body[data-theme="forest"] {
+  --bg: #eef5ee;
+  --card: #ffffff;
+  --text: #1f3d24;
+  --primary: #16803c;
+
+  --shadow-dark: #cfe3cf;
+  --shadow-light: #ffffff;
+}
+
+/* ── Lavender ── */
+body[data-theme="lavender"] {
+  --bg: #f3effa;
+  --card: #ffffff;
+  --text: #382a52;
+  --primary: #7c3aed;
+
+  --shadow-dark: #ddd0ef;
+  --shadow-light: #ffffff;
 }

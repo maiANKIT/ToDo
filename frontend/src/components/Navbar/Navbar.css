@@ -265,6 +265,7 @@ body[data-theme="dark"] .nav-dropdown__divider {
   padding: 9px 11px; border-radius: 13px; border: none;
   background: transparent; color: var(--text);
   font-size: 0.84rem; font-weight: 600; cursor: pointer;
+  margin-bottom: 3px;
   transition:
     background 0.16s ease,
     transform  0.18s cubic-bezier(0.34, 1.4, 0.64, 1),
@@ -470,4 +471,17 @@ body[data-theme="dark"] .nav-search-close:hover { background: rgba(255,255,255,0
   .nav-search-close { width: 26px; height: 26px; }
   .nav-dropdown { width: 200px; }
   .nav-dropdown--notif { width: 220px; }
+}
+.nav-dropdown__theme-section {
+  padding: 4px 0 2px;
+}
+.nav-dropdown__theme-section .nav-dropdown__theme-label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text);
+  opacity: 0.75;
+  padding: 6px 11px 2px;
 }
