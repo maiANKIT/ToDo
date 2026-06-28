@@ -6,10 +6,10 @@ exports.createToDo = async(req, res)=>{
     try{
 
         //title and description
-        const {title, description, status} = req.body;
+        const {title, description, link, status} = req.body;
 
         //create a new todo and insert inside the body
-        const response = await ToDo.create({title, description, status: status || 'pending', user: req.user.id});
+        const response = await ToDo.create({title, description, link, status: status || 'pending', user: req.user.id});
 
         //success
         res.status(200).json({

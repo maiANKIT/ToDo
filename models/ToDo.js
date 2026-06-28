@@ -11,6 +11,9 @@ const todoSchema = new mongoose.Schema({
         type: String,
         maxLength: 1000
     },
+    link:{
+        type: String
+    },
     status:{
         type: String,
         enum: ['pending', 'done', 'inprogress'],
