@@ -217,3 +217,11 @@ body[data-theme="dark"] .view-toggle-btn.active { background: rgba(255,255,255,0
   .status-pill { padding: 6px 2px; font-size: 0.6rem; gap: 2px; }
   .pill-count { display: inline; font-size: 0.58rem; padding: 0 3px; }
 }
+
+.view-toolbar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.view-toolbar-row .view-toggle { margin-bottom: 0; }

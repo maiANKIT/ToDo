@@ -11,6 +11,7 @@ import FloatingButton from "../../components/FloatingButton/FloatingButton";
 import TodoModal from "../../components/TodoModal/TodoModal";
 import TodoCard from "../../components/TodoCard/TodoCard";
 import DeleteModal from "../../components/DeleteModal/DeleteModal";
+import FilterDropdown from "../../components/FilterDropdown/FilterDropdown";
 import { AuthContext } from "../../context/AuthContext";
 import { getTodos, createTodo, deleteTodo, updateTodo } from "../../services/todoAPI";
 
@@ -51,6 +52,48 @@ const getScore = (todos) => {
   return Math.round(todos.filter(t => t.status === "done").length / todos.length * 100);
 };
 
+// ── Due date range check, used by the Filter dropdown ──
+const matchesDueFilter = (todo, dueFilter) => {
+  if (dueFilter === "all") return true;
+
+  const now = new Date();
+  const due = todo.dueDate ? new Date(todo.dueDate) : null;
+
+  if (dueFilter === "nodate") return !due;
+  if (!due) return false;
+
+  if (dueFilter === "overdue") {
+    return due < now && todo.status !== "done";
+  }
+  if (dueFilter === "week") {
+    const weekEnd = new Date(now);
+    weekEnd.setDate(weekEnd.getDate() + 7);
+    return due >= now && due <= weekEnd;
+  }
+  return true;
+};
+
+// ── Sort comparator, used by the Filter dropdown ──
+const sortTodos = (list, sortBy) => {
+  const arr = [...list];
+  switch (sortBy) {
+    case "oldest":
+      return arr.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    case "duedate":
+      return arr.sort((a, b) => {
+        if (!a.dueDate && !b.dueDate) return 0;
+        if (!a.dueDate) return 1;
+        if (!b.dueDate) return -1;
+        return new Date(a.dueDate) - new Date(b.dueDate);
+      });
+    case "az":
+      return arr.sort((a, b) => a.title.localeCompare(b.title));
+    case "newest":
+    default:
+      return arr.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  }
+};
+
 const Dashboard = () => {
   const { user } = useContext(AuthContext);
   const userName = user?.name?.split(" ")[0] || "User";
@@ -65,11 +108,13 @@ const Dashboard = () => {
   const [stripSticky,   setStripSticky]  = useState(false);
   const [searchState,   setSearchState]  = useState("closed");
 
-  // navbarBottom: the pixel distance from viewport top to the bottom edge of the navbar.
-  // The sticky strip's `top` is set to this value so it always hugs below the navbar.
+  // ── Filter dropdown state ──
+  const [sortBy,      setSortBy]      = useState("newest");
+  const [dueFilter,   setDueFilter]   = useState("all");
+  const [starredOnly, setStarredOnly] = useState(false);
+
   const [navbarBottom, setNavbarBottom] = useState(84);
 
-  // Persist view mode across refreshes
   const [viewMode, setViewMode] = useState(
     () => localStorage.getItem("todoflow-view-mode") || "grid"
   );
@@ -77,11 +122,9 @@ const Dashboard = () => {
   const heroRef   = useRef(null);
   const navbarRef = useRef(null);
 
-  // Measure the navbar's bottom edge in viewport coordinates (works with fixed positioning)
   const measureNavbar = useCallback(() => {
     if (navbarRef.current) {
       const r = navbarRef.current.getBoundingClientRect();
-      // Add 10px breathing room between navbar and strip
       setNavbarBottom(r.bottom + 10);
     }
   }, []);
@@ -93,7 +136,6 @@ const Dashboard = () => {
 
   useEffect(() => { fetchTodos(); }, []);
 
-  // Re-measure on mount, resize, and after search open/close
   useEffect(() => {
     measureNavbar();
     window.addEventListener("resize", measureNavbar);
@@ -106,7 +148,6 @@ const Dashboard = () => {
     return () => window.removeEventListener("scroll", fn);
   }, []);
 
-  // Watch hero card exit — when it leaves viewport the strip goes sticky
   useEffect(() => {
     const hero = heroRef.current;
     if (!hero) return;
@@ -140,7 +181,6 @@ const Dashboard = () => {
     try { await deleteTodo(id); setTodos(p => p.filter(t => t._id !== id)); } catch(e){}
   };
 
-  // ── Star toggle (used by TodoCard's quick-star button) ──
   const toggleStar = async (id, value) => {
     try {
       await updateTodo(id, { star: value });
@@ -160,7 +200,6 @@ const Dashboard = () => {
   const streak          = getStreak(todos);
   const score           = getScore(todos);
 
-  // ── Notification / Today / Starred derived data ──
   const now = new Date();
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const endOfToday = new Date(startOfToday);
@@ -169,23 +208,19 @@ const Dashboard = () => {
   const overdueTasks = todos.filter(
     (t) => t.dueDate && new Date(t.dueDate) < now && t.status !== "done"
   );
-  const todayTasks = todos.filter(
-    (t) =>
-      t.dueDate &&
-      new Date(t.dueDate) >= startOfToday &&
-      new Date(t.dueDate) < endOfToday &&
-      t.status !== "done"
-  );
-  const starredTasks = todos.filter((t) => t.star);
 
-  const filteredTodos = todos
-    .filter(t => {
+  // ── Apply search + status tab + filter dropdown (due range, starred, sort) ──
+  const filteredTodos = sortTodos(
+    todos.filter(t => {
       const s = t.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 t.description.toLowerCase().includes(searchTerm.toLowerCase());
       const f = activeFilter === "all" || t.status === activeFilter;
-      return s && f;
-    })
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      const due = matchesDueFilter(t, dueFilter);
+      const star = !starredOnly || t.star;
+      return s && f && due && star;
+    }),
+    sortBy
+  );
 
   const filters = [
     { key: "all",        label: "All",         count: todos.length,    dot: "dot-all"        },
@@ -197,7 +232,6 @@ const Dashboard = () => {
   const isSearchOpen = searchState === "open" || searchState === "opening" || searchState === "closing";
   const heroHidden   = isSearchOpen;
 
-  // Sticky strip: top = navbarBottom (viewport px), transform handles centering
   const stickyStyle = stripSticky ? { top: `${navbarBottom}px` } : {};
 
   return (
@@ -261,7 +295,6 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Spacer so content doesn't jump when strip goes sticky */}
           {stripSticky && <div className="status-strip-spacer" />}
 
           {/* ── Status Strip ── */}
@@ -286,10 +319,10 @@ const Dashboard = () => {
             ))}
           </div>
 
-          {/* ── View Toggle + Tasks ── */}
+          {/* ── View Toggle + Filter + Tasks ── */}
           {filteredTodos.length === 0 ? (
             <div className="empty-state neu-card">
-              {activeFilter === "all" && !searchTerm ? (
+              {activeFilter === "all" && !searchTerm && dueFilter === "all" && !starredOnly ? (
                 <>
                   <ListTodo size={48} strokeWidth={1.5} className="empty-icon" />
                   <h2>No tasks yet</h2>
@@ -302,28 +335,36 @@ const Dashboard = () => {
                   <p>
                     {searchTerm
                       ? "No tasks match your search."
-                      : `No ${activeFilter === "inprogress" ? "in progress" : activeFilter} tasks yet.`}
+                      : "No tasks match your current filters."}
                   </p>
                 </>
               )}
             </div>
           ) : (
             <>
-              <div className="view-toggle">
-                <button
-                  className={`view-toggle-btn ${viewMode === "grid" ? "active" : ""}`}
-                  onClick={() => handleSetViewMode("grid")}
-                  title="Grid view"
-                >
-                  <LayoutGrid size={15} strokeWidth={1.8} />
-                </button>
-                <button
-                  className={`view-toggle-btn ${viewMode === "list" ? "active" : ""}`}
-                  onClick={() => handleSetViewMode("list")}
-                  title="List view"
-                >
-                  <List size={15} strokeWidth={1.8} />
-                </button>
+              <div className="view-toolbar-row">
+                <div className="view-toggle">
+                  <button
+                    className={`view-toggle-btn ${viewMode === "grid" ? "active" : ""}`}
+                    onClick={() => handleSetViewMode("grid")}
+                    title="Grid view"
+                  >
+                    <LayoutGrid size={15} strokeWidth={1.8} />
+                  </button>
+                  <button
+                    className={`view-toggle-btn ${viewMode === "list" ? "active" : ""}`}
+                    onClick={() => handleSetViewMode("list")}
+                    title="List view"
+                  >
+                    <List size={15} strokeWidth={1.8} />
+                  </button>
+                </div>
+
+                <FilterDropdown
+                  sortBy={sortBy} setSortBy={setSortBy}
+                  dueFilter={dueFilter} setDueFilter={setDueFilter}
+                  starredOnly={starredOnly} setStarredOnly={setStarredOnly}
+                />
               </div>
 
               <div className={viewMode === "grid" ? "todo-grid" : "todo-list"}>

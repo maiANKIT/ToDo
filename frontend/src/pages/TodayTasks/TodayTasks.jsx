@@ -5,8 +5,44 @@ import Navbar from "../../components/Navbar/Navbar";
 import TodoCard from "../../components/TodoCard/TodoCard";
 import TodoModal from "../../components/TodoModal/TodoModal";
 import DeleteModal from "../../components/DeleteModal/DeleteModal";
+import FilterDropdown from "../../components/FilterDropdown/FilterDropdown";
 import { getTodos, updateTodo, deleteTodo } from "../../services/todoAPI";
 import "./TodayTasks.css";
+
+const matchesDueFilter = (todo, dueFilter) => {
+  if (dueFilter === "all") return true;
+  const now = new Date();
+  const due = todo.dueDate ? new Date(todo.dueDate) : null;
+  if (dueFilter === "nodate") return !due;
+  if (!due) return false;
+  if (dueFilter === "overdue") return due < now && todo.status !== "done";
+  if (dueFilter === "week") {
+    const weekEnd = new Date(now);
+    weekEnd.setDate(weekEnd.getDate() + 7);
+    return due >= now && due <= weekEnd;
+  }
+  return true;
+};
+
+const sortTodos = (list, sortBy) => {
+  const arr = [...list];
+  switch (sortBy) {
+    case "oldest":
+      return arr.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    case "duedate":
+      return arr.sort((a, b) => {
+        if (!a.dueDate && !b.dueDate) return 0;
+        if (!a.dueDate) return 1;
+        if (!b.dueDate) return -1;
+        return new Date(a.dueDate) - new Date(b.dueDate);
+      });
+    case "az":
+      return arr.sort((a, b) => a.title.localeCompare(b.title));
+    case "newest":
+    default:
+      return arr.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  }
+};
 
 const TodayTasks = () => {
   const navigate = useNavigate();
@@ -16,6 +52,10 @@ const TodayTasks = () => {
   const [showModal, setShowModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [activeFilter, setActiveFilter] = useState("all");
+
+  const [sortBy, setSortBy] = useState("newest");
+  const [dueFilter, setDueFilter] = useState("all");
+  const [starredOnly, setStarredOnly] = useState(false);
 
   const [viewMode, setViewMode] = useState(
     () => localStorage.getItem("todoflow-view-mode") || "grid"
@@ -36,7 +76,7 @@ const TodayTasks = () => {
   const endOfToday = new Date(startOfToday);
   endOfToday.setDate(endOfToday.getDate() + 1);
 
-  // Base set: all tasks due today (regardless of status)
+  // Base set: all tasks due today
   const todayTasks = todos.filter(
     (t) =>
       t.dueDate &&
@@ -48,8 +88,14 @@ const TodayTasks = () => {
   const inProgressCount = todayTasks.filter(t => t.status === "inprogress").length;
   const doneCount       = todayTasks.filter(t => t.status === "done").length;
 
-  const filteredTasks = todayTasks.filter(
-    (t) => activeFilter === "all" || t.status === activeFilter
+  const filteredTasks = sortTodos(
+    todayTasks.filter((t) => {
+      const f = activeFilter === "all" || t.status === activeFilter;
+      const due = matchesDueFilter(t, dueFilter);
+      const star = !starredOnly || t.star;
+      return f && due && star;
+    }),
+    sortBy
   );
 
   const filters = [
@@ -114,7 +160,6 @@ const TodayTasks = () => {
           </div>
         ) : (
           <>
-            {/* ── Status filter strip ── */}
             <div className="status-strip">
               {filters.map(({ key, label, count, dot }) => (
                 <button
@@ -133,25 +178,33 @@ const TodayTasks = () => {
               <div className="empty-state neu-card">
                 <Search size={48} strokeWidth={1.5} className="empty-icon" />
                 <h2>Nothing here</h2>
-                <p>No {activeFilter === "inprogress" ? "in progress" : activeFilter} tasks due today.</p>
+                <p>No tasks match your current filters.</p>
               </div>
             ) : (
               <>
-                <div className="view-toggle">
-                  <button
-                    className={`view-toggle-btn ${viewMode === "grid" ? "active" : ""}`}
-                    onClick={() => handleSetViewMode("grid")}
-                    title="Grid view"
-                  >
-                    <LayoutGrid size={15} strokeWidth={1.8} />
-                  </button>
-                  <button
-                    className={`view-toggle-btn ${viewMode === "list" ? "active" : ""}`}
-                    onClick={() => handleSetViewMode("list")}
-                    title="List view"
-                  >
-                    <List size={15} strokeWidth={1.8} />
-                  </button>
+                <div className="view-toolbar-row">
+                  <div className="view-toggle">
+                    <button
+                      className={`view-toggle-btn ${viewMode === "grid" ? "active" : ""}`}
+                      onClick={() => handleSetViewMode("grid")}
+                      title="Grid view"
+                    >
+                      <LayoutGrid size={15} strokeWidth={1.8} />
+                    </button>
+                    <button
+                      className={`view-toggle-btn ${viewMode === "list" ? "active" : ""}`}
+                      onClick={() => handleSetViewMode("list")}
+                      title="List view"
+                    >
+                      <List size={15} strokeWidth={1.8} />
+                    </button>
+                  </div>
+
+                  <FilterDropdown
+                    sortBy={sortBy} setSortBy={setSortBy}
+                    dueFilter={dueFilter} setDueFilter={setDueFilter}
+                    starredOnly={starredOnly} setStarredOnly={setStarredOnly}
+                  />
                 </div>
 
                 <div className={viewMode === "grid" ? "todo-grid" : "todo-list"}>
