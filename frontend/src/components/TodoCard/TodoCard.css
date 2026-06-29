@@ -344,3 +344,27 @@ body[data-theme="dark"] .link-btn:hover {
   .todo-list-actions .edit-btn,
   .todo-list-actions .delete-btn { flex: 1; height: 36px; }
 }
+/* Favicon inside link pill & list link btn */
+.link-favicon {
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.link-favicon-svg {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+}
+
+.link-fallback-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
