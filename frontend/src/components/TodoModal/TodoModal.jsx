@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { FiLink, FiStar } from "react-icons/fi";
 import DateTimePicker from "../DateTimePicker/DateTimePicker";
@@ -12,6 +12,9 @@ const TodoModal = ({ onClose, onSubmit, editTodo }) => {
   const [dueDate,     setDueDate]     = useState("");
   const [star,        setStar]        = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [dropdownFlip, setDropdownFlip] = useState(false);
+
+  const selectRef = useRef(null);
 
   const statusOptions = [
     { value: "pending",    label: "Pending"     },
@@ -26,7 +29,7 @@ const TodoModal = ({ onClose, onSubmit, editTodo }) => {
       setLink(editTodo.link         || "");
       setStatus(editTodo.status     || "pending");
       setStar(editTodo.star         || false);
-      setDueDate(editTodo.dueDate || "");
+      setDueDate(editTodo.dueDate   || "");
     }
   }, [editTodo]);
 
@@ -55,6 +58,15 @@ const TodoModal = ({ onClose, onSubmit, editTodo }) => {
       star,
     });
     onClose();
+  };
+
+  const handleSelectClick = () => {
+    if (!dropdownOpen && selectRef.current) {
+      const rect = selectRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      setDropdownFlip(spaceBelow < 180); // not enough room below for the options list
+    }
+    setDropdownOpen(!dropdownOpen);
   };
 
   return createPortal(
@@ -112,17 +124,18 @@ const TodoModal = ({ onClose, onSubmit, editTodo }) => {
             )}
           </div>
 
-         {/* Due date + time — optional */}
-<DateTimePicker
-  value={dueDate}
-  onChange={(iso) => setDueDate(iso || "")}
-/>
+          {/* Due date + time — optional */}
+          <DateTimePicker
+            value={dueDate}
+            onChange={(iso) => setDueDate(iso || "")}
+          />
 
           {/* Status dropdown */}
           <div className="custom-select-wrapper">
             <div
+              ref={selectRef}
               className={`custom-select ${dropdownOpen ? "open" : ""}`}
-              onClick={() => setDropdownOpen(!dropdownOpen)}
+              onClick={handleSelectClick}
             >
               <span>{statusOptions.find((o) => o.value === status)?.label}</span>
               <svg
@@ -138,7 +151,7 @@ const TodoModal = ({ onClose, onSubmit, editTodo }) => {
             </div>
 
             {dropdownOpen && (
-              <div className="custom-options">
+              <div className={`custom-options ${dropdownFlip ? "custom-options--flip" : ""}`}>
                 {statusOptions.map((opt) => (
                   <div
                     key={opt.value}

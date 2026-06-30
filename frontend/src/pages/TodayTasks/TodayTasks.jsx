@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, CalendarDays, LayoutGrid, List, Search } from "lucide-react";
+import { ArrowLeft, Star, LayoutGrid, List, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../../components/Navbar/Navbar";
 import TodoCard from "../../components/TodoCard/TodoCard";
 import TodoModal from "../../components/TodoModal/TodoModal";
-import DeleteModal from "../../components/DeleteModal/DeleteModal";
+import Toast from "../../components/Toast/Toast";
 import FilterDropdown from "../../components/FilterDropdown/FilterDropdown";
 import { getTodos, updateTodo, deleteTodo } from "../../services/todoAPI";
-import "./TodayTasks.css";
+import "../TodayTasks/TodayTasks.css";
 
 const matchesDueFilter = (todo, dueFilter) => {
   if (dueFilter === "all") return true;
@@ -44,18 +44,19 @@ const sortTodos = (list, sortBy) => {
   }
 };
 
-const TodayTasks = () => {
+const StarredTasks = () => {
   const navigate = useNavigate();
   const [todos, setTodos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingTodo, setEditingTodo] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [deleteId, setDeleteId] = useState(null);
   const [activeFilter, setActiveFilter] = useState("all");
 
   const [sortBy, setSortBy] = useState("newest");
   const [dueFilter, setDueFilter] = useState("all");
-  const [starredOnly, setStarredOnly] = useState(false);
+
+  // ── Undo-delete toast state ──
+  const [pendingDelete, setPendingDelete] = useState(null);
 
   const [viewMode, setViewMode] = useState(
     () => localStorage.getItem("todoflow-view-mode") || "grid"
@@ -71,38 +72,27 @@ const TodayTasks = () => {
 
   useEffect(() => { fetchTodos(); }, []);
 
-  const now = new Date();
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const endOfToday = new Date(startOfToday);
-  endOfToday.setDate(endOfToday.getDate() + 1);
+  // Base set: all starred tasks
+  const starredTasks = todos.filter((t) => t.star);
 
-  // Base set: all tasks due today
-  const todayTasks = todos.filter(
-    (t) =>
-      t.dueDate &&
-      new Date(t.dueDate) >= startOfToday &&
-      new Date(t.dueDate) < endOfToday
-  );
-
-  const pendingCount    = todayTasks.filter(t => t.status === "pending").length;
-  const inProgressCount = todayTasks.filter(t => t.status === "inprogress").length;
-  const doneCount       = todayTasks.filter(t => t.status === "done").length;
+  const pendingCount    = starredTasks.filter(t => t.status === "pending").length;
+  const inProgressCount = starredTasks.filter(t => t.status === "inprogress").length;
+  const doneCount       = starredTasks.filter(t => t.status === "done").length;
 
   const filteredTasks = sortTodos(
-    todayTasks.filter((t) => {
+    starredTasks.filter((t) => {
       const f = activeFilter === "all" || t.status === activeFilter;
       const due = matchesDueFilter(t, dueFilter);
-      const star = !starredOnly || t.star;
-      return f && due && star;
+      return f && due;
     }),
     sortBy
   );
 
   const filters = [
-    { key: "all",        label: "All",         count: todayTasks.length, dot: "dot-all"        },
-    { key: "pending",    label: "Pending",     count: pendingCount,      dot: "dot-pending"    },
-    { key: "inprogress", label: "In Progress", count: inProgressCount,   dot: "dot-inprogress" },
-    { key: "done",       label: "Done",        count: doneCount,         dot: "dot-done"       },
+    { key: "all",        label: "All",         count: starredTasks.length, dot: "dot-all"        },
+    { key: "pending",    label: "Pending",     count: pendingCount,        dot: "dot-pending"    },
+    { key: "inprogress", label: "In Progress", count: inProgressCount,     dot: "dot-inprogress" },
+    { key: "done",       label: "Done",        count: doneCount,           dot: "dot-done"       },
   ];
 
   const handleSetViewMode = (mode) => {
@@ -117,6 +107,13 @@ const TodayTasks = () => {
     } catch (e) { console.log(e); }
   };
 
+  const changeStatus = async (id, newStatus) => {
+    try {
+      await updateTodo(id, { status: newStatus });
+      setTodos((prev) => prev.map((t) => (t._id === id ? { ...t, status: newStatus } : t)));
+    } catch (e) { console.log(e); }
+  };
+
   const handleModalSubmit = async (data) => {
     if (editingTodo) {
       try { await updateTodo(editingTodo._id, data); fetchTodos(); } catch (e) {}
@@ -124,13 +121,34 @@ const TodayTasks = () => {
     setEditingTodo(null);
   };
 
-  const handleDeleteConfirm = async () => {
-    try {
-      await deleteTodo(deleteId);
-      setTodos((p) => p.filter((t) => t._id !== deleteId));
-    } catch (e) {}
-    setDeleteId(null);
+  // ── Undo-delete: remove instantly from UI, actually call API after 5s ──
+  const deleteTask = (id) => {
+    const todoToDelete = todos.find((t) => t._id === id);
+    if (!todoToDelete) return;
+
+    if (pendingDelete) {
+      clearTimeout(pendingDelete.timeoutId);
+      deleteTodo(pendingDelete.todo._id).catch(() => {});
+    }
+
+    setTodos((prev) => prev.filter((t) => t._id !== id));
+
+    const timeoutId = setTimeout(async () => {
+      try { await deleteTodo(id); } catch (e) {}
+      setPendingDelete((curr) => (curr?.todo._id === id ? null : curr));
+    }, 5000);
+
+    setPendingDelete({ todo: todoToDelete, timeoutId });
   };
+
+  const handleUndoDelete = () => {
+    if (!pendingDelete) return;
+    clearTimeout(pendingDelete.timeoutId);
+    setTodos((prev) => [pendingDelete.todo, ...prev]);
+    setPendingDelete(null);
+  };
+
+  const handleToastDismiss = () => setPendingDelete(null);
 
   return (
     <>
@@ -142,21 +160,21 @@ const TodayTasks = () => {
             <ArrowLeft size={18} />
           </button>
           <div className="page-header-title">
-            <CalendarDays size={26} strokeWidth={1.8} />
-            <h1>Today's Tasks</h1>
+            <Star size={26} strokeWidth={1.8} />
+            <h1>Starred Tasks</h1>
           </div>
           <p className="page-header-sub">
-            Tasks due today — {todayTasks.length} total
+            Your important tasks — {starredTasks.length} total
           </p>
         </div>
 
         {loading ? (
           <p className="page-loading">Loading...</p>
-        ) : todayTasks.length === 0 ? (
+        ) : starredTasks.length === 0 ? (
           <div className="empty-state neu-card">
-            <CalendarDays size={48} strokeWidth={1.5} className="empty-icon" />
-            <h2>Nothing due today</h2>
-            <p>Tasks with today's due date will show up here.</p>
+            <Star size={48} strokeWidth={1.5} className="empty-icon" />
+            <h2>No starred tasks</h2>
+            <p>Tap the star icon on any task to mark it important.</p>
           </div>
         ) : (
           <>
@@ -178,7 +196,7 @@ const TodayTasks = () => {
               <div className="empty-state neu-card">
                 <Search size={48} strokeWidth={1.5} className="empty-icon" />
                 <h2>Nothing here</h2>
-                <p>No tasks match your current filters.</p>
+                <p>No starred tasks match your current filters.</p>
               </div>
             ) : (
               <>
@@ -203,7 +221,7 @@ const TodayTasks = () => {
                   <FilterDropdown
                     sortBy={sortBy} setSortBy={setSortBy}
                     dueFilter={dueFilter} setDueFilter={setDueFilter}
-                    starredOnly={starredOnly} setStarredOnly={setStarredOnly}
+                    showStarredToggle={false}
                   />
                 </div>
 
@@ -213,8 +231,9 @@ const TodayTasks = () => {
                       key={todo._id}
                       todo={todo}
                       onEdit={(t) => { setEditingTodo(t); setShowModal(true); }}
-                      onDelete={(id) => setDeleteId(id)}
+                      onDelete={(id) => deleteTask(id)}
                       onToggleStar={toggleStar}
+                      onStatusChange={changeStatus}
                       isListView={viewMode === "list"}
                     />
                   ))}
@@ -233,14 +252,15 @@ const TodayTasks = () => {
         />
       )}
 
-      {deleteId && (
-        <DeleteModal
-          onClose={() => setDeleteId(null)}
-          onConfirm={handleDeleteConfirm}
+      {pendingDelete && (
+        <Toast
+          message={`"${pendingDelete.todo.title}" deleted`}
+          onUndo={handleUndoDelete}
+          onDismiss={handleToastDismiss}
         />
       )}
     </>
   );
 };
 
-export default TodayTasks;
+export default StarredTasks;

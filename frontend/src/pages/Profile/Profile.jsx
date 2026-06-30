@@ -1,6 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import Navbar from "../../components/Navbar/Navbar";
+import ProfileCharts from "../../components/ProfileCharts/ProfileCharts";
 import {
   FiUser, FiMail, FiCalendar, FiCheckCircle,
   FiList, FiTrendingUp, FiLogOut,
@@ -137,6 +138,9 @@ const Profile = () => {
                            "Create and complete tasks to build your score."}
           </p>
         </div>
+
+        {/* ── Charts ── */}
+        <ProfileCharts todos={todos} />
 
       </div>
     </div>

@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../../components/Navbar/Navbar";
 import TodoCard from "../../components/TodoCard/TodoCard";
 import TodoModal from "../../components/TodoModal/TodoModal";
-import DeleteModal from "../../components/DeleteModal/DeleteModal";
+import Toast from "../../components/Toast/Toast";
 import FilterDropdown from "../../components/FilterDropdown/FilterDropdown";
 import { getTodos, updateTodo, deleteTodo } from "../../services/todoAPI";
 import "../TodayTasks/TodayTasks.css";
@@ -50,11 +50,13 @@ const StarredTasks = () => {
   const [loading, setLoading] = useState(true);
   const [editingTodo, setEditingTodo] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [deleteId, setDeleteId] = useState(null);
   const [activeFilter, setActiveFilter] = useState("all");
 
   const [sortBy, setSortBy] = useState("newest");
   const [dueFilter, setDueFilter] = useState("all");
+
+  // ── Undo-delete toast state ──
+  const [pendingDelete, setPendingDelete] = useState(null);
 
   const [viewMode, setViewMode] = useState(
     () => localStorage.getItem("todoflow-view-mode") || "grid"
@@ -105,6 +107,13 @@ const StarredTasks = () => {
     } catch (e) { console.log(e); }
   };
 
+  const changeStatus = async (id, newStatus) => {
+    try {
+      await updateTodo(id, { status: newStatus });
+      setTodos((prev) => prev.map((t) => (t._id === id ? { ...t, status: newStatus } : t)));
+    } catch (e) { console.log(e); }
+  };
+
   const handleModalSubmit = async (data) => {
     if (editingTodo) {
       try { await updateTodo(editingTodo._id, data); fetchTodos(); } catch (e) {}
@@ -112,13 +121,34 @@ const StarredTasks = () => {
     setEditingTodo(null);
   };
 
-  const handleDeleteConfirm = async () => {
-    try {
-      await deleteTodo(deleteId);
-      setTodos((p) => p.filter((t) => t._id !== deleteId));
-    } catch (e) {}
-    setDeleteId(null);
+  // ── Undo-delete: remove instantly from UI, actually call API after 5s ──
+  const deleteTask = (id) => {
+    const todoToDelete = todos.find((t) => t._id === id);
+    if (!todoToDelete) return;
+
+    if (pendingDelete) {
+      clearTimeout(pendingDelete.timeoutId);
+      deleteTodo(pendingDelete.todo._id).catch(() => {});
+    }
+
+    setTodos((prev) => prev.filter((t) => t._id !== id));
+
+    const timeoutId = setTimeout(async () => {
+      try { await deleteTodo(id); } catch (e) {}
+      setPendingDelete((curr) => (curr?.todo._id === id ? null : curr));
+    }, 5000);
+
+    setPendingDelete({ todo: todoToDelete, timeoutId });
   };
+
+  const handleUndoDelete = () => {
+    if (!pendingDelete) return;
+    clearTimeout(pendingDelete.timeoutId);
+    setTodos((prev) => [pendingDelete.todo, ...prev]);
+    setPendingDelete(null);
+  };
+
+  const handleToastDismiss = () => setPendingDelete(null);
 
   return (
     <>
@@ -201,8 +231,9 @@ const StarredTasks = () => {
                       key={todo._id}
                       todo={todo}
                       onEdit={(t) => { setEditingTodo(t); setShowModal(true); }}
-                      onDelete={(id) => setDeleteId(id)}
+                      onDelete={(id) => deleteTask(id)}
                       onToggleStar={toggleStar}
+                      onStatusChange={changeStatus}
                       isListView={viewMode === "list"}
                     />
                   ))}
@@ -221,10 +252,11 @@ const StarredTasks = () => {
         />
       )}
 
-      {deleteId && (
-        <DeleteModal
-          onClose={() => setDeleteId(null)}
-          onConfirm={handleDeleteConfirm}
+      {pendingDelete && (
+        <Toast
+          message={`"${pendingDelete.todo.title}" deleted`}
+          onUndo={handleUndoDelete}
+          onDismiss={handleToastDismiss}
         />
       )}
     </>

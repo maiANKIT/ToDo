@@ -167,28 +167,7 @@ body[data-theme="dark"] .modal-link-input:focus {
   box-shadow: 0 0 0 4px rgba(167, 139, 250, 0.08) !important;
 }
 
-/* ── Due date row (reuses link-row styling, orange accent) ── */
-.modal-date-icon {
-  font-size: 15px;
-  left: 18px;
-  color: unset;
-}
-.modal-date-input {
-  border-color: rgba(245, 166, 35, 0.25) !important;
-  color: var(--text);
-}
-.modal-date-input:focus {
-  border-color: rgba(245, 166, 35, 0.55) !important;
-  box-shadow: 0 0 0 4px rgba(245, 166, 35, 0.10) !important;
-}
-body[data-theme="dark"] .modal-date-input {
-  border-color: rgba(245, 166, 35, 0.2) !important;
-}
-body[data-theme="dark"] .modal-date-input::-webkit-calendar-picker-indicator {
-  filter: invert(1);
-}
-
-/* Clear (×) button inside link/date input */
+/* Clear (×) button inside link input */
 .modal-link-clear {
   position: absolute;
   right: 14px;
@@ -292,6 +271,20 @@ body[data-theme="dark"] .custom-options {
   background: #1a1a1a;
   border-color: rgba(255, 255, 255, 0.08);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* Flip upward when there's no room below */
+.custom-options--flip {
+  top: auto;
+  bottom: 100%;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  border-bottom: none;
+  border-radius: 18px 18px 0 0;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.1);
+}
+body[data-theme="dark"] .custom-options--flip {
+  border-top-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.4);
 }
 
 .custom-option {

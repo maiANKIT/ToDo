@@ -1,0 +1,131 @@
+/* ── Section title row with range toggle ── */
+.profile-section-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+}
+.profile-section-title-row .profile-section-title { padding: 0; }
+
+.range-toggle {
+  display: flex;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+  padding: 3px;
+}
+body[data-theme="dark"] .range-toggle { background: rgba(255, 255, 255, 0.07); }
+
+.range-toggle-btn {
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 7px;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: all 0.2s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+.range-toggle-btn.active {
+  background: #fff;
+  opacity: 1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+body[data-theme="dark"] .range-toggle-btn.active { background: rgba(255, 255, 255, 0.12); }
+
+/* ── Chart card wrapper ── */
+.profile-chart-card {
+  padding: 22px 20px 14px;
+  --chart-grid: rgba(0, 0, 0, 0.06);
+  --chart-text: rgba(0, 0, 0, 0.45);
+}
+body[data-theme="dark"] .profile-chart-card {
+  --chart-grid: rgba(255, 255, 255, 0.08);
+  --chart-text: rgba(255, 255, 255, 0.45);
+}
+
+.chart-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 140px;
+  font-size: 0.88rem;
+  opacity: 0.4;
+  text-align: center;
+  padding: 0 20px;
+}
+
+/* ── Custom tooltip ── */
+.chart-tooltip {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 10px 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+body[data-theme="dark"] .chart-tooltip {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.chart-tooltip-label { font-size: 0.74rem; font-weight: 700; opacity: 0.5; margin-bottom: 4px; }
+.chart-tooltip-row { font-size: 0.82rem; font-weight: 600; margin: 0; }
+
+/* ── Heatmap ── */
+.heatmap-card { padding: 22px 20px; }
+
+.heatmap-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-x: auto;
+}
+
+.heatmap-grid {
+  display: flex;
+  gap: 4px;
+  width: fit-content;
+}
+
+.heatmap-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.heatmap-cell {
+  width: 13px;
+  height: 13px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.06);
+  transition: transform 0.15s ease;
+}
+.heatmap-cell:hover { transform: scale(1.25); }
+
+body[data-theme="dark"] .heatmap-cell { background: rgba(255, 255, 255, 0.07); }
+
+.heatmap-level-0 { background: rgba(0, 0, 0, 0.06); }
+.heatmap-level-1 { background: rgba(16, 185, 129, 0.30); }
+.heatmap-level-2 { background: rgba(16, 185, 129, 0.52); }
+.heatmap-level-3 { background: rgba(16, 185, 129, 0.74); }
+.heatmap-level-4 { background: rgba(16, 185, 129, 1); }
+
+body[data-theme="dark"] .heatmap-level-0 { background: rgba(255, 255, 255, 0.07); }
+
+.heatmap-legend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  opacity: 0.45;
+  font-weight: 600;
+}
+.heatmap-legend-cell { width: 11px; height: 11px; }
+
+/* ── Mobile ── */
+@media (max-width: 600px) {
+  .profile-section-title-row { flex-wrap: wrap; gap: 10px; }
+  .profile-chart-card { padding: 18px 12px 10px; }
+  .heatmap-card { padding: 18px 14px; }
+  .heatmap-cell { width: 11px; height: 11px; }
+}

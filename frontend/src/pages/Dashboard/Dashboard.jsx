@@ -3,15 +3,19 @@ import "./Dashboard.css";
 
 import {
   Sun, Cloud, Moon, Flame, CheckCircle2,
-  ListTodo, BarChart2, Search, LayoutGrid, List,
+  ListTodo, BarChart2, Search, LayoutGrid, List, Kanban,
 } from "lucide-react";
-
+import confetti from "canvas-confetti";
+import useDebounce from "../../hooks/useDebounce";
 import Navbar from "../../components/Navbar/Navbar";
 import FloatingButton from "../../components/FloatingButton/FloatingButton";
 import TodoModal from "../../components/TodoModal/TodoModal";
 import TodoCard from "../../components/TodoCard/TodoCard";
-import DeleteModal from "../../components/DeleteModal/DeleteModal";
+import Toast from "../../components/Toast/Toast";
 import FilterDropdown from "../../components/FilterDropdown/FilterDropdown";
+import TaskDetailPanel from "../../components/TaskDetailPanel/TaskDetailPanel";
+import KanbanBoard from "../../components/KanbanBoard/KanbanBoard";
+import useKeyboardShortcuts from "../../hooks/useKeyboardShortcuts";
 import { AuthContext } from "../../context/AuthContext";
 import { getTodos, createTodo, deleteTodo, updateTodo } from "../../services/todoAPI";
 
@@ -52,19 +56,13 @@ const getScore = (todos) => {
   return Math.round(todos.filter(t => t.status === "done").length / todos.length * 100);
 };
 
-// ── Due date range check, used by the Filter dropdown ──
 const matchesDueFilter = (todo, dueFilter) => {
   if (dueFilter === "all") return true;
-
   const now = new Date();
   const due = todo.dueDate ? new Date(todo.dueDate) : null;
-
   if (dueFilter === "nodate") return !due;
   if (!due) return false;
-
-  if (dueFilter === "overdue") {
-    return due < now && todo.status !== "done";
-  }
+  if (dueFilter === "overdue") return due < now && todo.status !== "done";
   if (dueFilter === "week") {
     const weekEnd = new Date(now);
     weekEnd.setDate(weekEnd.getDate() + 7);
@@ -73,7 +71,6 @@ const matchesDueFilter = (todo, dueFilter) => {
   return true;
 };
 
-// ── Sort comparator, used by the Filter dropdown ──
 const sortTodos = (list, sortBy) => {
   const arr = [...list];
   switch (sortBy) {
@@ -94,6 +91,17 @@ const sortTodos = (list, sortBy) => {
   }
 };
 
+// ── Confetti burst for a single completed task ──
+const fireTaskConfetti = () => {
+  confetti({
+    particleCount: 60,
+    spread: 65,
+    startVelocity: 35,
+    origin: { y: 0.7 },
+    colors: ["#667eea", "#764ba2", "#10b981", "#f59e0b"],
+  });
+};
+
 const Dashboard = () => {
   const { user } = useContext(AuthContext);
   const userName = user?.name?.split(" ")[0] || "User";
@@ -101,17 +109,21 @@ const Dashboard = () => {
   const [todos,         setTodos]        = useState([]);
   const [showModal,     setShowModal]    = useState(false);
   const [editingTodo,   setEditingTodo]  = useState(null);
-  const [deleteId,      setDeleteId]     = useState(null);
+  const [viewingTodo,   setViewingTodo]  = useState(null);
   const [searchTerm,    setSearchTerm]   = useState("");
   const [showScrollTop, setShowScrollTop]= useState(false);
   const [activeFilter,  setActiveFilter] = useState("all");
   const [stripSticky,   setStripSticky]  = useState(false);
   const [searchState,   setSearchState]  = useState("closed");
 
-  // ── Filter dropdown state ──
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
   const [sortBy,      setSortBy]      = useState("newest");
   const [dueFilter,   setDueFilter]   = useState("all");
   const [starredOnly, setStarredOnly] = useState(false);
+
+  // ── Undo-delete toast state ──
+  const [pendingDelete, setPendingDelete] = useState(null); // { todo, timeoutId }
 
   const [navbarBottom, setNavbarBottom] = useState(84);
 
@@ -177,8 +189,37 @@ const Dashboard = () => {
 
   const addTask    = async (d)    => { try { await createTodo(d);     fetchTodos(); } catch(e){} };
   const updateTask = async (id,d) => { try { await updateTodo(id,d);  fetchTodos(); } catch(e){} };
-  const deleteTask = async (id)   => {
-    try { await deleteTodo(id); setTodos(p => p.filter(t => t._id !== id)); } catch(e){}
+
+  // ── Undo-delete: remove instantly from UI, actually call API after 5s ──
+  const deleteTask = (id) => {
+    const todoToDelete = todos.find((t) => t._id === id);
+    if (!todoToDelete) return;
+
+    // If something else was pending, finalize it first
+    if (pendingDelete) {
+      clearTimeout(pendingDelete.timeoutId);
+      deleteTodo(pendingDelete.todo._id).catch(() => {});
+    }
+
+    setTodos((prev) => prev.filter((t) => t._id !== id));
+
+    const timeoutId = setTimeout(async () => {
+      try { await deleteTodo(id); } catch (e) {}
+      setPendingDelete((curr) => (curr?.todo._id === id ? null : curr));
+    }, 5000);
+
+    setPendingDelete({ todo: todoToDelete, timeoutId });
+  };
+
+  const handleUndoDelete = () => {
+    if (!pendingDelete) return;
+    clearTimeout(pendingDelete.timeoutId);
+    setTodos((prev) => [pendingDelete.todo, ...prev]);
+    setPendingDelete(null);
+  };
+
+  const handleToastDismiss = () => {
+    setPendingDelete(null);
   };
 
   const toggleStar = async (id, value) => {
@@ -188,11 +229,35 @@ const Dashboard = () => {
     } catch (e) { console.log(e); }
   };
 
+  // ── Status change: fires confetti whenever a task newly becomes "done" ──
+  // Also used by Kanban drag-and-drop (drag into a column = status change)
+  const changeStatus = async (id, newStatus) => {
+    const currentTodo = todos.find((t) => t._id === id);
+    const justCompleted = currentTodo && currentTodo.status !== "done" && newStatus === "done";
+
+    try {
+      await updateTodo(id, { status: newStatus });
+      setTodos((prev) => prev.map((t) => (t._id === id ? { ...t, status: newStatus } : t)));
+      if (justCompleted) fireTaskConfetti();
+    } catch (e) { console.log(e); }
+  };
+
   const handleModalSubmit = async (data) => {
     if (editingTodo) await updateTask(editingTodo._id, data);
     else await addTask(data);
     setEditingTodo(null);
   };
+
+  // ── Keyboard shortcuts: N = new task, / = search, Esc = close modal ──
+  useKeyboardShortcuts({
+    onNew: () => { setEditingTodo(null); setShowModal(true); },
+    onSearch: () => { if (searchState === "closed") openSearch(); },
+    onEscape: () => {
+      if (showModal) setShowModal(false);
+      else if (viewingTodo) setViewingTodo(null);
+      else if (searchState === "open") closeSearch();
+    },
+  });
 
   const pendingCount    = todos.filter(t => t.status === "pending").length;
   const inProgressCount = todos.filter(t => t.status === "inprogress").length;
@@ -201,19 +266,14 @@ const Dashboard = () => {
   const score           = getScore(todos);
 
   const now = new Date();
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const endOfToday = new Date(startOfToday);
-  endOfToday.setDate(endOfToday.getDate() + 1);
-
   const overdueTasks = todos.filter(
     (t) => t.dueDate && new Date(t.dueDate) < now && t.status !== "done"
   );
 
-  // ── Apply search + status tab + filter dropdown (due range, starred, sort) ──
   const filteredTodos = sortTodos(
     todos.filter(t => {
-      const s = t.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                t.description.toLowerCase().includes(searchTerm.toLowerCase());
+      const s = t.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+                t.description.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
       const f = activeFilter === "all" || t.status === activeFilter;
       const due = matchesDueFilter(t, dueFilter);
       const star = !starredOnly || t.star;
@@ -221,6 +281,16 @@ const Dashboard = () => {
     }),
     sortBy
   );
+
+  // ── Kanban: same search/due/star filters, but NOT status filter
+  //    (the 3 columns already split by status, so status filter would be redundant) ──
+  const filteredTodosForKanban = todos.filter(t => {
+    const s = t.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+              t.description.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
+    const due = matchesDueFilter(t, dueFilter);
+    const star = !starredOnly || t.star;
+    return s && due && star;
+  });
 
   const filters = [
     { key: "all",        label: "All",         count: todos.length,    dot: "dot-all"        },
@@ -319,24 +389,49 @@ const Dashboard = () => {
             ))}
           </div>
 
-          {/* ── View Toggle + Filter + Tasks ── */}
-          {filteredTodos.length === 0 ? (
+          {viewMode !== "kanban" && filteredTodos.length === 0 ? (
             <div className="empty-state neu-card">
-              {activeFilter === "all" && !searchTerm && dueFilter === "all" && !starredOnly ? (
+              {activeFilter === "all" && !debouncedSearchTerm && dueFilter === "all" && !starredOnly ? (
                 <>
                   <ListTodo size={48} strokeWidth={1.5} className="empty-icon" />
                   <h2>No tasks yet</h2>
-                  <p>Hit the <strong>+</strong> button to create your first task!</p>
+                  <p>Hit the <strong>+</strong> button (or press <strong>N</strong>) to create your first task!</p>
+                </>
+              ) : debouncedSearchTerm ? (
+                <>
+                  <Search size={48} strokeWidth={1.5} className="empty-icon" />
+                  <h2>No results for "{debouncedSearchTerm}"</h2>
+                  <p>Double-check the spelling, or try a shorter, more general search term.</p>
+                  <div className="empty-state-actions">
+                    <button
+                      className="empty-state-action-btn"
+                      onClick={() => setSearchTerm("")}
+                    >
+                      Clear search
+                    </button>
+                    {(activeFilter !== "all" || dueFilter !== "all" || starredOnly) && (
+                      <button
+                        className="empty-state-action-btn"
+                        onClick={() => { setActiveFilter("all"); setDueFilter("all"); setStarredOnly(false); }}
+                      >
+                        Clear filters too
+                      </button>
+                    )}
+                  </div>
                 </>
               ) : (
                 <>
                   <Search size={48} strokeWidth={1.5} className="empty-icon" />
                   <h2>Nothing here</h2>
-                  <p>
-                    {searchTerm
-                      ? "No tasks match your search."
-                      : "No tasks match your current filters."}
-                  </p>
+                  <p>No tasks match your current filters.</p>
+                  <div className="empty-state-actions">
+                    <button
+                      className="empty-state-action-btn"
+                      onClick={() => { setActiveFilter("all"); setDueFilter("all"); setStarredOnly(false); }}
+                    >
+                      Clear filters
+                    </button>
+                  </div>
                 </>
               )}
             </div>
@@ -358,6 +453,13 @@ const Dashboard = () => {
                   >
                     <List size={15} strokeWidth={1.8} />
                   </button>
+                  <button
+                    className={`view-toggle-btn ${viewMode === "kanban" ? "active" : ""}`}
+                    onClick={() => handleSetViewMode("kanban")}
+                    title="Kanban view"
+                  >
+                    <Kanban size={15} strokeWidth={1.8} />
+                  </button>
                 </div>
 
                 <FilterDropdown
@@ -367,18 +469,31 @@ const Dashboard = () => {
                 />
               </div>
 
-              <div className={viewMode === "grid" ? "todo-grid" : "todo-list"}>
-                {filteredTodos.map(todo => (
-                  <TodoCard
-                    key={todo._id}
-                    todo={todo}
-                    onEdit={t => { setEditingTodo(t); setShowModal(true); }}
-                    onDelete={id => setDeleteId(id)}
-                    onToggleStar={toggleStar}
-                    isListView={viewMode === "list"}
-                  />
-                ))}
-              </div>
+              {viewMode === "kanban" ? (
+                <KanbanBoard
+                  todos={filteredTodosForKanban}
+                  onEdit={t => { setEditingTodo(t); setShowModal(true); }}
+                  onDelete={id => deleteTask(id)}
+                  onToggleStar={toggleStar}
+                  onStatusChange={changeStatus}
+                  onViewDetails={setViewingTodo}
+                />
+              ) : (
+                <div className={viewMode === "grid" ? "todo-grid" : "todo-list"}>
+                  {filteredTodos.map(todo => (
+                    <TodoCard
+                      key={todo._id}
+                      todo={todo}
+                      onEdit={t => { setEditingTodo(t); setShowModal(true); }}
+                      onDelete={id => deleteTask(id)}
+                      onToggleStar={toggleStar}
+                      onStatusChange={changeStatus}
+                      onViewDetails={setViewingTodo}
+                      isListView={viewMode === "list"}
+                    />
+                  ))}
+                </div>
+              )}
             </>
           )}
 
@@ -403,10 +518,25 @@ const Dashboard = () => {
         />
       )}
 
-      {deleteId && (
-        <DeleteModal
-          onClose={() => setDeleteId(null)}
-          onConfirm={async () => { await deleteTask(deleteId); setDeleteId(null); }}
+      {viewingTodo && (
+        <TaskDetailPanel
+          todo={todos.find(t => t._id === viewingTodo._id) || viewingTodo}
+          onClose={() => setViewingTodo(null)}
+          onEdit={(t) => {
+            setViewingTodo(null);
+            setEditingTodo(t);
+            setShowModal(true);
+          }}
+          onStatusChange={changeStatus}
+          onToggleStar={toggleStar}
+        />
+      )}
+
+      {pendingDelete && (
+        <Toast
+          message={`"${pendingDelete.todo.title}" deleted`}
+          onUndo={handleUndoDelete}
+          onDismiss={handleToastDismiss}
         />
       )}
     </>

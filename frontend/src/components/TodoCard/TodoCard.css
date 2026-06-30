@@ -368,3 +368,39 @@ body[data-theme="dark"] .link-btn:hover {
   justify-content: center;
   flex-shrink: 0;
 }
+
+.status-badge--clickable {
+  border: none;
+  cursor: pointer;
+  transition: transform 0.15s cubic-bezier(0.34, 1.4, 0.64, 1), filter 0.15s ease;
+}
+.status-badge--clickable:hover {
+  transform: scale(1.05);
+  filter: brightness(0.95);
+}
+.status-badge--clickable:active {
+  transform: scale(0.96);
+}
+.status-badge--card { margin-bottom: 0; }
+
+.link-favicon {
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.link-fallback-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.todo-title-clickable {
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+.todo-title-clickable:hover {
+  opacity: 0.7;
+}
