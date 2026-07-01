@@ -1,0 +1,112 @@
+.features-page {
+  min-height: 100vh;
+  padding: 100px 40px 60px;
+}
+
+.features-container {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.features-header {
+  text-align: center;
+  margin-bottom: 36px;
+}
+.features-header h1 {
+  font-size: 2.1rem;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.features-header p {
+  font-size: 0.95rem;
+  color: var(--text);
+  opacity: 0.5;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+}
+
+.feature-card {
+  padding: 26px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: transform 0.3s cubic-bezier(0.34, 1.2, 0.64, 1), box-shadow 0.3s ease;
+}
+.feature-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.10);
+}
+
+.feature-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.feature-card h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.feature-card p {
+  font-size: 0.86rem;
+  line-height: 1.6;
+  color: var(--text);
+  opacity: 0.65;
+}
+
+/* ── Icon color variants ── */
+.feat--blue   .feature-icon { background: rgba(59, 130, 246, 0.12);  color: #3b82f6; }
+.feat--green  .feature-icon { background: rgba(16, 185, 129, 0.12);  color: #10b981; }
+.feat--purple .feature-icon { background: rgba(124, 58, 237, 0.12);  color: #7c3aed; }
+.feat--orange .feature-icon { background: rgba(234, 88, 12, 0.12);   color: #ea580c; }
+.feat--pink   .feature-icon { background: rgba(236, 72, 153, 0.12);  color: #ec4899; }
+.feat--teal   .feature-icon { background: rgba(14, 116, 144, 0.12);  color: #0e7490; }
+.feat--red    .feature-icon { background: rgba(239, 68, 68, 0.12);   color: #ef4444; }
+.feat--amber  .feature-icon { background: rgba(245, 158, 11, 0.12);  color: #f59e0b; }
+
+body[data-theme="dark"] .feat--blue   .feature-icon { background: rgba(59, 130, 246, 0.18); }
+body[data-theme="dark"] .feat--green  .feature-icon { background: rgba(16, 185, 129, 0.18); }
+body[data-theme="dark"] .feat--purple .feature-icon { background: rgba(167, 139, 250, 0.18); color: #a78bfa; }
+body[data-theme="dark"] .feat--orange .feature-icon { background: rgba(251, 146, 60, 0.18); color: #fb923c; }
+body[data-theme="dark"] .feat--pink   .feature-icon { background: rgba(244, 114, 182, 0.18); color: #f472b6; }
+body[data-theme="dark"] .feat--teal   .feature-icon { background: rgba(34, 211, 238, 0.18); color: #22d3ee; }
+body[data-theme="dark"] .feat--red    .feature-icon { background: rgba(248, 113, 113, 0.18); color: #f87171; }
+body[data-theme="dark"] .feat--amber  .feature-icon { background: rgba(251, 191, 36, 0.18); color: #fbbf24; }
+
+.features-footer {
+  display: flex;
+  justify-content: center;
+  margin-top: 36px;
+}
+
+.features-back-btn {
+  padding: 12px 28px;
+  border-radius: 999px;
+  border: none;
+  background: #111;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+.features-back-btn:hover { transform: translateY(-2px); opacity: 0.88; }
+body[data-theme="dark"] .features-back-btn { background: #fff; color: #111; }
+
+@media (max-width: 700px) {
+  .features-page { padding: 88px 16px 40px; }
+  .features-grid { grid-template-columns: 1fr; gap: 14px; }
+  .features-header h1 { font-size: 1.6rem; }
+  .feature-card { padding: 20px 18px; }
+}

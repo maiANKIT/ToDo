@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { AuthContext } from "../../context/AuthContext";
 import logo from "../../assets/images/logo.png";
 import {
-  FiSearch, FiX, FiUser, FiMoon, FiBell, FiStar,
+  FiSearch, FiX, FiUser, FiMoon, FiBell, FiStar, FiZap,
 } from "react-icons/fi";
 import { RiDashboardLine } from "react-icons/ri";
 import { HiOutlineUser } from "react-icons/hi2";
@@ -66,6 +66,7 @@ const Navbar = ({
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [themeOpen, setThemeOpen] = useState(false);
 
   const isSearchOpen = searchState === "open" || searchState === "opening";
 
@@ -82,6 +83,7 @@ const Navbar = ({
         dropdownRef.current && !dropdownRef.current.contains(e.target)
       ) {
         setMenuOpen(false);
+        setThemeOpen(false);
       }
       if (
         notifRef.current     && !notifRef.current.contains(e.target) &&
@@ -94,6 +96,11 @@ const Navbar = ({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  // Close theme accordion whenever the main menu closes
+  useEffect(() => {
+    if (!menuOpen) setThemeOpen(false);
+  }, [menuOpen]);
+
   const menuItems = [
     { icon: <RiDashboardLine size={14} />, label: "Dashboard",     path: "/dashboard"     },
     { icon: <HiOutlineUser   size={14} />, label: "Profile",       path: "/profile"       },
@@ -101,6 +108,7 @@ const Navbar = ({
     { icon: <TbUsers         size={14} />, label: "Collaboration", path: "/collaboration", collab: true },
     { icon: <LuCalendarDays  size={14} />, label: "Today's Tasks", path: "/today"         },
     { icon: <FiStar          size={14} />, label: "Starred Tasks", path: "/starred"       },
+    { icon: <FiZap           size={14} />, label: "Features",      path: "/features"      },
   ];
 
   const handleLogoClick = () => navigate(user ? "/dashboard" : "/");
@@ -244,15 +252,29 @@ const Navbar = ({
 
             <div className="nav-dropdown__divider" />
 
-            <div className="nav-dropdown__theme-section">
-  <span className="nav-dropdown__theme-label">
-    <span className="nav-dropdown__theme-icon">
-      <FiMoon size={13} />
-    </span>
-    Theme
-  </span>
-  <ThemePicker />
-</div>
+            {/* ── Theme accordion ── */}
+            <button
+              className="nav-dropdown__item nav-dropdown__item--accordion"
+              onClick={() => setThemeOpen((p) => !p)}
+            >
+              <span className="nav-dropdown__item-icon">
+                <FiMoon size={13} />
+              </span>
+              <span className="nav-dropdown__item-label">Theme</span>
+              <svg
+                className={`nav-accordion-arrow ${themeOpen ? "rotated" : ""}`}
+                width="12" height="12" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" strokeWidth="2.5"
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+
+            {themeOpen && (
+              <div className="nav-accordion-list">
+                <ThemePicker />
+              </div>
+            )}
 
             <div className="nav-dropdown__divider" />
 
