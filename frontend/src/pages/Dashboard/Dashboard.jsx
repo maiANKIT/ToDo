@@ -15,7 +15,10 @@ import Toast from "../../components/Toast/Toast";
 import FilterDropdown from "../../components/FilterDropdown/FilterDropdown";
 import TaskDetailPanel from "../../components/TaskDetailPanel/TaskDetailPanel";
 import KanbanBoard from "../../components/KanbanBoard/KanbanBoard";
+import QuickAddOverlay from "../../components/QuickAddOverlay/QuickAddOverlay";
+import NotificationBanner from "../../components/NotificationBanner/NotificationBanner";
 import useKeyboardShortcuts from "../../hooks/useKeyboardShortcuts";
+import useDueDateNotifications from "../../hooks/useDueDateNotifications";
 import { AuthContext } from "../../context/AuthContext";
 import { getTodos, createTodo, deleteTodo, updateTodo } from "../../services/todoAPI";
 
@@ -108,6 +111,7 @@ const Dashboard = () => {
 
   const [todos,         setTodos]        = useState([]);
   const [showModal,     setShowModal]    = useState(false);
+  const [showQuickAdd,  setShowQuickAdd] = useState(false);
   const [editingTodo,   setEditingTodo]  = useState(null);
   const [viewingTodo,   setViewingTodo]  = useState(null);
   const [searchTerm,    setSearchTerm]   = useState("");
@@ -147,6 +151,9 @@ const Dashboard = () => {
   };
 
   useEffect(() => { fetchTodos(); }, []);
+
+  // ── Browser notifications: fires once per task, 10 min before it's due ──
+  useDueDateNotifications(todos);
 
   useEffect(() => {
     measureNavbar();
@@ -248,12 +255,14 @@ const Dashboard = () => {
     setEditingTodo(null);
   };
 
-  // ── Keyboard shortcuts: N = new task, / = search, Esc = close modal ──
+  // ── Keyboard shortcuts: N = new task, / = search, Cmd/Ctrl+K = quick add, Esc = close ──
   useKeyboardShortcuts({
     onNew: () => { setEditingTodo(null); setShowModal(true); },
     onSearch: () => { if (searchState === "closed") openSearch(); },
+    onQuickAdd: () => setShowQuickAdd(true),
     onEscape: () => {
-      if (showModal) setShowModal(false);
+      if (showQuickAdd) setShowQuickAdd(false);
+      else if (showModal) setShowModal(false);
       else if (viewingTodo) setViewingTodo(null);
       else if (searchState === "open") closeSearch();
     },
@@ -318,6 +327,8 @@ const Dashboard = () => {
             onSearchChange={setSearchTerm}
             overdueTasks={overdueTasks}
           />
+
+          <NotificationBanner />
 
           {/* ── Hero ── */}
           <div
@@ -395,7 +406,7 @@ const Dashboard = () => {
                 <>
                   <ListTodo size={48} strokeWidth={1.5} className="empty-icon" />
                   <h2>No tasks yet</h2>
-                  <p>Hit the <strong>+</strong> button (or press <strong>N</strong>) to create your first task!</p>
+                  <p>Hit the <strong>+</strong> button (or press <strong>N</strong>, or <strong>⌘K</strong> to quick-add) to create your first task!</p>
                 </>
               ) : debouncedSearchTerm ? (
                 <>
@@ -515,6 +526,13 @@ const Dashboard = () => {
           editTodo={editingTodo}
           onClose={() => setShowModal(false)}
           onSubmit={handleModalSubmit}
+        />
+      )}
+
+      {showQuickAdd && (
+        <QuickAddOverlay
+          onClose={() => setShowQuickAdd(false)}
+          onSubmit={addTask}
         />
       )}
 

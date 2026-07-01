@@ -1,0 +1,158 @@
+@keyframes quickaddFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes quickaddPop {
+  from { opacity: 0; transform: scale(0.96) translateY(-10px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.quickadd-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 14vh;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: quickaddFade 0.2s ease;
+}
+
+.quickadd-box {
+  width: 560px;
+  max-width: 90%;
+  padding: 10px;
+  border-radius: 22px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: quickaddPop 0.22s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+body[data-theme="dark"] .quickadd-box {
+  background: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.65);
+}
+
+.quickadd-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.quickadd-icon {
+  position: absolute;
+  left: 16px;
+  color: #667eea;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+body[data-theme="dark"] .quickadd-icon { color: #a78bfa; }
+
+.quickadd-input {
+  width: 100%;
+  padding: 16px 18px 16px 46px;
+  border-radius: 16px;
+  background: #f5f5f5;
+  border: 1px solid transparent;
+  color: var(--text);
+  font-size: 1.05rem;
+  outline: none;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+.quickadd-input:focus {
+  border-color: rgba(102, 126, 234, 0.4);
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.08);
+}
+.quickadd-input::placeholder { color: rgba(120, 120, 120, 0.75); }
+body[data-theme="dark"] .quickadd-input {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+body[data-theme="dark"] .quickadd-input:focus {
+  border-color: rgba(167, 139, 250, 0.4);
+  box-shadow: 0 0 0 4px rgba(167, 139, 250, 0.08);
+}
+
+.quickadd-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 16px 4px;
+}
+
+.quickadd-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--text);
+}
+body[data-theme="dark"] .quickadd-chip { background: rgba(255, 255, 255, 0.1); }
+
+.quickadd-chip--title {
+  background: rgba(17, 17, 17, 0.9);
+  color: #fff;
+}
+body[data-theme="dark"] .quickadd-chip--title {
+  background: #fff;
+  color: #111;
+}
+
+.quickadd-chip--date { color: #059669; background: rgba(5, 150, 105, 0.1); }
+body[data-theme="dark"] .quickadd-chip--date { color: #34d399; background: rgba(52, 211, 153, 0.12); }
+
+.quickadd-chip--link { color: #667eea; background: rgba(102, 126, 234, 0.1); }
+body[data-theme="dark"] .quickadd-chip--link { color: #a78bfa; background: rgba(167, 139, 250, 0.12); }
+
+.quickadd-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px 6px;
+}
+
+.quickadd-hint {
+  font-size: 0.78rem;
+  color: rgba(120, 120, 120, 0.9);
+}
+.quickadd-hint kbd {
+  font-family: inherit;
+  background: rgba(0, 0, 0, 0.08);
+  padding: 2px 6px;
+  border-radius: 5px;
+  font-size: 0.75rem;
+}
+body[data-theme="dark"] .quickadd-hint kbd { background: rgba(255, 255, 255, 0.12); }
+
+.quickadd-submit {
+  padding: 9px 20px;
+  border: none;
+  border-radius: 999px;
+  background: #111;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+.quickadd-submit:hover:not(:disabled) { transform: translateY(-1px); opacity: 0.85; }
+.quickadd-submit:disabled { opacity: 0.35; cursor: default; }
+body[data-theme="dark"] .quickadd-submit { background: #fff; color: #111; }
+
+@media (max-width: 600px) {
+  .quickadd-overlay { padding-top: 8vh; }
+  .quickadd-box { width: calc(100% - 24px); border-radius: 18px; }
+  .quickadd-footer { flex-direction: column-reverse; align-items: stretch; gap: 10px; }
+  .quickadd-submit { width: 100%; height: 44px; }
+}

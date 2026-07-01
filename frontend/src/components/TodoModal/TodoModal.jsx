@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { FiLink, FiStar } from "react-icons/fi";
+import { FiLink, FiStar, FiZap, FiCalendar } from "react-icons/fi";
 import DateTimePicker from "../DateTimePicker/DateTimePicker";
+import { parseQuickAdd } from "../../utils/quickAddParser";
 import "./TodoModal.css";
 
 const TodoModal = ({ onClose, onSubmit, editTodo }) => {
@@ -13,6 +14,10 @@ const TodoModal = ({ onClose, onSubmit, editTodo }) => {
   const [star,        setStar]        = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [dropdownFlip, setDropdownFlip] = useState(false);
+
+  // ── Quick add mode (create-only) ──
+  const [quickMode, setQuickMode] = useState(false);
+  const [quickText, setQuickText] = useState("");
 
   const selectRef = useRef(null);
 
@@ -60,6 +65,24 @@ const TodoModal = ({ onClose, onSubmit, editTodo }) => {
     onClose();
   };
 
+  const quickPreview = quickText.trim() ? parseQuickAdd(quickText) : null;
+  const quickCanSubmit = !!quickPreview?.title;
+
+  const quickSubmitHandler = (e) => {
+    e.preventDefault();
+    if (!quickCanSubmit) return;
+    const { title: qTitle, dueDate: qDueDate, link: qLink } = parseQuickAdd(quickText);
+    onSubmit({
+      title: qTitle,
+      description: "",
+      link: qLink || "",
+      status: "pending",
+      dueDate: qDueDate || null,
+      star: false,
+    });
+    onClose();
+  };
+
   const handleSelectClick = () => {
     if (!dropdownOpen && selectRef.current) {
       const rect = selectRef.current.getBoundingClientRect();
@@ -74,6 +97,17 @@ const TodoModal = ({ onClose, onSubmit, editTodo }) => {
       <div className="modal-box" onClick={(e) => e.stopPropagation()}>
 
         <div className="modal-header-row">
+          {!editTodo && (
+            <button
+              type="button"
+              className="modal-quick-switch"
+              onClick={() => setQuickMode((p) => !p)}
+              title={quickMode ? "Switch to detailed form" : "Switch to quick add"}
+            >
+              <FiZap size={14} fill={quickMode ? "currentColor" : "none"} />
+              {quickMode ? "Detailed" : "Quick add"}
+            </button>
+          )}
           <h2>{editTodo ? "Edit Task" : "Create Task"}</h2>
           <button
             type="button"
@@ -85,95 +119,142 @@ const TodoModal = ({ onClose, onSubmit, editTodo }) => {
           </button>
         </div>
 
-        <form onSubmit={submitHandler}>
-          {/* Title */}
-          <input
-            type="text"
-            placeholder="Task title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-          />
-
-          {/* Description */}
-          <textarea
-            placeholder="Description (optional)"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-
-          {/* Link — optional */}
-          <div className="modal-link-wrap">
-            <span className="modal-link-icon"><FiLink size={15} /></span>
-            <input
-              type="url"
-              className="modal-link-input"
-              placeholder="Link (optional) — https://..."
-              value={link}
-              onChange={(e) => setLink(e.target.value)}
-            />
-            {link && (
-              <button
-                type="button"
-                className="modal-link-clear"
-                onClick={() => setLink("")}
-                title="Clear link"
-              >
-                ×
-              </button>
-            )}
-          </div>
-
-          {/* Due date + time — optional */}
-          <DateTimePicker
-            value={dueDate}
-            onChange={(iso) => setDueDate(iso || "")}
-          />
-
-          {/* Status dropdown */}
-          <div className="custom-select-wrapper">
-            <div
-              ref={selectRef}
-              className={`custom-select ${dropdownOpen ? "open" : ""}`}
-              onClick={handleSelectClick}
-            >
-              <span>{statusOptions.find((o) => o.value === status)?.label}</span>
-              <svg
-                className={`select-arrow ${dropdownOpen ? "rotated" : ""}`}
-                xmlns="http://www.w3.org/2000/svg"
-                width="16" height="16"
-                viewBox="0 0 24 24"
-                fill="none" stroke="currentColor"
-                strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-              >
-                <polyline points="6 9 12 15 18 9" />
-              </svg>
+        {quickMode ? (
+          <form onSubmit={quickSubmitHandler}>
+            <div className="modal-link-wrap">
+              <span className="modal-link-icon"><FiZap size={15} /></span>
+              <input
+                type="text"
+                className="modal-link-input"
+                placeholder='Try "Merge Intervals due tomorrow leetcode.com"'
+                value={quickText}
+                onChange={(e) => setQuickText(e.target.value)}
+                autoFocus
+              />
             </div>
 
-            {dropdownOpen && (
-              <div className={`custom-options ${dropdownFlip ? "custom-options--flip" : ""}`}>
-                {statusOptions.map((opt) => (
-                  <div
-                    key={opt.value}
-                    className={`custom-option ${status === opt.value ? "selected" : ""}`}
-                    onClick={() => { setStatus(opt.value); setDropdownOpen(false); }}
-                  >
-                    {opt.label}
-                  </div>
-                ))}
+            {quickPreview && (quickPreview.title || quickPreview.dueDate || quickPreview.link) && (
+              <div className="quickadd-preview">
+                {quickPreview.title && (
+                  <span className="quickadd-chip quickadd-chip--title">{quickPreview.title}</span>
+                )}
+                {quickPreview.dueDate && (
+                  <span className="quickadd-chip quickadd-chip--date">
+                    <FiCalendar size={12} />
+                    {new Date(quickPreview.dueDate).toLocaleString(undefined, {
+                      month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
+                    })}
+                  </span>
+                )}
+                {quickPreview.link && (
+                  <span className="quickadd-chip quickadd-chip--link">
+                    <FiLink size={12} />
+                    {quickPreview.link.replace(/^https?:\/\//, "")}
+                  </span>
+                )}
               </div>
             )}
-          </div>
 
-          <div className="modal-actions">
-            <button type="button" className="cancel-btn" onClick={onClose}>
-              Cancel
-            </button>
-            <button type="submit" className="submit-btn">
-              {editTodo ? "Update" : "Create"}
-            </button>
-          </div>
-        </form>
+            <div className="modal-actions">
+              <button type="button" className="cancel-btn" onClick={onClose}>
+                Cancel
+              </button>
+              <button type="submit" className="submit-btn" disabled={!quickCanSubmit}>
+                Create
+              </button>
+            </div>
+          </form>
+        ) : (
+          <form onSubmit={submitHandler}>
+            {/* Title */}
+            <input
+              type="text"
+              placeholder="Task title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+            />
+
+            {/* Description */}
+            <textarea
+              placeholder="Description (optional)"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+
+            {/* Link — optional */}
+            <div className="modal-link-wrap">
+              <span className="modal-link-icon"><FiLink size={15} /></span>
+              <input
+                type="url"
+                className="modal-link-input"
+                placeholder="Link (optional) — https://..."
+                value={link}
+                onChange={(e) => setLink(e.target.value)}
+              />
+              {link && (
+                <button
+                  type="button"
+                  className="modal-link-clear"
+                  onClick={() => setLink("")}
+                  title="Clear link"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+
+            {/* Due date + time — optional */}
+            <DateTimePicker
+              value={dueDate}
+              onChange={(iso) => setDueDate(iso || "")}
+            />
+
+            {/* Status dropdown */}
+            <div className="custom-select-wrapper">
+              <div
+                ref={selectRef}
+                className={`custom-select ${dropdownOpen ? "open" : ""}`}
+                onClick={handleSelectClick}
+              >
+                <span>{statusOptions.find((o) => o.value === status)?.label}</span>
+                <svg
+                  className={`select-arrow ${dropdownOpen ? "rotated" : ""}`}
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16" height="16"
+                  viewBox="0 0 24 24"
+                  fill="none" stroke="currentColor"
+                  strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </div>
+
+              {dropdownOpen && (
+                <div className={`custom-options ${dropdownFlip ? "custom-options--flip" : ""}`}>
+                  {statusOptions.map((opt) => (
+                    <div
+                      key={opt.value}
+                      className={`custom-option ${status === opt.value ? "selected" : ""}`}
+                      onClick={() => { setStatus(opt.value); setDropdownOpen(false); }}
+                    >
+                      {opt.label}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="modal-actions">
+              <button type="button" className="cancel-btn" onClick={onClose}>
+                Cancel
+              </button>
+              <button type="submit" className="submit-btn">
+                {editTodo ? "Update" : "Create"}
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </div>,
     document.body

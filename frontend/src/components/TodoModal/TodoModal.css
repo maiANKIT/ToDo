@@ -91,6 +91,37 @@ body[data-theme="dark"] .modal-star-toggle--active {
   background: rgba(251, 191, 36, 0.15);
 }
 
+/* ── Quick add / Detailed switch ── */
+.modal-quick-switch {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(102, 126, 234, 0.1);
+  color: #667eea;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+.modal-quick-switch:hover {
+  background: rgba(102, 126, 234, 0.18);
+  transform: translateY(-50%) scale(1.05);
+}
+body[data-theme="dark"] .modal-quick-switch {
+  background: rgba(167, 139, 250, 0.14);
+  color: #a78bfa;
+}
+body[data-theme="dark"] .modal-quick-switch:hover {
+  background: rgba(167, 139, 250, 0.22);
+}
+
 .modal-box form {
   display: flex;
   flex-direction: column;
@@ -132,7 +163,7 @@ body[data-theme="dark"] .modal-box textarea:focus {
 
 .modal-box textarea { min-height: 140px; resize: none; }
 
-/* ── Link input row ── */
+/* ── Link input row (also reused by quick-add mode's single input) ── */
 .modal-link-wrap {
   position: relative;
   display: flex;
@@ -188,6 +219,42 @@ body[data-theme="dark"] .modal-link-input:focus {
 body[data-theme="dark"] .modal-link-clear { background: rgba(255,255,255,0.12); }
 body[data-theme="dark"] .modal-link-clear:hover { background: rgba(255,255,255,0.22); }
 
+/* ── Quick-add preview chips (shown inside modal quick mode) ── */
+.quickadd-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: -8px;
+}
+
+.quickadd-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--text);
+}
+body[data-theme="dark"] .quickadd-chip { background: rgba(255, 255, 255, 0.1); }
+
+.quickadd-chip--title {
+  background: rgba(17, 17, 17, 0.9);
+  color: #fff;
+}
+body[data-theme="dark"] .quickadd-chip--title {
+  background: #fff;
+  color: #111;
+}
+
+.quickadd-chip--date { color: #059669; background: rgba(5, 150, 105, 0.1); }
+body[data-theme="dark"] .quickadd-chip--date { color: #34d399; background: rgba(52, 211, 153, 0.12); }
+
+.quickadd-chip--link { color: #667eea; background: rgba(102, 126, 234, 0.1); }
+body[data-theme="dark"] .quickadd-chip--link { color: #a78bfa; background: rgba(167, 139, 250, 0.12); }
+
 /* ── Actions ── */
 .modal-actions {
   display: flex;
@@ -220,7 +287,8 @@ body[data-theme="dark"] .cancel-btn {
 body[data-theme="dark"] .submit-btn { background: white; color: black; }
 
 .cancel-btn:hover { transform: translateY(-2px); }
-.submit-btn:hover { transform: translateY(-2px); opacity: 0.85; }
+.submit-btn:hover:not(:disabled) { transform: translateY(-2px); opacity: 0.85; }
+.submit-btn:disabled { opacity: 0.4; cursor: default; }
 .cancel-btn:active,
 .submit-btn:active { transform: scale(0.96); }
 
@@ -306,4 +374,5 @@ body[data-theme="dark"] .custom-option.selected { background: rgba(255, 255, 255
   .modal-box textarea { min-height: 120px; }
   .modal-actions { flex-direction: column-reverse; }
   .cancel-btn, .submit-btn { width: 100%; height: 48px; }
+  .modal-quick-switch { font-size: 0.72rem; padding: 6px 10px; }
 }

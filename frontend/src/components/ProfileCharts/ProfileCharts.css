@@ -1,4 +1,3 @@
-/* ── Section title row with range toggle ── */
 .profile-section-title-row {
   display: flex;
   align-items: center;
@@ -35,7 +34,6 @@ body[data-theme="dark"] .range-toggle { background: rgba(255, 255, 255, 0.07); }
 }
 body[data-theme="dark"] .range-toggle-btn.active { background: rgba(255, 255, 255, 0.12); }
 
-/* ── Chart card wrapper ── */
 .profile-chart-card {
   padding: 22px 20px 14px;
   --chart-grid: rgba(0, 0, 0, 0.06);
@@ -57,7 +55,6 @@ body[data-theme="dark"] .profile-chart-card {
   padding: 0 20px;
 }
 
-/* ── Custom tooltip ── */
 .chart-tooltip {
   background: var(--card);
   border-radius: 12px;
@@ -65,9 +62,7 @@ body[data-theme="dark"] .profile-chart-card {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   border: 1px solid rgba(0, 0, 0, 0.06);
 }
-body[data-theme="dark"] .chart-tooltip {
-  border-color: rgba(255, 255, 255, 0.08);
-}
+body[data-theme="dark"] .chart-tooltip { border-color: rgba(255, 255, 255, 0.08); }
 .chart-tooltip-label { font-size: 0.74rem; font-weight: 700; opacity: 0.5; margin-bottom: 4px; }
 .chart-tooltip-row { font-size: 0.82rem; font-weight: 600; margin: 0; }
 
@@ -77,8 +72,22 @@ body[data-theme="dark"] .chart-tooltip {
 .heatmap-wrap {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 6px;
   overflow-x: auto;
+}
+
+.heatmap-months {
+  display: flex;
+  gap: 4px;
+}
+.heatmap-month-label {
+  width: 13px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text);
+  opacity: 0.45;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .heatmap-grid {
@@ -93,39 +102,52 @@ body[data-theme="dark"] .chart-tooltip {
   gap: 4px;
 }
 
+/* Base cell — NO background here, only size/shape.
+   Color comes exclusively from the level classes below,
+   so nothing can override them by specificity. */
 .heatmap-cell {
   width: 13px;
   height: 13px;
   border-radius: 3px;
-  background: rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
   transition: transform 0.15s ease;
 }
-.heatmap-cell:hover { transform: scale(1.25); }
+.heatmap-cell:hover { transform: scale(1.3); }
 
-body[data-theme="dark"] .heatmap-cell { background: rgba(255, 255, 255, 0.07); }
-
-.heatmap-level-0 { background: rgba(0, 0, 0, 0.06); }
-.heatmap-level-1 { background: rgba(16, 185, 129, 0.30); }
-.heatmap-level-2 { background: rgba(16, 185, 129, 0.52); }
+/* ── Light mode levels ── */
+.heatmap-level-0 { background: rgba(0, 0, 0, 0.07); }
+.heatmap-level-1 { background: rgba(16, 185, 129, 0.28); }
+.heatmap-level-2 { background: rgba(16, 185, 129, 0.50); }
 .heatmap-level-3 { background: rgba(16, 185, 129, 0.74); }
-.heatmap-level-4 { background: rgba(16, 185, 129, 1); }
+.heatmap-level-4 { background: rgba(16, 185, 129, 1);    }
 
-body[data-theme="dark"] .heatmap-level-0 { background: rgba(255, 255, 255, 0.07); }
+/* ── Dark mode levels — same specificity pattern, so these
+   correctly win over the light-mode rules above in dark mode ── */
+body[data-theme="dark"] .heatmap-level-0 { background: rgba(255, 255, 255, 0.09); }
+body[data-theme="dark"] .heatmap-level-1 { background: rgba(16, 185, 129, 0.38); }
+body[data-theme="dark"] .heatmap-level-2 { background: rgba(16, 185, 129, 0.58); }
+body[data-theme="dark"] .heatmap-level-3 { background: rgba(16, 185, 129, 0.80); }
+body[data-theme="dark"] .heatmap-level-4 { background: rgba(16, 185, 129, 1);    }
 
 .heatmap-legend {
   display: flex;
   align-items: center;
   gap: 4px;
   font-size: 0.7rem;
-  opacity: 0.45;
   font-weight: 600;
+  color: var(--text);
+  opacity: 0.45;
+  margin-top: 4px;
 }
-.heatmap-legend-cell { width: 11px; height: 11px; }
+.heatmap-legend-cell {
+  width: 11px !important;
+  height: 11px !important;
+}
 
-/* ── Mobile ── */
 @media (max-width: 600px) {
   .profile-section-title-row { flex-wrap: wrap; gap: 10px; }
   .profile-chart-card { padding: 18px 12px 10px; }
   .heatmap-card { padding: 18px 14px; }
   .heatmap-cell { width: 11px; height: 11px; }
+  .heatmap-month-label { width: 11px; font-size: 0.6rem; }
 }

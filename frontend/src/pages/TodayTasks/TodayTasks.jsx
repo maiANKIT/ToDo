@@ -1,28 +1,14 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, Star, LayoutGrid, List, Search } from "lucide-react";
+import { ArrowLeft, CalendarCheck, LayoutGrid, List, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../../components/Navbar/Navbar";
 import TodoCard from "../../components/TodoCard/TodoCard";
 import TodoModal from "../../components/TodoModal/TodoModal";
 import Toast from "../../components/Toast/Toast";
 import FilterDropdown from "../../components/FilterDropdown/FilterDropdown";
+import TaskDetailPanel from "../../components/TaskDetailPanel/TaskDetailPanel";
 import { getTodos, updateTodo, deleteTodo } from "../../services/todoAPI";
-import "../TodayTasks/TodayTasks.css";
-
-const matchesDueFilter = (todo, dueFilter) => {
-  if (dueFilter === "all") return true;
-  const now = new Date();
-  const due = todo.dueDate ? new Date(todo.dueDate) : null;
-  if (dueFilter === "nodate") return !due;
-  if (!due) return false;
-  if (dueFilter === "overdue") return due < now && todo.status !== "done";
-  if (dueFilter === "week") {
-    const weekEnd = new Date(now);
-    weekEnd.setDate(weekEnd.getDate() + 7);
-    return due >= now && due <= weekEnd;
-  }
-  return true;
-};
+import "./TodayTasks.css";
 
 const sortTodos = (list, sortBy) => {
   const arr = [...list];
@@ -44,19 +30,21 @@ const sortTodos = (list, sortBy) => {
   }
 };
 
-const StarredTasks = () => {
+const isToday = (dateStr) => {
+  if (!dateStr) return false;
+  return new Date(dateStr).toDateString() === new Date().toDateString();
+};
+
+const TodayTasks = () => {
   const navigate = useNavigate();
-  const [todos, setTodos] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [editingTodo, setEditingTodo] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [activeFilter, setActiveFilter] = useState("all");
-
-  const [sortBy, setSortBy] = useState("newest");
-  const [dueFilter, setDueFilter] = useState("all");
-
-  // ── Undo-delete toast state ──
-  const [pendingDelete, setPendingDelete] = useState(null);
+  const [todos,        setTodos]       = useState([]);
+  const [loading,      setLoading]     = useState(true);
+  const [editingTodo,  setEditingTodo] = useState(null);
+  const [viewingTodo,  setViewingTodo] = useState(null);
+  const [showModal,    setShowModal]   = useState(false);
+  const [activeFilter, setActiveFilter]= useState("all");
+  const [sortBy,       setSortBy]      = useState("newest");
+  const [pendingDelete,setPendingDelete]= useState(null);
 
   const [viewMode, setViewMode] = useState(
     () => localStorage.getItem("todoflow-view-mode") || "grid"
@@ -72,27 +60,27 @@ const StarredTasks = () => {
 
   useEffect(() => { fetchTodos(); }, []);
 
-  // Base set: all starred tasks
-  const starredTasks = todos.filter((t) => t.star);
+  // ── Today: due today OR created today ──
+  const todayTasks = todos.filter(
+    (t) => isToday(t.dueDate) || isToday(t.createdAt)
+  );
 
-  const pendingCount    = starredTasks.filter(t => t.status === "pending").length;
-  const inProgressCount = starredTasks.filter(t => t.status === "inprogress").length;
-  const doneCount       = starredTasks.filter(t => t.status === "done").length;
+  const pendingCount    = todayTasks.filter(t => t.status === "pending").length;
+  const inProgressCount = todayTasks.filter(t => t.status === "inprogress").length;
+  const doneCount       = todayTasks.filter(t => t.status === "done").length;
 
   const filteredTasks = sortTodos(
-    starredTasks.filter((t) => {
-      const f = activeFilter === "all" || t.status === activeFilter;
-      const due = matchesDueFilter(t, dueFilter);
-      return f && due;
-    }),
+    todayTasks.filter((t) =>
+      activeFilter === "all" || t.status === activeFilter
+    ),
     sortBy
   );
 
   const filters = [
-    { key: "all",        label: "All",         count: starredTasks.length, dot: "dot-all"        },
-    { key: "pending",    label: "Pending",     count: pendingCount,        dot: "dot-pending"    },
-    { key: "inprogress", label: "In Progress", count: inProgressCount,     dot: "dot-inprogress" },
-    { key: "done",       label: "Done",        count: doneCount,           dot: "dot-done"       },
+    { key: "all",        label: "All",         count: todayTasks.length, dot: "dot-all"        },
+    { key: "pending",    label: "Pending",     count: pendingCount,      dot: "dot-pending"    },
+    { key: "inprogress", label: "In Progress", count: inProgressCount,   dot: "dot-inprogress" },
+    { key: "done",       label: "Done",        count: doneCount,         dot: "dot-done"       },
   ];
 
   const handleSetViewMode = (mode) => {
@@ -121,7 +109,6 @@ const StarredTasks = () => {
     setEditingTodo(null);
   };
 
-  // ── Undo-delete: remove instantly from UI, actually call API after 5s ──
   const deleteTask = (id) => {
     const todoToDelete = todos.find((t) => t._id === id);
     if (!todoToDelete) return;
@@ -148,7 +135,9 @@ const StarredTasks = () => {
     setPendingDelete(null);
   };
 
-  const handleToastDismiss = () => setPendingDelete(null);
+  const todayLabel = new Date().toLocaleDateString("en-US", {
+    weekday: "long", month: "long", day: "numeric",
+  });
 
   return (
     <>
@@ -160,21 +149,21 @@ const StarredTasks = () => {
             <ArrowLeft size={18} />
           </button>
           <div className="page-header-title">
-            <Star size={26} strokeWidth={1.8} />
-            <h1>Starred Tasks</h1>
+            <CalendarCheck size={26} strokeWidth={1.8} />
+            <h1>Today's Tasks</h1>
           </div>
           <p className="page-header-sub">
-            Your important tasks — {starredTasks.length} total
+            {todayLabel} · {todayTasks.length} task{todayTasks.length !== 1 ? "s" : ""}
           </p>
         </div>
 
         {loading ? (
           <p className="page-loading">Loading...</p>
-        ) : starredTasks.length === 0 ? (
+        ) : todayTasks.length === 0 ? (
           <div className="empty-state neu-card">
-            <Star size={48} strokeWidth={1.5} className="empty-icon" />
-            <h2>No starred tasks</h2>
-            <p>Tap the star icon on any task to mark it important.</p>
+            <CalendarCheck size={48} strokeWidth={1.5} className="empty-icon" />
+            <h2>Nothing due today</h2>
+            <p>Tasks created or due today will appear here.</p>
           </div>
         ) : (
           <>
@@ -196,7 +185,7 @@ const StarredTasks = () => {
               <div className="empty-state neu-card">
                 <Search size={48} strokeWidth={1.5} className="empty-icon" />
                 <h2>Nothing here</h2>
-                <p>No starred tasks match your current filters.</p>
+                <p>No today's tasks match your current filter.</p>
               </div>
             ) : (
               <>
@@ -220,8 +209,10 @@ const StarredTasks = () => {
 
                   <FilterDropdown
                     sortBy={sortBy} setSortBy={setSortBy}
-                    dueFilter={dueFilter} setDueFilter={setDueFilter}
+                    dueFilter="all"
+                    setDueFilter={() => {}}
                     showStarredToggle={false}
+                    hideDueFilter
                   />
                 </div>
 
@@ -234,6 +225,7 @@ const StarredTasks = () => {
                       onDelete={(id) => deleteTask(id)}
                       onToggleStar={toggleStar}
                       onStatusChange={changeStatus}
+                      onViewDetails={setViewingTodo}
                       isListView={viewMode === "list"}
                     />
                   ))}
@@ -252,6 +244,20 @@ const StarredTasks = () => {
         />
       )}
 
+      {viewingTodo && (
+        <TaskDetailPanel
+          todo={todos.find(t => t._id === viewingTodo._id) || viewingTodo}
+          onClose={() => setViewingTodo(null)}
+          onEdit={(t) => {
+            setViewingTodo(null);
+            setEditingTodo(t);
+            setShowModal(true);
+          }}
+          onStatusChange={changeStatus}
+          onToggleStar={toggleStar}
+        />
+      )}
+
       {pendingDelete && (
         <Toast
           message={`"${pendingDelete.todo.title}" deleted`}
@@ -263,4 +269,4 @@ const StarredTasks = () => {
   );
 };
 
-export default StarredTasks;
+export default TodayTasks;  

@@ -10,7 +10,6 @@ const RANGE_OPTIONS = [
   { key: 30, label: "30 Days" },
 ];
 
-// Build an array of { date, dateLabel, completed, created, rate } for the last N days
 const buildDailyData = (todos, days) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -25,44 +24,57 @@ const buildDailyData = (todos, days) => {
       (t) => t.status === "done" && t.updatedAt && new Date(t.updatedAt).toDateString() === dayKey
     ).length;
 
-    const createdThatDay = todos.filter(
-      (t) => t.createdAt && new Date(t.createdAt).toDateString() === dayKey
-    ).length;
-
-    // Running completion rate: % of all tasks created up to & including this day that are done
     const tasksUpToDay = todos.filter(
       (t) => t.createdAt && new Date(t.createdAt) <= day
     );
     const doneUpToDay = tasksUpToDay.filter((t) => {
       if (t.status !== "done" || !t.updatedAt) return false;
-      return new Date(t.updatedAt) <= new Date(day.getTime() + 86399999); // end of that day
+      return new Date(t.updatedAt) <= new Date(day.getTime() + 86399999);
     });
     const rate = tasksUpToDay.length ? Math.round((doneUpToDay.length / tasksUpToDay.length) * 100) : 0;
 
     result.push({
       date: day,
       dateLabel: day.toLocaleDateString(undefined, { day: "numeric", month: "short" }),
-      shortLabel: day.toLocaleDateString(undefined, { weekday: "narrow" }),
       completed: completedThatDay,
-      created: createdThatDay,
       rate,
     });
   }
   return result;
 };
 
-// Build a 7-column x N-row heatmap grid (most recent ~12 weeks)
 const buildHeatmapWeeks = (todos, weeks = 12) => {
   const totalDays = weeks * 7;
-  const daily = buildDailyData(todos, totalDays);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-  const maxCompleted = Math.max(1, ...daily.map((d) => d.completed));
+  const days = [];
+  for (let i = totalDays - 1; i >= 0; i--) {
+    const day = new Date(today);
+    day.setDate(today.getDate() - i);
+    const dayKey = day.toDateString();
+    const completed = todos.filter(
+      (t) => t.status === "done" && t.updatedAt && new Date(t.updatedAt).toDateString() === dayKey
+    ).length;
+    days.push({ date: day, dateLabel: day.toLocaleDateString(undefined, { day: "numeric", month: "short" }), completed });
+  }
+
+  const maxCompleted = Math.max(1, ...days.map((d) => d.completed));
 
   const grid = [];
   for (let w = 0; w < weeks; w++) {
-    grid.push(daily.slice(w * 7, w * 7 + 7));
+    grid.push(days.slice(w * 7, w * 7 + 7));
   }
-  return { grid, maxCompleted };
+
+  const monthLabels = grid.map((week, wi) => {
+    const firstDay = week[0]?.date;
+    if (!firstDay) return null;
+    const prevWeekFirst = wi > 0 ? grid[wi - 1][0]?.date : null;
+    const isNewMonth = !prevWeekFirst || firstDay.getMonth() !== prevWeekFirst.getMonth();
+    return isNewMonth ? firstDay.toLocaleDateString(undefined, { month: "short" }) : null;
+  });
+
+  return { grid, maxCompleted, monthLabels };
 };
 
 const getHeatLevel = (count, max) => {
@@ -92,7 +104,7 @@ const ProfileCharts = ({ todos }) => {
   const [range, setRange] = useState(7);
 
   const dailyData = useMemo(() => buildDailyData(todos, range), [todos, range]);
-  const { grid: heatmapWeeks, maxCompleted } = useMemo(
+  const { grid: heatmapWeeks, maxCompleted, monthLabels } = useMemo(
     () => buildHeatmapWeeks(todos, 12),
     [todos]
   );
@@ -101,7 +113,6 @@ const ProfileCharts = ({ todos }) => {
 
   return (
     <>
-      {/* ── Completion Rate Over Time ── */}
       <div className="profile-section-title-row">
         <div className="profile-section-title">Completion Rate Over Time</div>
         <div className="range-toggle">
@@ -159,13 +170,18 @@ const ProfileCharts = ({ todos }) => {
         )}
       </div>
 
-      {/* ── Streak Heatmap ── */}
       <div className="profile-section-title">Activity Heatmap</div>
       <div className="profile-chart-card neu-card heatmap-card">
         {isEmpty ? (
           <div className="chart-empty">Your activity heatmap will appear once you complete tasks.</div>
         ) : (
           <div className="heatmap-wrap">
+            <div className="heatmap-months">
+              {monthLabels.map((label, wi) => (
+                <div key={wi} className="heatmap-month-label">{label || ""}</div>
+              ))}
+            </div>
+
             <div className="heatmap-grid">
               {heatmapWeeks.map((week, wi) => (
                 <div className="heatmap-col" key={wi}>
@@ -182,6 +198,7 @@ const ProfileCharts = ({ todos }) => {
                 </div>
               ))}
             </div>
+
             <div className="heatmap-legend">
               <span>Less</span>
               {[0, 1, 2, 3, 4].map((lvl) => (
@@ -193,7 +210,6 @@ const ProfileCharts = ({ todos }) => {
         )}
       </div>
 
-      {/* ── Daily Completions Bar Chart ── */}
       <div className="profile-section-title">Daily Completions</div>
       <div className="profile-chart-card neu-card">
         {isEmpty ? (
