@@ -6,6 +6,7 @@ import "./TaskDetailPanel.css";
 const STATUS_CYCLE = ["pending", "inprogress", "done"];
 
 const TaskDetailPanel = ({ todo, onClose, onEdit, onStatusChange, onToggleStar, onDuplicate }) => {
+  // Close on Escape
   useEffect(() => {
     const handleKey = (e) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", handleKey);
@@ -119,14 +120,6 @@ const TaskDetailPanel = ({ todo, onClose, onEdit, onStatusChange, onToggleStar, 
                 day: "numeric", month: "short", year: "numeric",
               })}
             </span>
-          </div>
-        )}
-
-        {/* ── Time estimate ── */}
-        {todo.estimate && (
-          <div className="detail-due-row due-upcoming">
-            <FiClock size={14} />
-            <span>Estimated {todo.estimate}</span>
           </div>
         )}
 
