@@ -1,0 +1,103 @@
+.weekly-recap {
+  position: relative;
+  padding: 18px 22px;
+  border-radius: 22px;
+  margin-bottom: 18px;
+  animation: recapFadeIn 0.35s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+@keyframes recapFadeIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.weekly-recap-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.weekly-recap-close:hover { background: rgba(0, 0, 0, 0.12); transform: scale(1.1); }
+body[data-theme="dark"] .weekly-recap-close { background: rgba(255, 255, 255, 0.1); }
+body[data-theme="dark"] .weekly-recap-close:hover { background: rgba(255, 255, 255, 0.18); }
+
+.weekly-recap-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.weekly-recap-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(245, 158, 11, 0.14);
+  color: #d97706;
+  flex-shrink: 0;
+}
+body[data-theme="dark"] .weekly-recap-icon {
+  background: rgba(251, 191, 36, 0.16);
+  color: #fbbf24;
+}
+
+.weekly-recap-header h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+
+.weekly-recap-stats {
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+}
+
+.weekly-recap-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.weekly-recap-value {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.weekly-recap-stat--busiest .weekly-recap-value {
+  color: #059669;
+}
+body[data-theme="dark"] .weekly-recap-stat--busiest .weekly-recap-value {
+  color: #34d399;
+}
+
+.weekly-recap-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text);
+  opacity: 0.5;
+}
+
+@media (max-width: 600px) {
+  .weekly-recap { padding: 16px 18px; }
+  .weekly-recap-stats { gap: 20px; }
+  .weekly-recap-value { font-size: 1.35rem; }
+}

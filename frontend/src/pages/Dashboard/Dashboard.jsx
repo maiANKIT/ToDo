@@ -17,8 +17,10 @@ import TaskDetailPanel from "../../components/TaskDetailPanel/TaskDetailPanel";
 import KanbanBoard from "../../components/KanbanBoard/KanbanBoard";
 import QuickAddOverlay from "../../components/QuickAddOverlay/QuickAddOverlay";
 import NotificationBanner from "../../components/NotificationBanner/NotificationBanner";
+import WeeklyRecap from "../../components/WeeklyRecap/WeeklyRecap";
 import useKeyboardShortcuts from "../../hooks/useKeyboardShortcuts";
 import useDueDateNotifications from "../../hooks/useDueDateNotifications";
+import useDocumentTitleBadge from "../../hooks/useDocumentTitleBadge";
 import { AuthContext } from "../../context/AuthContext";
 import { getTodos, createTodo, deleteTodo, updateTodo } from "../../services/todoAPI";
 
@@ -279,6 +281,9 @@ const Dashboard = () => {
     (t) => t.dueDate && new Date(t.dueDate) < now && t.status !== "done"
   );
 
+  // ── Tab title badge: "(3) TodoFlow" while there are overdue tasks ──
+  useDocumentTitleBadge(overdueTasks.length);
+
   const filteredTodos = sortTodos(
     todos.filter(t => {
       const s = t.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
@@ -329,6 +334,8 @@ const Dashboard = () => {
           />
 
           <NotificationBanner />
+
+          <WeeklyRecap todos={todos} />
 
           {/* ── Hero ── */}
           <div
