@@ -1,0 +1,103 @@
+.on-this-day {
+  position: relative;
+  padding: 18px 22px;
+  border-radius: 22px;
+  margin-bottom: 18px;
+  animation: onThisDayFadeIn 0.35s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+@keyframes onThisDayFadeIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.on-this-day-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.on-this-day-close:hover { background: rgba(0, 0, 0, 0.12); transform: scale(1.1); }
+body[data-theme="dark"] .on-this-day-close { background: rgba(255, 255, 255, 0.1); }
+body[data-theme="dark"] .on-this-day-close:hover { background: rgba(255, 255, 255, 0.18); }
+
+.on-this-day-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.on-this-day-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(102, 126, 234, 0.14);
+  color: #667eea;
+  flex-shrink: 0;
+}
+body[data-theme="dark"] .on-this-day-icon {
+  background: rgba(167, 139, 250, 0.16);
+  color: #a78bfa;
+}
+
+.on-this-day-header h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+
+.on-this-day-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.on-this-day-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.on-this-day-group-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text);
+  opacity: 0.45;
+}
+
+.on-this-day-tasks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.on-this-day-chip {
+  padding: 6px 13px;
+  border-radius: 999px;
+  background: rgba(102, 126, 234, 0.08);
+  color: var(--text);
+  font-size: 0.83rem;
+  font-weight: 600;
+}
+body[data-theme="dark"] .on-this-day-chip { background: rgba(167, 139, 250, 0.1); }
+
+@media (max-width: 600px) {
+  .on-this-day { padding: 16px 18px; }
+}

@@ -1,4 +1,5 @@
-import { FiExternalLink, FiStar } from "react-icons/fi";
+import { FiExternalLink, FiStar, FiCopy } from "react-icons/fi";
+import { getUrgencyLevel, getUrgencyLabel } from "../../utils/dueDateUrgency";
 import "./TodoCard.css";
 
 const STATUS_CYCLE = ["pending", "inprogress", "done"];
@@ -10,6 +11,7 @@ const TodoCard = ({
   onToggleStar,
   onStatusChange,
   onViewDetails,
+  onDuplicate,
   isListView = false,
   isKanban = false,
 }) => {
@@ -54,21 +56,16 @@ const TodoCard = ({
     onViewDetails?.(todo);
   };
 
-  // ── Due date status ──
-  const now = new Date();
-  const due = todo.dueDate ? new Date(todo.dueDate) : null;
-  const isOverdue  = due && due < now && todo.status !== "done";
-  const isDueToday = due && due.toDateString() === now.toDateString() && todo.status !== "done";
+  const handleDuplicateClick = (e) => {
+    e.stopPropagation();
+    onDuplicate?.(todo);
+  };
 
-  const dueDateLabel = due
-    ? isOverdue
-      ? `Overdue · ${due.toLocaleDateString()}`
-      : isDueToday
-      ? "Due today"
-      : `Due ${due.toLocaleDateString()}`
-    : null;
-
-  const dueDateClass = isOverdue ? "due-overdue" : isDueToday ? "due-today" : "due-upcoming";
+  // ── Due date urgency (color-coded: overdue/today/soon/week/later) ──
+  const urgency = getUrgencyLevel(todo.dueDate, todo.status);
+  const dueDateLabel = todo.dueDate ? getUrgencyLabel(todo.dueDate, urgency) : null;
+  const dueDateClass = `due-${urgency}`;
+  const urgencyClass = urgency !== "none" ? `urgency-${urgency}` : "";
 
   // ── Favicon helpers ──
   const getDomain = (url) => {
@@ -130,9 +127,19 @@ const TodoCard = ({
     </button>
   );
 
+  const DuplicateButton = ({ className = "duplicate-btn" }) => (
+    <button
+      className={className}
+      onClick={handleDuplicateClick}
+      title="Duplicate task"
+    >
+      <FiCopy size={14} />
+    </button>
+  );
+
   if (isListView) {
     return (
-      <div className="todo-card todo-card--list neu-card">
+      <div className={`todo-card todo-card--list neu-card ${urgencyClass}`}>
         <div className="todo-list-left">
           <StatusBadge />
           {StarButton}
@@ -150,6 +157,7 @@ const TodoCard = ({
               <FaviconImg url={todo.link} size={14} />
             </button>
           )}
+          <DuplicateButton className="link-btn" />
           <button className="edit-btn" onClick={() => onEdit(todo)}>Edit</button>
           <button className="delete-btn" onClick={() => onDelete(todo._id)}>Delete</button>
         </div>
@@ -158,7 +166,7 @@ const TodoCard = ({
   }
 
   return (
-    <div className="todo-card neu-card">
+    <div className={`todo-card neu-card ${urgencyClass}`}>
       <div className="todo-content">
         <div className="todo-card-top-row">
           <StatusBadge extraClass="status-badge--card" />
@@ -183,6 +191,7 @@ const TodoCard = ({
           {new Date(todo.createdAt).toLocaleDateString()}
         </span>
         <div className="todo-actions">
+          <DuplicateButton />
           <button className="edit-btn" onClick={() => onEdit(todo)}>Edit</button>
           <button className="delete-btn" onClick={() => onDelete(todo._id)}>Delete</button>
         </div>

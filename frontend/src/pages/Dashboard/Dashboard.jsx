@@ -3,7 +3,7 @@ import "./Dashboard.css";
 
 import {
   Sun, Cloud, Moon, Flame, CheckCircle2,
-  ListTodo, BarChart2, Search, LayoutGrid, List, Kanban,
+  ListTodo, BarChart2, Search, LayoutGrid, List, Kanban, Printer,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import useDebounce from "../../hooks/useDebounce";
@@ -18,6 +18,8 @@ import KanbanBoard from "../../components/KanbanBoard/KanbanBoard";
 import QuickAddOverlay from "../../components/QuickAddOverlay/QuickAddOverlay";
 import NotificationBanner from "../../components/NotificationBanner/NotificationBanner";
 import WeeklyRecap from "../../components/WeeklyRecap/WeeklyRecap";
+import OnThisDay from "../../components/OnThisDay/OnThisDay";
+import PrintableView from "../../components/PrintableView/PrintableView";
 import useKeyboardShortcuts from "../../hooks/useKeyboardShortcuts";
 import useDueDateNotifications from "../../hooks/useDueDateNotifications";
 import useDocumentTitleBadge from "../../hooks/useDocumentTitleBadge";
@@ -199,6 +201,20 @@ const Dashboard = () => {
   const addTask    = async (d)    => { try { await createTodo(d);     fetchTodos(); } catch(e){} };
   const updateTask = async (id,d) => { try { await updateTodo(id,d);  fetchTodos(); } catch(e){} };
 
+  // ── Duplicate: clones a task's fields into a fresh task via the same
+  //    addTask/createTodo path everything else uses. Status resets to
+  //    pending and star resets to false — a duplicate starts fresh.
+  const duplicateTask = (todo) => {
+    addTask({
+      title: `${todo.title} (Copy)`,
+      description: todo.description || "",
+      link: todo.link || "",
+      status: "pending",
+      dueDate: todo.dueDate || null,
+      star: false,
+    });
+  };
+
   // ── Undo-delete: remove instantly from UI, actually call API after 5s ──
   const deleteTask = (id) => {
     const todoToDelete = todos.find((t) => t._id === id);
@@ -336,6 +352,8 @@ const Dashboard = () => {
           <NotificationBanner />
 
           <WeeklyRecap todos={todos} />
+
+          <OnThisDay todos={todos} />
 
           {/* ── Hero ── */}
           <div
@@ -485,6 +503,14 @@ const Dashboard = () => {
                   dueFilter={dueFilter} setDueFilter={setDueFilter}
                   starredOnly={starredOnly} setStarredOnly={setStarredOnly}
                 />
+
+                <button
+                  className="view-toggle-btn"
+                  onClick={() => window.print()}
+                  title="Print current task list"
+                >
+                  <Printer size={15} strokeWidth={1.8} />
+                </button>
               </div>
 
               {viewMode === "kanban" ? (
@@ -495,6 +521,7 @@ const Dashboard = () => {
                   onToggleStar={toggleStar}
                   onStatusChange={changeStatus}
                   onViewDetails={setViewingTodo}
+                  onDuplicate={duplicateTask}
                 />
               ) : (
                 <div className={viewMode === "grid" ? "todo-grid" : "todo-list"}>
@@ -507,6 +534,7 @@ const Dashboard = () => {
                       onToggleStar={toggleStar}
                       onStatusChange={changeStatus}
                       onViewDetails={setViewingTodo}
+                      onDuplicate={duplicateTask}
                       isListView={viewMode === "list"}
                     />
                   ))}
@@ -554,6 +582,7 @@ const Dashboard = () => {
           }}
           onStatusChange={changeStatus}
           onToggleStar={toggleStar}
+          onDuplicate={duplicateTask}
         />
       )}
 
@@ -564,6 +593,8 @@ const Dashboard = () => {
           onDismiss={handleToastDismiss}
         />
       )}
+
+      <PrintableView todos={viewMode === "kanban" ? filteredTodosForKanban : filteredTodos} />
     </>
   );
 };

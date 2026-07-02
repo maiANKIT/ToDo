@@ -1,10 +1,11 @@
 import { useEffect } from "react";
-import { FiX, FiExternalLink, FiCalendar, FiClock, FiEdit2, FiStar } from "react-icons/fi";
+import { FiX, FiExternalLink, FiCalendar, FiClock, FiEdit2, FiStar, FiCopy } from "react-icons/fi";
+import { getUrgencyLevel } from "../../utils/dueDateUrgency";
 import "./TaskDetailPanel.css";
 
 const STATUS_CYCLE = ["pending", "inprogress", "done"];
 
-const TaskDetailPanel = ({ todo, onClose, onEdit, onStatusChange, onToggleStar }) => {
+const TaskDetailPanel = ({ todo, onClose, onEdit, onStatusChange, onToggleStar, onDuplicate }) => {
   // Close on Escape
   useEffect(() => {
     const handleKey = (e) => { if (e.key === "Escape") onClose(); };
@@ -57,11 +58,11 @@ const TaskDetailPanel = ({ todo, onClose, onEdit, onStatusChange, onToggleStar }
     }
   };
 
-  const now = new Date();
   const due = todo.dueDate ? new Date(todo.dueDate) : null;
-  const isOverdue  = due && due < now && todo.status !== "done";
-  const isDueToday = due && due.toDateString() === now.toDateString() && todo.status !== "done";
-  const dueDateClass = isOverdue ? "due-overdue" : isDueToday ? "due-today" : "due-upcoming";
+  const urgency = getUrgencyLevel(todo.dueDate, todo.status);
+  const isOverdue  = urgency === "overdue";
+  const isDueToday = urgency === "today";
+  const dueDateClass = `due-${urgency}`;
 
   const createdLabel = new Date(todo.createdAt).toLocaleDateString(undefined, {
     day: "numeric", month: "short", year: "numeric",
@@ -146,10 +147,19 @@ const TaskDetailPanel = ({ todo, onClose, onEdit, onStatusChange, onToggleStar }
 
         {/* ── Footer ── */}
         <div className="detail-footer">
-          <button className="detail-edit-btn" onClick={() => onEdit(todo)}>
-            <FiEdit2 size={14} />
-            Edit Task
-          </button>
+          <div className="detail-footer-row">
+            <button
+              className="detail-duplicate-btn"
+              onClick={() => onDuplicate?.(todo)}
+              title="Duplicate task"
+            >
+              <FiCopy size={14} />
+            </button>
+            <button className="detail-edit-btn" onClick={() => onEdit(todo)}>
+              <FiEdit2 size={14} />
+              Edit Task
+            </button>
+          </div>
         </div>
       </div>
     </div>

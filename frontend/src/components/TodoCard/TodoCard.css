@@ -83,12 +83,32 @@ body[data-theme="dark"] .star-btn--active { color: #fbbf24; background: rgba(251
   margin-bottom: 12px;
 }
 .due-overdue  { background: rgba(239, 68, 68, 0.12);  color: #dc2626; }
-.due-today    { background: rgba(245, 166, 35, 0.14); color: #b45309; }
-.due-upcoming { background: rgba(107, 114, 128, 0.10); color: #4b5563; }
+.due-today    { background: rgba(234, 88, 12, 0.14);  color: #c2410c; }
+.due-soon     { background: rgba(245, 158, 11, 0.14); color: #b45309; }
+.due-week     { background: rgba(234, 179, 8, 0.14);  color: #92720c; }
+.due-later    { background: rgba(22, 163, 74, 0.12);  color: #15803d; }
+.due-upcoming { background: rgba(107, 114, 128, 0.10); color: #4b5563; } /* kept for compatibility */
 
 body[data-theme="dark"] .due-overdue  { background: rgba(239, 68, 68, 0.18); color: #f87171; }
-body[data-theme="dark"] .due-today    { background: rgba(245, 166, 35, 0.20); color: #fbbf24; }
+body[data-theme="dark"] .due-today    { background: rgba(251, 146, 60, 0.20); color: #fb923c; }
+body[data-theme="dark"] .due-soon     { background: rgba(245, 158, 11, 0.20); color: #fbbf24; }
+body[data-theme="dark"] .due-week     { background: rgba(234, 179, 8, 0.20); color: #fde047; }
+body[data-theme="dark"] .due-later    { background: rgba(34, 197, 94, 0.18); color: #4ade80; }
 body[data-theme="dark"] .due-upcoming { background: rgba(107, 114, 128, 0.18); color: #9ca3af; }
+
+/* ── Urgency accent: colored left border on the card itself, matching
+      the due-badge tier (red → orange → amber → yellow → green) ── */
+.todo-card.urgency-overdue { border-left: 4px solid #dc2626; }
+.todo-card.urgency-today   { border-left: 4px solid #ea580c; }
+.todo-card.urgency-soon    { border-left: 4px solid #f59e0b; }
+.todo-card.urgency-week    { border-left: 4px solid #eab308; }
+.todo-card.urgency-later   { border-left: 4px solid #16a34a; }
+
+body[data-theme="dark"] .todo-card.urgency-overdue { border-left-color: #f87171; }
+body[data-theme="dark"] .todo-card.urgency-today   { border-left-color: #fb923c; }
+body[data-theme="dark"] .todo-card.urgency-soon    { border-left-color: #fbbf24; }
+body[data-theme="dark"] .todo-card.urgency-week    { border-left-color: #fde047; }
+body[data-theme="dark"] .todo-card.urgency-later   { border-left-color: #4ade80; }
 
 /* ── Link pill (grid view) ── */
 .todo-link-pill {
@@ -145,6 +165,30 @@ body[data-theme="dark"] .todo-link-pill:hover {
   display: flex;
   gap: 12px;
 }
+
+/* Duplicate — fixed-width icon button, sits before flex-1 Edit/Delete */
+.duplicate-btn {
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--text);
+  opacity: 0.65;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.22s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+.duplicate-btn:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px) scale(1.06);
+}
+body[data-theme="dark"] .duplicate-btn { background: rgba(255, 255, 255, 0.08); }
+body[data-theme="dark"] .duplicate-btn:hover { background: rgba(255, 255, 255, 0.15); }
 
 .edit-btn,
 .delete-btn {
@@ -330,6 +374,7 @@ body[data-theme="dark"] .link-btn:hover {
     flex: 1; height: 42px;
     font-size: 0.9rem; font-weight: 600; width: auto;
   }
+  .duplicate-btn { width: 42px; height: 42px; }
 
   /* List card on mobile — stack vertically */
   .todo-card--list {
