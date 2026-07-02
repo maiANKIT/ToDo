@@ -23,6 +23,8 @@ import PrintableView from "../../components/PrintableView/PrintableView";
 import useKeyboardShortcuts from "../../hooks/useKeyboardShortcuts";
 import useDueDateNotifications from "../../hooks/useDueDateNotifications";
 import useDocumentTitleBadge from "../../hooks/useDocumentTitleBadge";
+import useIdleNudge from "../../hooks/useIdleNudge";
+import useFaviconBadge from "../../hooks/useFaviconBadge";
 import { AuthContext } from "../../context/AuthContext";
 import { getTodos, createTodo, deleteTodo, updateTodo } from "../../services/todoAPI";
 
@@ -204,6 +206,7 @@ const Dashboard = () => {
   // ── Duplicate: clones a task's fields into a fresh task via the same
   //    addTask/createTodo path everything else uses. Status resets to
   //    pending and star resets to false — a duplicate starts fresh.
+  //    Estimate carries over since it's descriptive metadata, not state.
   const duplicateTask = (todo) => {
     addTask({
       title: `${todo.title} (Copy)`,
@@ -211,6 +214,7 @@ const Dashboard = () => {
       link: todo.link || "",
       status: "pending",
       dueDate: todo.dueDate || null,
+      estimate: todo.estimate || "",
       star: false,
     });
   };
@@ -255,7 +259,7 @@ const Dashboard = () => {
   };
 
   // ── Status change: fires confetti whenever a task newly becomes "done" ──
-  // Also used by Kanban drag-and-drop (drag into a column = status change)
+  // Also used by Kanban drag-and-drop and swipe-right-to-done on TodoCard
   const changeStatus = async (id, newStatus) => {
     const currentTodo = todos.find((t) => t._id === id);
     const justCompleted = currentTodo && currentTodo.status !== "done" && newStatus === "done";
@@ -291,6 +295,11 @@ const Dashboard = () => {
   const doneCount       = todos.filter(t => t.status === "done").length;
   const streak          = getStreak(todos);
   const score           = getScore(todos);
+
+  // ── Idle nudge: if the user's been inactive for a while with pending
+  //    tasks left, show a gentle toast + a red-dot badge on the tab favicon ──
+  const { nudgeActive, dismissNudge } = useIdleNudge(pendingCount);
+  useFaviconBadge(nudgeActive);
 
   const now = new Date();
   const overdueTasks = todos.filter(
@@ -591,6 +600,14 @@ const Dashboard = () => {
           message={`"${pendingDelete.todo.title}" deleted`}
           onUndo={handleUndoDelete}
           onDismiss={handleToastDismiss}
+        />
+      )}
+
+      {nudgeActive && !pendingDelete && (
+        <Toast
+          message={`${pendingCount} task${pendingCount !== 1 ? "s" : ""} still pending today`}
+          onDismiss={dismissNudge}
+          duration={6000}
         />
       )}
 

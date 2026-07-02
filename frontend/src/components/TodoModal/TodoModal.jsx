@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { FiLink, FiStar, FiZap, FiCalendar } from "react-icons/fi";
+import { FiLink, FiStar, FiZap, FiCalendar, FiClock } from "react-icons/fi";
 import DateTimePicker from "../DateTimePicker/DateTimePicker";
 import { parseQuickAdd } from "../../utils/quickAddParser";
 import "./TodoModal.css";
@@ -11,11 +11,11 @@ const TodoModal = ({ onClose, onSubmit, editTodo }) => {
   const [link,        setLink]        = useState("");
   const [status,      setStatus]      = useState("pending");
   const [dueDate,     setDueDate]     = useState("");
+  const [estimate,    setEstimate]    = useState("");
   const [star,        setStar]        = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [dropdownFlip, setDropdownFlip] = useState(false);
 
-  // ── Quick add mode (create-only) ──
   const [quickMode, setQuickMode] = useState(false);
   const [quickText, setQuickText] = useState("");
 
@@ -35,6 +35,7 @@ const TodoModal = ({ onClose, onSubmit, editTodo }) => {
       setStatus(editTodo.status     || "pending");
       setStar(editTodo.star         || false);
       setDueDate(editTodo.dueDate   || "");
+      setEstimate(editTodo.estimate || "");
     }
   }, [editTodo]);
 
@@ -60,6 +61,7 @@ const TodoModal = ({ onClose, onSubmit, editTodo }) => {
       link: link.trim(),
       status,
       dueDate: dueDate || null,
+      estimate: estimate.trim(),
       star,
     });
     onClose();
@@ -78,6 +80,7 @@ const TodoModal = ({ onClose, onSubmit, editTodo }) => {
       link: qLink || "",
       status: "pending",
       dueDate: qDueDate || null,
+      estimate: "",
       star: false,
     });
     onClose();
@@ -87,7 +90,7 @@ const TodoModal = ({ onClose, onSubmit, editTodo }) => {
     if (!dropdownOpen && selectRef.current) {
       const rect = selectRef.current.getBoundingClientRect();
       const spaceBelow = window.innerHeight - rect.bottom;
-      setDropdownFlip(spaceBelow < 180); // not enough room below for the options list
+      setDropdownFlip(spaceBelow < 180);
     }
     setDropdownOpen(!dropdownOpen);
   };
@@ -166,7 +169,6 @@ const TodoModal = ({ onClose, onSubmit, editTodo }) => {
           </form>
         ) : (
           <form onSubmit={submitHandler}>
-            {/* Title */}
             <input
               type="text"
               placeholder="Task title"
@@ -175,14 +177,12 @@ const TodoModal = ({ onClose, onSubmit, editTodo }) => {
               required
             />
 
-            {/* Description */}
             <textarea
               placeholder="Description (optional)"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
 
-            {/* Link — optional */}
             <div className="modal-link-wrap">
               <span className="modal-link-icon"><FiLink size={15} /></span>
               <input
@@ -204,13 +204,34 @@ const TodoModal = ({ onClose, onSubmit, editTodo }) => {
               )}
             </div>
 
-            {/* Due date + time — optional */}
+            {/* Time estimate — free-form, e.g. "30 min", "2 hrs" */}
+            <div className="modal-link-wrap">
+              <span className="modal-link-icon"><FiClock size={15} /></span>
+              <input
+                type="text"
+                className="modal-link-input"
+                placeholder="Time estimate (optional) — e.g. 30 min, 2 hrs"
+                value={estimate}
+                onChange={(e) => setEstimate(e.target.value)}
+                maxLength={24}
+              />
+              {estimate && (
+                <button
+                  type="button"
+                  className="modal-link-clear"
+                  onClick={() => setEstimate("")}
+                  title="Clear estimate"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+
             <DateTimePicker
               value={dueDate}
               onChange={(iso) => setDueDate(iso || "")}
             />
 
-            {/* Status dropdown */}
             <div className="custom-select-wrapper">
               <div
                 ref={selectRef}

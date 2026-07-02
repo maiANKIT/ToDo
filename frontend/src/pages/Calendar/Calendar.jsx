@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import Navbar from "../../components/Navbar/Navbar";
-import { getTodos } from "../../services/todoAPI";
+import { getTodos, updateTodo } from "../../services/todoAPI";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { CheckCircle2, Clock, Circle } from "lucide-react";
 import "./Calendar.css";
@@ -18,13 +18,21 @@ const isSameDay = (a, b) =>
   a.getMonth()    === b.getMonth()    &&
   a.getDate()     === b.getDate();
 
+// ── Reference date for placing a task on the calendar:
+//    dueDate if set, otherwise fall back to createdAt so nothing disappears ──
+const getRefDate = (t) => {
+  if (t.dueDate) return new Date(t.dueDate);
+  if (t.createdAt) return new Date(t.createdAt);
+  return null;
+};
+
 const Calendar = () => {
   const [todos,       setTodos]       = useState([]);
   const [view,        setView]        = useState("Month");
   const [current,     setCurrent]     = useState(new Date());
   const [selectedDay, setSelectedDay] = useState(new Date());
+  const [dragOverKey, setDragOverKey] = useState(null);
 
-  // Search state — same pattern as Dashboard
   const [searchState,  setSearchState]  = useState("closed");
   const [searchTerm,   setSearchTerm]   = useState("");
   const [navbarBottom, setNavbarBottom] = useState(80);
@@ -43,9 +51,11 @@ const Calendar = () => {
     return () => window.removeEventListener("resize", measureNavbar);
   }, [measureNavbar]);
 
-  useEffect(() => {
+  const fetchTodos = () => {
     getTodos().then((r) => setTodos(r.data.data)).catch(console.log);
-  }, []);
+  };
+
+  useEffect(() => { fetchTodos(); }, []);
 
   const openSearch = () => {
     setSearchState("opening");
@@ -58,7 +68,6 @@ const Calendar = () => {
     setTimeout(() => { setSearchState("closed"); measureNavbar(); }, 320);
   };
 
-  // Filter all todos by search term (searched across all dates)
   const searchResults = searchTerm.trim()
     ? todos.filter((t) =>
         t.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -69,7 +78,10 @@ const Calendar = () => {
   const isSearchOpen = searchState === "open" || searchState === "opening" || searchState === "closing";
 
   const todosForDay = (date) =>
-    todos.filter((t) => t.createdAt && isSameDay(new Date(t.createdAt), date));
+    todos.filter((t) => {
+      const ref = getRefDate(t);
+      return ref && isSameDay(ref, date);
+    });
 
   const navigate = (dir) => {
     const d = new Date(current);
@@ -117,6 +129,42 @@ const Calendar = () => {
   const statusLabel = (s) =>
     s === "inprogress" ? "In Progress" : s.charAt(0).toUpperCase() + s.slice(1);
 
+  // ── Drag-to-reschedule ──
+  const handleDragStart = (e, todoId) => {
+    e.dataTransfer.setData("text/todo-id", todoId);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOverCell = (e, key) => {
+    e.preventDefault();
+    if (dragOverKey !== key) setDragOverKey(key);
+  };
+
+  const handleDragLeaveCell = (key) => {
+    setDragOverKey((curr) => (curr === key ? null : curr));
+  };
+
+  const handleDrop = (e, date) => {
+    e.preventDefault();
+    setDragOverKey(null);
+    const id = e.dataTransfer.getData("text/todo-id");
+    if (!id) return;
+    const todo = todos.find((t) => t._id === id);
+    if (!todo) return;
+
+    const newDate = new Date(date);
+    if (todo.dueDate) {
+      const old = new Date(todo.dueDate);
+      newDate.setHours(old.getHours(), old.getMinutes(), 0, 0);
+    } else {
+      newDate.setHours(12, 0, 0, 0);
+    }
+
+    updateTodo(id, { dueDate: newDate.toISOString() })
+      .then(fetchTodos)
+      .catch(console.log);
+  };
+
   return (
     <div className="cal-page">
       <Navbar
@@ -145,7 +193,12 @@ const Calendar = () => {
             ) : (
               <div className="cal-search-list">
                 {searchResults.map((t, i) => (
-                  <div key={i} className={`cal-day__task cal-day__task--${t.status}`}>
+                  <div
+                    key={i}
+                    className={`cal-day__task cal-day__task--${t.status} cal-draggable-task`}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, t._id)}
+                  >
                     <div className="cal-day__task-left">
                       {statusIcon(t.status)}
                       <div>
@@ -174,7 +227,7 @@ const Calendar = () => {
         <div className="cal-header neu-card">
           <div className="cal-header__left">
             <h1 className="cal-title">Calendar</h1>
-            <p className="cal-sub">View your tasks by date</p>
+            <p className="cal-sub">View your tasks by date · drag a task onto a day to reschedule</p>
           </div>
           <div className="cal-header__right">
             <div className="cal-view-switch">
@@ -218,11 +271,16 @@ const Calendar = () => {
                   const dayTodos  = todosForDay(date);
                   const isToday   = isSameDay(date, today);
                   const isSel     = isSameDay(date, selectedDay);
+                  const key       = date.toDateString();
+                  const isOver    = dragOverKey === key;
                   return (
                     <div
                       key={i}
-                      className={`cal-cell ${isToday ? "cal-cell--today" : ""} ${isSel ? "cal-cell--selected" : ""}`}
+                      className={`cal-cell ${isToday ? "cal-cell--today" : ""} ${isSel ? "cal-cell--selected" : ""} ${isOver ? "cal-cell--dragover" : ""}`}
                       onClick={() => setSelectedDay(date)}
+                      onDragOver={(e) => handleDragOverCell(e, key)}
+                      onDragLeave={() => handleDragLeaveCell(key)}
+                      onDrop={(e) => handleDrop(e, date)}
                     >
                       <span className="cal-cell__num">{date.getDate()}</span>
                       <div className="cal-cell__dots">
@@ -247,11 +305,16 @@ const Calendar = () => {
                 const dayTodos = todosForDay(date);
                 const isToday  = isSameDay(date, today);
                 const isSel    = isSameDay(date, selectedDay);
+                const key      = date.toDateString();
+                const isOver   = dragOverKey === key;
                 return (
                   <div
                     key={i}
-                    className={`cal-week__col ${isToday ? "cal-week__col--today" : ""} ${isSel ? "cal-week__col--selected" : ""}`}
+                    className={`cal-week__col ${isToday ? "cal-week__col--today" : ""} ${isSel ? "cal-week__col--selected" : ""} ${isOver ? "cal-week__col--dragover" : ""}`}
                     onClick={() => setSelectedDay(date)}
+                    onDragOver={(e) => handleDragOverCell(e, key)}
+                    onDragLeave={() => handleDragLeaveCell(key)}
+                    onDrop={(e) => handleDrop(e, date)}
                   >
                     <div className="cal-week__header">
                       <span className="cal-week__day">
@@ -266,7 +329,12 @@ const Calendar = () => {
                         <div className="cal-week__empty">—</div>
                       ) : (
                         dayTodos.map((t, j) => (
-                          <div key={j} className={`cal-week__task cal-week__task--${t.status}`}>
+                          <div
+                            key={j}
+                            className={`cal-week__task cal-week__task--${t.status} cal-draggable-task`}
+                            draggable
+                            onDragStart={(e) => { e.stopPropagation(); handleDragStart(e, t._id); }}
+                          >
                             {statusIcon(t.status)}
                             <span>{t.title}</span>
                           </div>
@@ -298,7 +366,12 @@ const Calendar = () => {
                   </div>
                 ) : (
                   todosForDay(current).map((t, i) => (
-                    <div key={i} className={`cal-day__task cal-day__task--${t.status}`}>
+                    <div
+                      key={i}
+                      className={`cal-day__task cal-day__task--${t.status} cal-draggable-task`}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, t._id)}
+                    >
                       <div className="cal-day__task-left">
                         {statusIcon(t.status)}
                         <div>
@@ -318,7 +391,11 @@ const Calendar = () => {
 
           {/* ── Selected Day Panel (Month & Week) ── */}
           {view !== "Day" && (
-            <div className="cal-selected-panel neu-card">
+            <div
+              className="cal-selected-panel neu-card"
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => handleDrop(e, selectedDay)}
+            >
               <h3 className="cal-panel-title">
                 {selectedDay.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
               </h3>
@@ -330,7 +407,12 @@ const Calendar = () => {
               ) : (
                 <div className="cal-panel-tasks">
                   {selectedTodos.map((t, i) => (
-                    <div key={i} className={`cal-day__task cal-day__task--${t.status}`}>
+                    <div
+                      key={i}
+                      className={`cal-day__task cal-day__task--${t.status} cal-draggable-task`}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, t._id)}
+                    >
                       <div className="cal-day__task-left">
                         {statusIcon(t.status)}
                         <div>

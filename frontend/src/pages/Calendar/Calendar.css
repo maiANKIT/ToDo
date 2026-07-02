@@ -594,3 +594,26 @@ body[data-theme="dark"] .cal-search-results {
   word-break: break-all;
   white-space: normal;
 }
+/* ── Drag-to-reschedule ── */
+.cal-draggable-task {
+  cursor: grab;
+}
+.cal-draggable-task:active {
+  cursor: grabbing;
+}
+
+.cal-cell--dragover {
+  background: rgba(102, 126, 234, 0.15) !important;
+  border-color: #667eea !important;
+}
+body[data-theme="dark"] .cal-cell--dragover {
+  background: rgba(167, 139, 250, 0.15) !important;
+  border-color: #a78bfa !important;
+}
+
+.cal-week__col--dragover {
+  background: rgba(102, 126, 234, 0.10) !important;
+}
+body[data-theme="dark"] .cal-week__col--dragover {
+  background: rgba(167, 139, 250, 0.12) !important;
+}
