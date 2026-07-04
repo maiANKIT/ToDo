@@ -8,9 +8,6 @@ exports.auth = (req, res, next)=>{
 
         const token = req.cookies?.token || req.body?.token || req.header('Authorization')?.replace('Bearer ', '');
 
-        console.log("Authorization:", req.header("Authorization"));
-        console.log("Token:", token);
-
         if(!token){
 
             return res.status(401).json({
@@ -25,14 +22,13 @@ exports.auth = (req, res, next)=>{
         //verify token
         try{
 
-            const payload = jwt.verify(token, process.env.JWT_SECRET);
-            console.log(payload);
-            req.user = payload;
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            req.user = decoded;
 
         }
-        catch(err){
+        catch(error){
 
-            console.error(err);
+            console.error(error);
             return res.status(401).json({
 
                 success: false,
@@ -45,7 +41,9 @@ exports.auth = (req, res, next)=>{
         next();
         
     }
-    catch(err){
+    catch(error){
+
+        console.error(error);
 
         return res.status(500).json({
 
