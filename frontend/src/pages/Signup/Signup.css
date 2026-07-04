@@ -194,6 +194,59 @@ body[data-theme="dark"] .auth-form__logo-mobile { filter: invert(1); }
   opacity: 0.5;
 }
 
+/* ── Step progress dots ── */
+.auth-steps {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: -2px;
+}
+
+.auth-step-dot {
+  width: 22px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(120, 120, 120, 0.25);
+  transition: background 0.25s ease, width 0.25s ease;
+}
+
+.auth-step-dot--active {
+  width: 32px;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+}
+
+.auth-step-dot--done {
+  background: #818cf8;
+}
+
+/* ── OTP step head ── */
+.auth-form__head--otp {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.auth-otp-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(99, 102, 241, 0.12);
+  color: #6366f1;
+}
+body[data-theme="dark"] .auth-otp-icon {
+  background: rgba(167, 139, 250, 0.16);
+  color: #a78bfa;
+}
+
+.auth-form__head--otp p strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
 /* ── Floating-label fields ── */
 
 .field {
@@ -283,6 +336,85 @@ body[data-theme="dark"] .field input {
 
 .field__toggle:hover { opacity: 0.8; }
 
+/* ── OTP boxes — fluid sizing via clamp() so this scales smoothly
+      across phones/tablets/laptops without extra breakpoints ── */
+.otp-boxes {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: clamp(6px, 2vw, 10px);
+}
+
+.otp-box {
+  width: 100%;
+  height: clamp(46px, 13vw, 58px);
+  text-align: center;
+  font-size: clamp(1.05rem, 4vw, 1.35rem);
+  font-weight: 700;
+  border: 1.5px solid transparent;
+  border-radius: 12px;
+  background: var(--card);
+  color: var(--text);
+  outline: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+}
+body[data-theme="dark"] .otp-box { box-shadow: none; }
+
+.otp-box:focus {
+  border-color: #818cf8;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.14);
+  transform: translateY(-1px);
+}
+
+/* ── Resend row ── */
+.otp-resend-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--text);
+  opacity: 0.6;
+}
+
+.otp-resend-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: none;
+  background: transparent;
+  color: #818cf8;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 2px 4px;
+  transition: opacity 0.2s ease;
+}
+.otp-resend-btn:disabled {
+  color: var(--text);
+  opacity: 0.45;
+  cursor: default;
+}
+.otp-resend-btn:not(:disabled):hover { opacity: 0.8; }
+
+/* ── Back link ── */
+.otp-back-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  opacity: 0.5;
+  font-size: 0.83rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px;
+  transition: opacity 0.2s ease;
+}
+.otp-back-link:hover { opacity: 0.85; }
+
 /* ── Submit button ── */
 
 .auth-submit {
@@ -364,4 +496,5 @@ body[data-theme="dark"] .field input {
 
 @media (max-width: 420px) {
   .auth-form__head h1 { font-size: 1.45rem; }
+  .otp-resend-row { flex-direction: column; gap: 2px; }
 }
