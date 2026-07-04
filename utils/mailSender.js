@@ -1,34 +1,27 @@
-const transporter = require('../config/mail');
+const mailSender = async (email, subject, body) => {
+  try {
+    const googleScriptUrl = process.env.GOOGLE_SCRIPT_URL;
 
-const mailSender = async(email, subject, body)=>{
+    const response = await fetch(googleScriptUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: email,
+        subject: subject,
+        body: body,
+      }),
+    });
 
-    try{
+    const data = await response.json();
+    console.log("Mail sent successfully via Google Script:", data);
 
-        const info = await transporter.sendMail({
-
-            from: `"ToDoFlow"<${process.env.MAIL_USER}>`,
-
-            to: email,
-
-            subject: subject,
-
-            html: body
-
-        });
-
-        console.log('Mail sent successfully');
-        console.log(info);
-
-        return info;
-
-    }
-    catch(error){
-
-        console.error('Mail error: ', error);
-        throw error;
-
-    }
-
-}
+    return data;
+  } catch (error) {
+    console.error("Mail error: ", error);
+    throw error;
+  }
+};
 
 module.exports = mailSender;
