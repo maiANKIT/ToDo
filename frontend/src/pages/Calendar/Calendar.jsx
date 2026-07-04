@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { toast } from "react-toastify";
 import Navbar from "../../components/Navbar/Navbar";
 import { getTodos, updateTodo } from "../../services/todoAPI";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
@@ -37,6 +38,10 @@ const Calendar = () => {
   const [searchTerm,   setSearchTerm]   = useState("");
   const [navbarBottom, setNavbarBottom] = useState(80);
   const navbarRef = useRef(null);
+
+  // ── Tap-to-reschedule (mobile fallback — native drag doesn't work on touch) ──
+  const [reschedulingTask, setReschedulingTask] = useState(null);
+  const [rescheduleValue,  setRescheduleValue]  = useState("");
 
   const measureNavbar = useCallback(() => {
     if (navbarRef.current) {
@@ -130,13 +135,19 @@ const Calendar = () => {
     s === "inprogress" ? "In Progress" : s.charAt(0).toUpperCase() + s.slice(1);
 
   // ── Drag-to-reschedule ──
+  // NOTE: using the standard "text/plain" MIME type here instead of a
+  // custom one ("text/todo-id"). Some privacy-hardened browsers (Brave,
+  // certain Firefox configurations) silently strip custom dataTransfer
+  // types, which made drop silently do nothing — "text/plain" is always
+  // preserved.
   const handleDragStart = (e, todoId) => {
-    e.dataTransfer.setData("text/todo-id", todoId);
+    e.dataTransfer.setData("text/plain", todoId);
     e.dataTransfer.effectAllowed = "move";
   };
 
   const handleDragOverCell = (e, key) => {
     e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
     if (dragOverKey !== key) setDragOverKey(key);
   };
 
@@ -147,10 +158,18 @@ const Calendar = () => {
   const handleDrop = (e, date) => {
     e.preventDefault();
     setDragOverKey(null);
-    const id = e.dataTransfer.getData("text/todo-id");
-    if (!id) return;
+
+    const id = e.dataTransfer.getData("text/plain");
+    if (!id) {
+      console.warn("Drop fired with no task id in dataTransfer — drag may not have started correctly.");
+      return;
+    }
+
     const todo = todos.find((t) => t._id === id);
-    if (!todo) return;
+    if (!todo) {
+      console.warn("Dropped task id not found in current todos list:", id);
+      return;
+    }
 
     const newDate = new Date(date);
     if (todo.dueDate) {
@@ -160,9 +179,60 @@ const Calendar = () => {
       newDate.setHours(12, 0, 0, 0);
     }
 
+    // If it's already due on the dropped day, there's nothing to change.
+    if (todo.dueDate && isSameDay(new Date(todo.dueDate), newDate)) return;
+
     updateTodo(id, { dueDate: newDate.toISOString() })
-      .then(fetchTodos)
-      .catch(console.log);
+      .then(() => {
+        toast.success(
+          `"${todo.title}" moved to ${newDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
+        );
+        fetchTodos();
+      })
+      .catch((error) => {
+        console.error("Failed to reschedule task:", error?.response?.data || error);
+        toast.error(error?.response?.data?.message || "Couldn't reschedule that task");
+      });
+  };
+
+  // ── Tap-to-reschedule: opens a small date-picker popover. Works on
+  //    touch devices where native HTML5 drag-and-drop isn't available. ──
+  const openReschedule = (todo) => {
+    const ref = todo.dueDate ? new Date(todo.dueDate) : new Date();
+    setRescheduleValue(ref.toISOString().slice(0, 10)); // yyyy-mm-dd for <input type="date">
+    setReschedulingTask(todo);
+  };
+
+  const closeReschedule = () => {
+    setReschedulingTask(null);
+    setRescheduleValue("");
+  };
+
+  const confirmReschedule = () => {
+    if (!rescheduleValue || !reschedulingTask) return;
+    const todo = reschedulingTask;
+    const [y, m, d] = rescheduleValue.split("-").map(Number);
+    const newDate = new Date(y, m - 1, d);
+
+    if (todo.dueDate) {
+      const old = new Date(todo.dueDate);
+      newDate.setHours(old.getHours(), old.getMinutes(), 0, 0);
+    } else {
+      newDate.setHours(12, 0, 0, 0);
+    }
+
+    updateTodo(todo._id, { dueDate: newDate.toISOString() })
+      .then(() => {
+        toast.success(
+          `"${todo.title}" moved to ${newDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
+        );
+        fetchTodos();
+        closeReschedule();
+      })
+      .catch((error) => {
+        console.error("Failed to reschedule task:", error?.response?.data || error);
+        toast.error(error?.response?.data?.message || "Couldn't reschedule that task");
+      });
   };
 
   return (
@@ -198,6 +268,8 @@ const Calendar = () => {
                     className={`cal-day__task cal-day__task--${t.status} cal-draggable-task`}
                     draggable
                     onDragStart={(e) => handleDragStart(e, t._id)}
+                    onClick={() => openReschedule(t)}
+                    title="Tap to reschedule"
                   >
                     <div className="cal-day__task-left">
                       {statusIcon(t.status)}
@@ -334,6 +406,8 @@ const Calendar = () => {
                             className={`cal-week__task cal-week__task--${t.status} cal-draggable-task`}
                             draggable
                             onDragStart={(e) => { e.stopPropagation(); handleDragStart(e, t._id); }}
+                            onClick={(e) => { e.stopPropagation(); openReschedule(t); }}
+                            title="Tap to reschedule"
                           >
                             {statusIcon(t.status)}
                             <span>{t.title}</span>
@@ -371,6 +445,8 @@ const Calendar = () => {
                       className={`cal-day__task cal-day__task--${t.status} cal-draggable-task`}
                       draggable
                       onDragStart={(e) => handleDragStart(e, t._id)}
+                      onClick={() => openReschedule(t)}
+                      title="Tap to reschedule"
                     >
                       <div className="cal-day__task-left">
                         {statusIcon(t.status)}
@@ -393,7 +469,7 @@ const Calendar = () => {
           {view !== "Day" && (
             <div
               className="cal-selected-panel neu-card"
-              onDragOver={(e) => e.preventDefault()}
+              onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; }}
               onDrop={(e) => handleDrop(e, selectedDay)}
             >
               <h3 className="cal-panel-title">
@@ -412,6 +488,8 @@ const Calendar = () => {
                       className={`cal-day__task cal-day__task--${t.status} cal-draggable-task`}
                       draggable
                       onDragStart={(e) => handleDragStart(e, t._id)}
+                      onClick={() => openReschedule(t)}
+                      title="Tap to reschedule"
                     >
                       <div className="cal-day__task-left">
                         {statusIcon(t.status)}
@@ -432,6 +510,35 @@ const Calendar = () => {
 
         </div>
       </div>
+
+      {/* ── Tap-to-reschedule popover ── */}
+      {reschedulingTask && (
+        <div className="cal-reschedule-overlay" onClick={closeReschedule}>
+          <div className="cal-reschedule-box" onClick={(e) => e.stopPropagation()}>
+            <h4 className="cal-reschedule-heading">Reschedule task</h4>
+            <p className="cal-reschedule-task-title">{reschedulingTask.title}</p>
+            <input
+              type="date"
+              className="cal-reschedule-input"
+              value={rescheduleValue}
+              onChange={(e) => setRescheduleValue(e.target.value)}
+              autoFocus
+            />
+            <div className="cal-reschedule-actions">
+              <button className="cal-reschedule-cancel" onClick={closeReschedule}>
+                Cancel
+              </button>
+              <button
+                className="cal-reschedule-save"
+                onClick={confirmReschedule}
+                disabled={!rescheduleValue}
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
