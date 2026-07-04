@@ -7,6 +7,11 @@ const transporter = nodemailer.createTransport({
     port: 465,
     secure: true, // true for port 465, false for 587
 
+    // Render's network doesn't support outbound IPv6, and Gmail's SMTP
+    // hostname resolves to an IPv6 address first — forcing IPv4 here
+    // avoids the ENETUNREACH connection failure.
+    family: 4,
+
     auth: {
         user: process.env.MAIL_USER,
         pass: process.env.MAIL_PASS
