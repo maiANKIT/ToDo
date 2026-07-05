@@ -178,6 +178,17 @@ const Login = () => {
             </button>
           </motion.div>
 
+          <motion.div
+            className="auth-forgot-row"
+            variants={fieldVariants}
+            animate="show"
+            initial="hidden"
+          >
+            <Link to="/forgot-password" className="auth-forgot-link">
+              Forgot password?
+            </Link>
+          </motion.div>
+
           <motion.button
             type="submit"
             className="auth-submit"
