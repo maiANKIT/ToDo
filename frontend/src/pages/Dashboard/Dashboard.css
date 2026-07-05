@@ -12,7 +12,7 @@
 ======================= */
 .hero-card {
   padding: 30px 36px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   display: flex;
   flex-direction: column;
   gap: 22px;
@@ -114,8 +114,7 @@ body[data-theme="dark"] .score-bar { background: rgba(255,255,255,0.1); }
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 10px;
-  margin-bottom: 24px;
-  /* Smooth entrance/exit transitions */
+  margin-bottom: 12px;
   transition:
     opacity    0.28s cubic-bezier(0.4, 0, 0.2, 1),
     transform  0.32s cubic-bezier(0.4, 0, 0.2, 1),
@@ -132,30 +131,25 @@ body[data-theme="dark"] .score-bar { background: rgba(255,255,255,0.1); }
   pointer-events: none;
 }
 
-/* Spacer holds layout when strip goes sticky so cards don't jump */
-.status-strip-spacer { height: 66px; margin-bottom: 24px; }
+.status-strip-spacer { 
+  height: 48px;        
+  margin-bottom: 12px; 
+}
 
 /* =======================
    STATUS STRIP — sticky (glassmorphism)
-
-   CRITICAL PRODUCTION FIX:
-   - position:fixed so it stays glued below the navbar
-   - top is set via JS (navbarBottom) so it never overlaps the navbar
-   - will-change + isolation force GPU layer for backdrop-filter
-   - Pills inside do NOT use backdrop-filter (nested BF is ignored by browsers)
 ======================= */
 .status-strip--sticky {
   position: fixed;
+  top: 90px; /* Navbar ke niche set karne ke liye top add kiya */
   left: 50%;
-  /* top is set inline via JS: navbarRef.bottom + gap */
   transform: translateX(-50%);
   width: min(1250px, calc(100% - 32px));
-  z-index: 999;   /* below navbar (1000) but above content */
+  z-index: 999;
   margin-bottom: 0;
   padding: 8px 14px;
   border-radius: 28px;
 
-  /* Glassmorphism — same recipe as navbar */
   background: rgba(255, 255, 255, 0.55);
   -webkit-backdrop-filter: blur(40px) saturate(200%) brightness(1.06);
           backdrop-filter: blur(40px) saturate(200%) brightness(1.06);
@@ -165,7 +159,6 @@ body[data-theme="dark"] .score-bar { background: rgba(255,255,255,0.1); }
     inset 0 1px 0 rgba(255, 255, 255, 0.95),
     inset 0 -1px 0 rgba(255, 255, 255, 0.3);
 
-  /* Production critical */
   will-change: transform;
   isolation: isolate;
 
@@ -183,7 +176,6 @@ body[data-theme="dark"] .status-strip--sticky {
     inset 0 -1px 0 rgba(0, 0, 0, 0.15);
 }
 
-/* When hidden while sticky (search open) */
 .status-strip--sticky.status-strip--hidden {
   opacity: 0;
   transform: translateX(-50%) translateY(-10px);
@@ -192,7 +184,6 @@ body[data-theme="dark"] .status-strip--sticky {
   animation: none;
 }
 
-/* Drop-in animation: slides down from navbar position */
 @keyframes strip-drop {
   from {
     opacity: 0;
@@ -206,7 +197,6 @@ body[data-theme="dark"] .status-strip--sticky {
   }
 }
 
-/* Slightly smaller pills when sticky */
 .status-strip--sticky .status-pill {
   padding: 7px 12px;
   font-size: 0.82rem;
@@ -214,9 +204,6 @@ body[data-theme="dark"] .status-strip--sticky {
 
 /* =======================
    PILLS
-
-   No backdrop-filter here — nested BF under strip's BF = invisible blur.
-   Solid semi-transparent bg looks identical and works everywhere.
 ======================= */
 .status-pill {
   position: relative;
@@ -260,7 +247,6 @@ body[data-theme="dark"] .status-pill.active {
   background: #fff; color: #111; border-color: #fff;
 }
 
-/* Dots */
 .pill-dot {
   width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
   transition: transform 0.24s cubic-bezier(0.34,1.6,0.64,1);
@@ -272,7 +258,6 @@ body[data-theme="dark"] .status-pill.active {
 .dot-inprogress { background: #3b82f6; }
 .dot-done       { background: #10b981; }
 
-/* Count badge */
 .pill-count {
   background: rgba(0,0,0,0.07); color: inherit;
   font-size: 0.72rem; font-weight: 700;
@@ -317,13 +302,14 @@ body[data-theme="dark"] .status-pill.active .pill-count { background: rgba(0,0,0
 }
 
 /* =======================
-   VIEW TOGGLE
+   VIEW TOGGLE / CONTROLS STRIP
 ======================= */
 .view-toggle {
   display: flex; gap: 4px;
   background: rgba(0,0,0,0.05);
   border-radius: 10px; padding: 3px;
-  width: fit-content; margin-bottom: 16px;
+  width: fit-content;
+  margin-bottom: 12px; 
 }
 body[data-theme="dark"] .view-toggle { background: rgba(255,255,255,0.07); }
 
@@ -342,7 +328,6 @@ body[data-theme="dark"] .view-toggle-btn.active { background: rgba(255,255,255,0
 
 /* =======================
    SCROLL TOP BTN
-   Works because position:fixed on body — not nested in any BF parent
 ======================= */
 .scroll-top-btn {
   position: fixed; right: 36px; bottom: 110px;
@@ -381,14 +366,19 @@ body[data-theme="dark"] .scroll-top-btn:hover {
 ======================= */
 @media (max-width: 768px) {
   .dashboard-page { padding: 88px 16px 20px; }
-  .hero-card { padding: 24px 20px; margin-bottom: 14px; gap: 18px; }
+  .hero-card { padding: 24px 20px; margin-bottom: 10px; gap: 18px; }
   .hero-card h1 { font-size: 2rem; }
   .hero-stats { padding: 14px 10px; }
   .stat-value { font-size: 1.5rem; }
   .hero-stat-divider { height: 38px; }
-  .status-strip { gap: 8px; }
-  .status-strip--sticky { width: calc(100% - 20px); border-radius: 22px; padding: 7px 11px; }
-  .status-strip-spacer { height: 60px; }
+  .status-strip { gap: 8px; margin-bottom: 10px; }
+  .status-strip--sticky { 
+    top: 80px; /* Tablet responsive top */
+    width: calc(100% - 20px); 
+    border-radius: 22px; 
+    padding: 7px 11px; 
+  }
+  .status-strip-spacer { height: 50px; margin-bottom: 10px; }
   .status-pill { padding: 9px 10px; font-size: 0.8rem; gap: 5px; border-radius: 14px; }
   .todo-grid { grid-template-columns: 1fr; gap: 18px; }
   .scroll-top-btn { right: 16px; bottom: 90px; width: 40px; height: 40px; font-size: 1.1rem; }
@@ -396,11 +386,10 @@ body[data-theme="dark"] .scroll-top-btn:hover {
 
 /* =======================
    MOBILE ≤500px
-   Pills stay as thin horizontal row — no stacking
 ======================= */
 @media (max-width: 500px) {
   .dashboard-page { padding: 76px 10px 16px; }
-  .hero-card { padding: 18px 16px; margin-bottom: 12px; border-radius: 20px; gap: 14px; }
+  .hero-card { padding: 18px 16px; margin-bottom: 8px; border-radius: 20px; gap: 14px; }
   .hero-card h1 { font-size: 1.6rem; }
   .hero-icon svg { width: 20px; height: 20px; }
   .hero-sub { font-size: 0.8rem; }
@@ -411,11 +400,15 @@ body[data-theme="dark"] .scroll-top-btn:hover {
   .score-bar { width: 42px; }
   .hero-stat-divider { height: 34px; }
 
-  .status-strip { grid-template-columns: repeat(4,1fr); gap: 5px; }
-  .status-strip--sticky { width: calc(100% - 12px); border-radius: 16px; padding: 5px 6px; }
-  .status-strip-spacer { height: 50px; }
+  .status-strip { grid-template-columns: repeat(4,1fr); gap: 5px; margin-bottom: 8px; }
+  .status-strip--sticky { 
+    top: 70px; /* Mobile responsive top */
+    width: calc(100% - 12px); 
+    border-radius: 16px; 
+    padding: 5px 6px; 
+  }
+  .status-strip-spacer { height: 40px; margin-bottom: 8px; }
 
-  /* Thin horizontal pills — same as desktop, just compressed */
   .status-pill {
     padding: 6px 4px; font-size: 0.66rem; gap: 3px;
     border-radius: 10px;
@@ -431,11 +424,12 @@ body[data-theme="dark"] .scroll-top-btn:hover {
   .scroll-top-btn { right: 12px; bottom: 85px; width: 38px; height: 38px; font-size: 1rem; }
 }
 
-/* Extra small: show count again, hide label text */
+/* Extra small */
 @media (max-width: 360px) {
   .status-pill { padding: 6px 2px; font-size: 0.6rem; gap: 2px; }
   .pill-count { display: inline; font-size: 0.58rem; padding: 0 3px; }
 }
+
 .empty-state-actions {
   display: flex;
   gap: 10px;
@@ -464,4 +458,12 @@ body[data-theme="dark"] .empty-state-action-btn {
 }
 body[data-theme="dark"] .empty-state-action-btn:hover {
   background: rgba(255, 255, 255, 0.08);
+}
+.swipe-wrap {
+  position: relative;
+  margin: 0;
+  height: auto;
+}
+.todo-list .swipe-wrap {
+  width: 100%;
 }

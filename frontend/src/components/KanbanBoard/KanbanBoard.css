@@ -89,9 +89,9 @@ body[data-theme="dark"] .kanban-column-body--over {
 }
 
 /* Kanban cards: compact, no min-height stretch */
+/* ── Consistent minimum card height so cards in a row don't look mismatched ── */
 .kanban-card-wrap .todo-card {
-  min-height: unset;
-  padding: 20px;
+  min-height: 200px;
 }
 
 /* ── Tablet: 2 columns wrap to scroll-x, keep 3 cols but tighten ── */

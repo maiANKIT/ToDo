@@ -9,21 +9,26 @@
 }
 
 @media print {
-  /* Hide everything else on the page, then reveal only this subtree.
-     This works no matter what markup the rest of the app has. */
-  body * {
-    visibility: hidden;
+  html, body {
+    height: auto !important;
+    overflow: visible !important;
   }
-  .printable-tasks,
-  .printable-tasks * {
-    visibility: visible;
+
+  /* Hide the app's real UI (removes it from layout entirely —
+     unlike visibility:hidden, this doesn't leave blank page space) */
+  #root > *:not(.printable-tasks) {
+    display: none !important;
+  }
+
+  /* Hide any modals/toasts/dropdowns rendered via createPortal
+     directly onto <body>, outside #root */
+  body > *:not(#root) {
+    display: none !important;
   }
 
   .printable-tasks {
-    display: block;
-    position: absolute;
-    top: 0;
-    left: 0;
+    display: block !important;
+    position: static;
     width: 100%;
     padding: 24px 32px;
     color: #000;
@@ -58,8 +63,11 @@
 
   .printable-group {
     margin-bottom: 22px;
-    break-inside: avoid;
+    /* break-inside: avoid; */
   }
+.printable-group:not(:first-child) {
+  break-before: page;
+}
   .printable-group h2 {
     font-size: 1rem;
     margin: 0 0 8px;
@@ -112,5 +120,16 @@
     white-space: nowrap;
     font-size: 0.8rem;
     color: #444;
+  }
+}
+@media print {
+  html, body, #root {
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
+
+  @page {
+    margin: 12mm;
   }
 }
