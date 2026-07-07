@@ -25,9 +25,11 @@ app.use(
 
 const todoRoutes = require("./routes/todos");
 const userRoutes = require("./routes/user");
+const workspaceRoutes = require("./routes/workspace");
 
 app.use("/api/v1/todo", todoRoutes);
 app.use("/api/v1/user", userRoutes);
+app.use("/api/v1/workspace", workspaceRoutes);
 
 const { connect } = require("./config/database");
 connect();

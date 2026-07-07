@@ -19,18 +19,17 @@ exports.deleteToDo = async(req, res)=>{
             });
         }
 
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
-            message: 'task is deleted'
+            message: 'todo is deleted'
         })
 
     }
     catch(err){
 
         console.error(err);
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
-            error: err.message,
             message: 'server error'
         })
 

@@ -1,47 +1,100 @@
 const mongoose = require('mongoose');
 
+//subtask
+
+const subTaskSchema = new mongoose.Schema({
+
+    title:{
+        type: String,
+        required: true,
+        trim: true
+    },
+
+    description:{
+        type: String,
+        trim: true
+    },
+
+    link:{
+        type: String,
+        trim: true,
+        default: null
+    },
+
+    dueDate:{
+        type: Date,
+        default: null
+    },
+    status:{
+        type: String,
+        enum: ['Pending', 'In Progress', 'Completed'],
+        default: 'Pending'
+    },
+
+    priority: {
+        type: String,
+        enum: ['Low', 'Medium', 'High', "Critical"],
+        default: 'Medium'
+    },
+    order: {
+        type: Number,
+        default: 0
+    }
+
+},
+{
+    timestamps: true
+});
+
+//task
 const todoSchema = new mongoose.Schema({
 
     title:{
         type: String,
         required: true,
-        maxLength: 500
+        trim: true
     },
     description:{
         type: String,
-        maxLength: 1000
+        trim: true
     },
-    link:{
-        type: String
-    },
-    dueDate:{
-        type: Date
+    status:{
+        type: String,
+        enum: ['Pending', 'In Progress', 'Completed'],
+        default: 'Pending'
     },
     star:{
         type: Boolean,
         default: false
     },
-    status:{
+    link:{
         type: String,
-        enum: ['pending', 'done', 'inprogress'],
-        default: 'pending'
+        trim: true,
+        default: null
+    },
+    dueDate:{
+        type: Date,
+        default: null
+    },
+    priority:{
+
+        type: String,
+        enum: ["Low", "Medium", "High", "Critical"],
+        default: "Medium"
+
     },
     user:{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
     },
-    createdAt:{
-        type: Date,
-        required: true,
-        default: Date.now
-    },
-    updatedAt:{
-        type: Date,
-        required: true,
-        default: Date.now
+    subtasks: {
+        type: [subTaskSchema],
+        default: []
     }
-
+},
+{
+    timestamps: true
 });
 
 module.exports = mongoose.model('ToDo', todoSchema);

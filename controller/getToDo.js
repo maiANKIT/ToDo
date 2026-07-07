@@ -9,7 +9,7 @@ exports.getToDo = async(req, res)=>{
         const todos = await ToDo.find({user: req.user.id});
 
         //response
-        res.status(200).json({
+        return res.status(200).json({
 
             success: true,
             data: todos,
@@ -21,11 +21,9 @@ exports.getToDo = async(req, res)=>{
     catch(err){
 
         console.error(err);
-        console.log("GET TODO ERROR");
 
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
-            error: err.message,
             message: 'server error'
         })
 
@@ -37,8 +35,11 @@ exports.getToDoById = async(req, res)=>{
 
     try{
 
-        const id = req.params.id;
-        const todo = await ToDo.findById(id);
+        const {id} = req.params;
+        const todo = await ToDo.findOne({
+            _id: id,
+            user: req.user.id
+        });
         
         //data for given is not found
         if(!todo){
@@ -51,7 +52,7 @@ exports.getToDoById = async(req, res)=>{
         }
 
         //jb id mil gyi
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
             data: todo,
             message: `ToDo ${id} data successfully fetched`
@@ -61,12 +62,10 @@ exports.getToDoById = async(req, res)=>{
     catch(err){
 
         console.error(err);
-        console.log("GET TODO ERROR");
 
-        res.status(500).json({
+        return res.status(500).json({
 
             success: false,
-            error: err.message,
             message: 'server error'
 
         })
