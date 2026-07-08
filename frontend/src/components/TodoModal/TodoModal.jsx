@@ -3,36 +3,44 @@ import { createPortal } from "react-dom";
 import { FiLink, FiStar, FiZap, FiCalendar, FiClock } from "react-icons/fi";
 import DateTimePicker from "../DateTimePicker/DateTimePicker";
 import { parseQuickAdd } from "../../utils/quickAddParser";
+import { STATUS, PRIORITY, PRIORITY_ORDER } from "../../utils/taskEnums";
 import "./TodoModal.css";
 
 const TodoModal = ({ onClose, onSubmit, editTodo }) => {
   const [title,       setTitle]       = useState("");
   const [description, setDescription] = useState("");
   const [link,        setLink]        = useState("");
-  const [status,      setStatus]      = useState("pending");
+  const [status,      setStatus]      = useState(STATUS.PENDING);
+  const [priority,    setPriority]    = useState(PRIORITY.MEDIUM);
   const [dueDate,     setDueDate]     = useState("");
   const [estimate,    setEstimate]    = useState("");
   const [star,        setStar]        = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [dropdownFlip, setDropdownFlip] = useState(false);
+  const [priorityDropdownOpen, setPriorityDropdownOpen] = useState(false);
+  const [priorityDropdownFlip, setPriorityDropdownFlip] = useState(false);
 
   const [quickMode, setQuickMode] = useState(false);
   const [quickText, setQuickText] = useState("");
 
   const selectRef = useRef(null);
+  const priorityRef = useRef(null);
 
   const statusOptions = [
-    { value: "pending",    label: "Pending"     },
-    { value: "inprogress", label: "In Progress" },
-    { value: "done",       label: "Done"        },
+    { value: STATUS.PENDING,     label: "Pending"     },
+    { value: STATUS.IN_PROGRESS, label: "In Progress" },
+    { value: STATUS.DONE,        label: "Completed"   },
   ];
+
+  const priorityOptions = PRIORITY_ORDER.map((p) => ({ value: p, label: p }));
 
   useEffect(() => {
     if (editTodo) {
       setTitle(editTodo.title       || "");
       setDescription(editTodo.description || "");
       setLink(editTodo.link         || "");
-      setStatus(editTodo.status     || "pending");
+      setStatus(editTodo.status     || STATUS.PENDING);
+      setPriority(editTodo.priority || PRIORITY.MEDIUM);
       setStar(editTodo.star         || false);
       setDueDate(editTodo.dueDate   || "");
       setEstimate(editTodo.estimate || "");
@@ -47,7 +55,10 @@ const TodoModal = ({ onClose, onSubmit, editTodo }) => {
 
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (!e.target.closest(".custom-select-wrapper")) setDropdownOpen(false);
+      if (!e.target.closest(".custom-select-wrapper")) {
+        setDropdownOpen(false);
+        setPriorityDropdownOpen(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -60,6 +71,7 @@ const TodoModal = ({ onClose, onSubmit, editTodo }) => {
       description,
       link: link.trim(),
       status,
+      priority,
       dueDate: dueDate || null,
       estimate: estimate.trim(),
       star,
@@ -78,7 +90,8 @@ const TodoModal = ({ onClose, onSubmit, editTodo }) => {
       title: qTitle,
       description: "",
       link: qLink || "",
-      status: "pending",
+      status: STATUS.PENDING,
+      priority: PRIORITY.MEDIUM,
       dueDate: qDueDate || null,
       estimate: "",
       star: false,
@@ -92,7 +105,18 @@ const TodoModal = ({ onClose, onSubmit, editTodo }) => {
       const spaceBelow = window.innerHeight - rect.bottom;
       setDropdownFlip(spaceBelow < 180);
     }
+    setPriorityDropdownOpen(false);
     setDropdownOpen(!dropdownOpen);
+  };
+
+  const handlePrioritySelectClick = () => {
+    if (!priorityDropdownOpen && priorityRef.current) {
+      const rect = priorityRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      setPriorityDropdownFlip(spaceBelow < 180);
+    }
+    setDropdownOpen(false);
+    setPriorityDropdownOpen(!priorityDropdownOpen);
   };
 
   return createPortal(
@@ -232,6 +256,7 @@ const TodoModal = ({ onClose, onSubmit, editTodo }) => {
               onChange={(iso) => setDueDate(iso || "")}
             />
 
+            {/* Status dropdown */}
             <div className="custom-select-wrapper">
               <div
                 ref={selectRef}
@@ -258,6 +283,41 @@ const TodoModal = ({ onClose, onSubmit, editTodo }) => {
                       key={opt.value}
                       className={`custom-option ${status === opt.value ? "selected" : ""}`}
                       onClick={() => { setStatus(opt.value); setDropdownOpen(false); }}
+                    >
+                      {opt.label}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Priority dropdown */}
+            <div className="custom-select-wrapper">
+              <div
+                ref={priorityRef}
+                className={`custom-select ${priorityDropdownOpen ? "open" : ""}`}
+                onClick={handlePrioritySelectClick}
+              >
+                <span>{priorityOptions.find((o) => o.value === priority)?.label} priority</span>
+                <svg
+                  className={`select-arrow ${priorityDropdownOpen ? "rotated" : ""}`}
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16" height="16"
+                  viewBox="0 0 24 24"
+                  fill="none" stroke="currentColor"
+                  strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </div>
+
+              {priorityDropdownOpen && (
+                <div className={`custom-options ${priorityDropdownFlip ? "custom-options--flip" : ""}`}>
+                  {priorityOptions.map((opt) => (
+                    <div
+                      key={opt.value}
+                      className={`custom-option ${priority === opt.value ? "selected" : ""}`}
+                      onClick={() => { setPriority(opt.value); setPriorityDropdownOpen(false); }}
                     >
                       {opt.label}
                     </div>

@@ -160,6 +160,76 @@ exports.inviteMember = async (req, res) => {
   }
 };
 
+exports.getInvitationByToken = async (req, res) => {
+
+    try {
+
+        const { token } = req.params;
+
+        const invitation = await Invitation.findOne({ token })
+            .populate("workspace", "name description isArchived")
+            .populate("invitedBy", "name");
+
+        if (!invitation) {
+
+            return res.status(404).json({
+                success: false,
+                message: "invitation not found"
+            });
+
+        }
+
+        // only the invited email can preview this invitation
+        if (req.user.email.toLowerCase() !== invitation.email) {
+
+            return res.status(403).json({
+                success: false,
+                message: "this invitation does not belong to your account"
+            });
+
+        }
+
+        //lazily mark expired invites
+        if (invitation.status === "Pending" && invitation.expiresAt < new Date()) {
+
+            invitation.status = "Expired";
+            await invitation.save();
+
+        }
+
+        return res.status(200).json({
+
+            success: true,
+
+            data: {
+                workspaceName: invitation.workspace?.name,
+                workspaceDescription: invitation.workspace?.description,
+                workspaceArchived: invitation.workspace?.isArchived,
+                invitedByName: invitation.invitedBy?.name,
+                role: invitation.role,
+                status: invitation.status,
+                email: invitation.email,
+                expiresAt: invitation.expiresAt
+            },
+
+            message: "invitation fetched successfully"
+
+        });
+
+    }
+    catch (error) {
+
+        console.error(error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error"
+        });
+
+    }
+
+};
+
 exports.acceptInvitation = async (req, res) => {
 
     try {
@@ -210,6 +280,26 @@ exports.acceptInvitation = async (req, res) => {
             return res.status(403).json({
                 success: false,
                 message: "this invitation does not belong to your account"
+            });
+
+        }
+
+        const workspace = await Workspace.findById(invitation.workspace);
+
+        if (!workspace) {
+
+            return res.status(404).json({
+                success: false,
+                message: "workspace not found"
+            });
+
+        }
+
+        if (workspace.isArchived) {
+
+            return res.status(409).json({
+                success: false,
+                message: "workspace is archived"
             });
 
         }

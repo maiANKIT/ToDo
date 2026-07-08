@@ -1,9 +1,10 @@
 import { useContext, useRef, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { AuthContext } from "../../context/AuthContext";
+import { WorkspaceContext } from "../../context/WorkspaceContext";
 import logo from "../../assets/images/logo.png";
 import {
-  FiSearch, FiX, FiUser, FiMoon, FiBell, FiStar, FiZap,
+  FiSearch, FiX, FiUser, FiMoon, FiBell, FiStar, FiZap, FiUsers, FiShield,
 } from "react-icons/fi";
 import { RiDashboardLine } from "react-icons/ri";
 import { HiOutlineUser } from "react-icons/hi2";
@@ -15,8 +16,8 @@ import "./Navbar.css";
 import ThemePicker from "../ThemePicker/ThemePicker";
 
 
-const DropdownPortal = ({ anchorRef, children }) => {
-  const [pos, setPos] = useState({ top: 0, right: 0 });
+const DropdownPortal = ({ anchorRef, children, align = "right" }) => {
+  const [pos, setPos] = useState({ top: 0, right: 0, left: 0 });
 
   useEffect(() => {
     const recalc = () => {
@@ -25,6 +26,7 @@ const DropdownPortal = ({ anchorRef, children }) => {
       setPos({
         top:   rect.bottom + 12,
         right: window.innerWidth - rect.right,
+        left:  rect.left,
       });
     };
     recalc();
@@ -37,7 +39,7 @@ const DropdownPortal = ({ anchorRef, children }) => {
   return createPortal(
     <div
       className="nav-dropdown-portal"
-      style={{ top: pos.top, right: pos.right }}
+      style={align === "left" ? { top: pos.top, left: pos.left } : { top: pos.top, right: pos.right }}
     >
       {children}
     </div>,
@@ -56,17 +58,22 @@ const Navbar = ({
   overdueTasks = [],
 }) => {
   const { logout, user } = useContext(AuthContext);
-  const inputRef     = useRef(null);
-  const menuRef       = useRef(null);
-  const dropdownRef   = useRef(null);
-  const notifRef      = useRef(null);
-  const notifDropRef  = useRef(null);
-  const navigate      = useNavigate();
-  const location      = useLocation();
+  const { activeWorkspace, members, membersLoading, setActiveWorkspace } = useContext(WorkspaceContext);
+
+  const inputRef      = useRef(null);
+  const menuRef        = useRef(null);
+  const dropdownRef    = useRef(null);
+  const notifRef       = useRef(null);
+  const notifDropRef   = useRef(null);
+  const brandRef       = useRef(null);
+  const brandDropRef   = useRef(null);
+  const navigate       = useNavigate();
+  const location       = useLocation();
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [themeOpen, setThemeOpen] = useState(false);
+  const [brandOpen, setBrandOpen] = useState(false);
 
   const isSearchOpen = searchState === "open" || searchState === "opening";
 
@@ -91,6 +98,12 @@ const Navbar = ({
       ) {
         setNotifOpen(false);
       }
+      if (
+        brandRef.current     && !brandRef.current.contains(e.target) &&
+        brandDropRef.current && !brandDropRef.current.contains(e.target)
+      ) {
+        setBrandOpen(false);
+      }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -100,6 +113,11 @@ const Navbar = ({
   useEffect(() => {
     if (!menuOpen) setThemeOpen(false);
   }, [menuOpen]);
+
+  // Close workspace info panel whenever the active workspace changes
+  useEffect(() => {
+    setBrandOpen(false);
+  }, [activeWorkspace?._id]);
 
   const menuItems = [
     { icon: <RiDashboardLine size={14} />, label: "Dashboard",     path: "/dashboard"     },
@@ -113,6 +131,21 @@ const Navbar = ({
 
   const handleLogoClick = () => navigate(user ? "/dashboard" : "/");
 
+  const handleBrandClick = () => {
+    if (activeWorkspace) setBrandOpen((p) => !p);
+    else handleLogoClick();
+  };
+
+  const goToCollaboration = () => {
+    setBrandOpen(false);
+    navigate("/collaboration");
+  };
+
+  const backToPersonal = () => {
+    setActiveWorkspace(null);
+    setBrandOpen(false);
+  };
+
   return (
     <nav
       className={`navbar ${isSearchOpen ? "navbar--search" : ""}`}
@@ -123,14 +156,31 @@ const Navbar = ({
 
         <div
           className="logo-section"
-          onClick={handleLogoClick}
+          ref={brandRef}
+          onClick={handleBrandClick}
           role="button"
           tabIndex={0}
-          onKeyDown={(e) => e.key === "Enter" && handleLogoClick()}
+          onKeyDown={(e) => e.key === "Enter" && handleBrandClick()}
           style={{ cursor: "pointer" }}
         >
-          <img src={logo} alt="logo" className="logo" />
-          <h2>TodoFlow</h2>
+          {activeWorkspace ? (
+            <>
+              <span className="brand-workspace-avatar">
+                {activeWorkspace.name[0]?.toUpperCase()}
+              </span>
+              <div className="brand-workspace-info">
+                <h2 className="brand-workspace-name">{activeWorkspace.name}</h2>
+                <span className="brand-workspace-sub">
+                  {members.length} member{members.length !== 1 ? "s" : ""}
+                </span>
+              </div>
+            </>
+          ) : (
+            <>
+              <img src={logo} alt="logo" className="logo" />
+              <h2>TodoFlow</h2>
+            </>
+          )}
         </div>
 
         <div className="nav-actions">
@@ -182,6 +232,64 @@ const Navbar = ({
             <FiX size={18} />
           </button>
         </div>
+      )}
+
+      {/* Workspace group-info dropdown (WhatsApp-style) */}
+      {brandOpen && activeWorkspace && (
+        <DropdownPortal anchorRef={brandRef} align="left">
+          <div className="nav-dropdown nav-dropdown--workspace" ref={brandDropRef}>
+            <div className="nav-dropdown__header">
+              <div className="nav-dropdown__avatar">
+                <FiUsers size={16} />
+              </div>
+              <div className="nav-dropdown__info">
+                <span className="nav-dropdown__name">{activeWorkspace.name}</span>
+                <span className="nav-dropdown__email">
+                  {members.length} member{members.length !== 1 ? "s" : ""}
+                </span>
+              </div>
+            </div>
+
+            <div className="nav-dropdown__divider" />
+
+            {membersLoading ? (
+              <p className="nav-notif-empty">Loading members...</p>
+            ) : (
+              <div className="nav-workspace-member-list">
+                {members.map((m) => (
+                  <div className="nav-workspace-member-row" key={m._id}>
+                    <span className="nav-workspace-member-avatar">
+                      {m.user?.name?.[0]?.toUpperCase() || "?"}
+                    </span>
+                    <span className="nav-workspace-member-name">
+                      {m.user?.name}
+                    </span>
+                    <span className="nav-workspace-member-role">
+                      {m.role === "Owner" && <FiShield size={11} />}
+                      {m.role}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="nav-dropdown__divider" />
+
+            <button className="nav-dropdown__item nav-dropdown__item--collab" onClick={goToCollaboration}>
+              <span className="nav-dropdown__item-icon">
+                <TbUsers size={13} />
+              </span>
+              Manage Workspace
+            </button>
+
+            <button className="nav-dropdown__item" onClick={backToPersonal}>
+              <span className="nav-dropdown__item-icon">
+                <HiOutlineUser size={13} />
+              </span>
+              Switch to Personal
+            </button>
+          </div>
+        </DropdownPortal>
       )}
 
       {/* Notification dropdown */}

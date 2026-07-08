@@ -1,5 +1,6 @@
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import TodoCard from "../TodoCard/TodoCard";
+import { STATUS_KEYS } from "../../utils/taskEnums";
 import "./KanbanBoard.css";
 
 const COLUMNS = [
@@ -15,19 +16,20 @@ const KanbanBoard = ({
   onToggleStar,
   onStatusChange,
   onViewDetails,
+  onDuplicate,
 }) => {
   const handleDragEnd = (result) => {
     const { source, destination, draggableId } = result;
     if (!destination) return;
     if (source.droppableId === destination.droppableId) return;
-    onStatusChange(draggableId, destination.droppableId);
+    onStatusChange(draggableId, STATUS_KEYS[destination.droppableId]);
   };
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
       <div className="kanban-board">
         {COLUMNS.map((col) => {
-          const colTodos = todos.filter((t) => t.status === col.key);
+          const colTodos = todos.filter((t) => t.status === STATUS_KEYS[col.key]);
           return (
             <div className="kanban-column" key={col.key}>
               <div className="kanban-column-header">
@@ -71,6 +73,7 @@ const KanbanBoard = ({
                               onToggleStar={onToggleStar}
                               onStatusChange={onStatusChange}
                               onViewDetails={onViewDetails}
+                              onDuplicate={onDuplicate}
                               isKanban
                             />
                           </div>

@@ -1,11 +1,17 @@
-import { useEffect } from "react";
-import { FiX, FiExternalLink, FiCalendar, FiClock, FiEdit2, FiStar, FiCopy } from "react-icons/fi";
+import { useEffect, useState } from "react";
+import { FiX, FiExternalLink, FiCalendar, FiClock, FiEdit2, FiStar, FiCopy, FiPlus, FiTrash2, FiCheck } from "react-icons/fi";
 import { getUrgencyLevel } from "../../utils/dueDateUrgency";
+import { STATUS, getNextStatus, PRIORITY_META, getNextPriority } from "../../utils/taskEnums";
+import { addSubtask, updateSubtask, deleteSubtask } from "../../services/todoAPI";
 import "./TaskDetailPanel.css";
 
-const STATUS_CYCLE = ["pending", "inprogress", "done"];
+const TaskDetailPanel = ({
+  todo, onClose, onEdit, onStatusChange, onToggleStar, onDuplicate,
+  onPriorityChange, onRefresh,
+}) => {
+  const [subtaskTitle, setSubtaskTitle] = useState("");
+  const [addingSubtask, setAddingSubtask] = useState(false);
 
-const TaskDetailPanel = ({ todo, onClose, onEdit, onStatusChange, onToggleStar, onDuplicate }) => {
   // Close on Escape
   useEffect(() => {
     const handleKey = (e) => { if (e.key === "Escape") onClose(); };
@@ -20,26 +26,25 @@ const TaskDetailPanel = ({ todo, onClose, onEdit, onStatusChange, onToggleStar, 
   if (!todo) return null;
 
   const getStatusClass = () => {
-    switch (todo.status) {
-      case "done":       return "status-done";
-      case "inprogress": return "status-progress";
-      default:           return "status-pending";
-    }
+    if (todo.status === STATUS.DONE) return "status-done";
+    if (todo.status === STATUS.IN_PROGRESS) return "status-progress";
+    return "status-pending";
   };
 
   const getStatusText = () => {
-    switch (todo.status) {
-      case "done":       return "Done";
-      case "inprogress": return "In Progress";
-      default:           return "Pending";
-    }
+    if (todo.status === STATUS.DONE) return "Completed";
+    if (todo.status === STATUS.IN_PROGRESS) return "In Progress";
+    return "Pending";
   };
 
   const handleStatusClick = () => {
     if (!onStatusChange) return;
-    const currentIndex = STATUS_CYCLE.indexOf(todo.status);
-    const nextStatus = STATUS_CYCLE[(currentIndex + 1) % STATUS_CYCLE.length];
-    onStatusChange(todo._id, nextStatus);
+    onStatusChange(todo._id, getNextStatus(todo.status));
+  };
+
+  const handlePriorityClick = () => {
+    if (!onPriorityChange || !todo.priority) return;
+    onPriorityChange(todo._id, getNextPriority(todo.priority));
   };
 
   const handleLinkClick = () => {
@@ -73,6 +78,45 @@ const TaskDetailPanel = ({ todo, onClose, onEdit, onStatusChange, onToggleStar, 
       })
     : null;
 
+  const priorityMeta = todo.priority ? PRIORITY_META[todo.priority] : null;
+
+  const subtasks = todo.subtasks || [];
+  const subtaskDoneCount = subtasks.filter((s) => s.status === STATUS.DONE).length;
+
+  const handleAddSubtask = async (e) => {
+    e.preventDefault();
+    if (!subtaskTitle.trim() || addingSubtask) return;
+    setAddingSubtask(true);
+    try {
+      await addSubtask(todo._id, { title: subtaskTitle.trim() });
+      setSubtaskTitle("");
+      onRefresh?.();
+    } catch (err) {
+      console.error("Failed to add subtask:", err?.response?.data || err);
+    } finally {
+      setAddingSubtask(false);
+    }
+  };
+
+  const handleToggleSubtask = async (subtask) => {
+    const nextStatus = subtask.status === STATUS.DONE ? STATUS.PENDING : STATUS.DONE;
+    try {
+      await updateSubtask(todo._id, subtask._id, { status: nextStatus });
+      onRefresh?.();
+    } catch (err) {
+      console.error("Failed to update subtask:", err?.response?.data || err);
+    }
+  };
+
+  const handleDeleteSubtask = async (subtaskId) => {
+    try {
+      await deleteSubtask(todo._id, subtaskId);
+      onRefresh?.();
+    } catch (err) {
+      console.error("Failed to delete subtask:", err?.response?.data || err);
+    }
+  };
+
   return (
     <div className="detail-overlay" onClick={onClose}>
       <div
@@ -105,6 +149,17 @@ const TaskDetailPanel = ({ todo, onClose, onEdit, onStatusChange, onToggleStar, 
         {/* ── Title ── */}
         <h2 className="detail-title">{todo.title}</h2>
 
+        {/* ── Priority pill ── */}
+        {priorityMeta && (
+          <button
+            className={`detail-priority-pill detail-priority-pill--${priorityMeta.className.replace("priority-", "")}`}
+            onClick={handlePriorityClick}
+            title="Click to change priority"
+          >
+            {priorityMeta.label} priority
+          </button>
+        )}
+
         {/* ── Description ── */}
         {todo.description && (
           <p className="detail-description">{todo.description}</p>
@@ -130,6 +185,58 @@ const TaskDetailPanel = ({ todo, onClose, onEdit, onStatusChange, onToggleStar, 
             <span>{getDomain(todo.link)}</span>
           </button>
         )}
+
+        {/* ── Subtasks ── */}
+        <div className="detail-subtasks">
+          <div className="detail-subtasks-title">
+            <span>Subtasks</span>
+            {subtasks.length > 0 && <span>{subtaskDoneCount}/{subtasks.length}</span>}
+          </div>
+
+          {subtasks.length > 0 && (
+            <div className="detail-subtask-list">
+              {subtasks.map((s) => (
+                <div key={s._id} className="detail-subtask-item">
+                  <button
+                    className={`detail-subtask-check ${s.status === STATUS.DONE ? "detail-subtask-check--done" : ""}`}
+                    onClick={() => handleToggleSubtask(s)}
+                    title={s.status === STATUS.DONE ? "Mark as pending" : "Mark as done"}
+                  >
+                    {s.status === STATUS.DONE && <FiCheck size={12} />}
+                  </button>
+                  <span className={`detail-subtask-title ${s.status === STATUS.DONE ? "detail-subtask-title--done" : ""}`}>
+                    {s.title}
+                  </span>
+                  <button
+                    className="detail-subtask-delete"
+                    onClick={() => handleDeleteSubtask(s._id)}
+                    title="Delete subtask"
+                  >
+                    <FiTrash2 size={13} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <form className="detail-subtask-add-row" onSubmit={handleAddSubtask}>
+            <input
+              type="text"
+              className="detail-subtask-input"
+              placeholder="Add a subtask..."
+              value={subtaskTitle}
+              onChange={(e) => setSubtaskTitle(e.target.value)}
+            />
+            <button
+              type="submit"
+              className="detail-subtask-add-btn"
+              disabled={!subtaskTitle.trim() || addingSubtask}
+              title="Add subtask"
+            >
+              <FiPlus size={16} />
+            </button>
+          </form>
+        </div>
 
         {/* ── Meta ── */}
         <div className="detail-meta">

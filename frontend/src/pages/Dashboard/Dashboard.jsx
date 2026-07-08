@@ -20,13 +20,16 @@ import NotificationBanner from "../../components/NotificationBanner/Notification
 import WeeklyRecap from "../../components/WeeklyRecap/WeeklyRecap";
 import OnThisDay from "../../components/OnThisDay/OnThisDay";
 import PrintableView from "../../components/PrintableView/PrintableView";
+import WorkspaceSwitcher from "../../components/WorkspaceSwitcher/WorkspaceSwitcher";
 import useKeyboardShortcuts from "../../hooks/useKeyboardShortcuts";
 import useDueDateNotifications from "../../hooks/useDueDateNotifications";
 import useDocumentTitleBadge from "../../hooks/useDocumentTitleBadge";
 import useIdleNudge from "../../hooks/useIdleNudge";
 import useFaviconBadge from "../../hooks/useFaviconBadge";
 import { AuthContext } from "../../context/AuthContext";
+import { WorkspaceContext } from "../../context/WorkspaceContext";
 import { getTodos, createTodo, deleteTodo, updateTodo } from "../../services/todoAPI";
+import { STATUS, STATUS_KEYS, PRIORITY } from "../../utils/taskEnums";
 
 const getGreeting = () => {
   const h = new Date().getHours();
@@ -45,7 +48,7 @@ const getGreetingIcon = () => {
 const getStreak = (todos) => {
   if (!todos.length) return 0;
   const dates = [...new Set(
-    todos.filter(t => t.status === "done" && t.updatedAt)
+    todos.filter(t => t.status === STATUS.DONE && t.updatedAt)
          .map(t => new Date(t.updatedAt).toDateString())
   )];
   if (!dates.length) return 0;
@@ -62,7 +65,7 @@ const getStreak = (todos) => {
 
 const getScore = (todos) => {
   if (!todos.length) return 0;
-  return Math.round(todos.filter(t => t.status === "done").length / todos.length * 100);
+  return Math.round(todos.filter(t => t.status === STATUS.DONE).length / todos.length * 100);
 };
 
 const matchesDueFilter = (todo, dueFilter) => {
@@ -71,7 +74,7 @@ const matchesDueFilter = (todo, dueFilter) => {
   const due = todo.dueDate ? new Date(todo.dueDate) : null;
   if (dueFilter === "nodate") return !due;
   if (!due) return false;
-  if (dueFilter === "overdue") return due < now && todo.status !== "done";
+  if (dueFilter === "overdue") return due < now && todo.status !== STATUS.DONE;
   if (dueFilter === "week") {
     const weekEnd = new Date(now);
     weekEnd.setDate(weekEnd.getDate() + 7);
@@ -113,6 +116,7 @@ const fireTaskConfetti = () => {
 
 const Dashboard = () => {
   const { user } = useContext(AuthContext);
+  const { workspaces, activeWorkspace, setActiveWorkspace } = useContext(WorkspaceContext);
   const userName = user?.name?.split(" ")[0] || "User";
 
   const [todos,         setTodos]        = useState([]);
@@ -135,6 +139,9 @@ const Dashboard = () => {
   // ── Undo-delete toast state ──
   const [pendingDelete, setPendingDelete] = useState(null); // { todo, timeoutId }
 
+  // ── Action error toast (e.g. permission denied on a workspace task) ──
+  const [actionError, setActionError] = useState("");
+
   const [navbarBottom, setNavbarBottom] = useState(84);
 
   const [viewMode, setViewMode] = useState(
@@ -151,12 +158,14 @@ const Dashboard = () => {
     }
   }, []);
 
-  const fetchTodos = async () => {
-    try { const r = await getTodos(); setTodos(r.data.data); }
-    catch (e) { console.log(e); }
-  };
+  const fetchTodos = useCallback(async () => {
+    try {
+      const r = await getTodos(activeWorkspace?._id);
+      setTodos(r.data.data);
+    } catch (e) { console.log(e); }
+  }, [activeWorkspace]);
 
-  useEffect(() => { fetchTodos(); }, []);
+  useEffect(() => { fetchTodos(); }, [fetchTodos]);
 
   // ── Browser notifications: fires once per task, 10 min before it's due ──
   useDueDateNotifications(todos);
@@ -200,19 +209,44 @@ const Dashboard = () => {
     localStorage.setItem("todoflow-view-mode", mode);
   };
 
-  const addTask    = async (d)    => { try { await createTodo(d);     fetchTodos(); } catch(e){} };
-  const updateTask = async (id,d) => { try { await updateTodo(id,d);  fetchTodos(); } catch(e){} };
+  const handleWorkspaceSelect = (ws) => {
+    setActiveWorkspace(ws);
+    setActiveFilter("all");
+  };
+
+  const addTask = async (d) => {
+    try {
+      const payload = activeWorkspace
+        ? { ...d, workspace: activeWorkspace._id }
+        : d;
+      await createTodo(payload);
+      fetchTodos();
+    } catch (e) {
+      setActionError(e?.response?.data?.message || "Could not create task");
+    }
+  };
+
+  const updateTask = async (id, d) => {
+    try {
+      await updateTodo(id, d);
+      fetchTodos();
+    } catch (e) {
+      setActionError(e?.response?.data?.message || "Could not update task");
+    }
+  };
 
   // ── Duplicate: clones a task's fields into a fresh task via the same
   //    addTask/createTodo path everything else uses. Status resets to
   //    pending and star resets to false — a duplicate starts fresh.
-  //    Estimate carries over since it's descriptive metadata, not state.
+  //    Priority and estimate carry over since they're descriptive metadata.
+  //    Subtasks are NOT copied — a duplicate starts with a clean checklist.
   const duplicateTask = (todo) => {
     addTask({
       title: `${todo.title} (Copy)`,
       description: todo.description || "",
       link: todo.link || "",
-      status: "pending",
+      status: STATUS.PENDING,
+      priority: todo.priority || PRIORITY.MEDIUM,
       dueDate: todo.dueDate || null,
       estimate: todo.estimate || "",
       star: false,
@@ -233,7 +267,10 @@ const Dashboard = () => {
     setTodos((prev) => prev.filter((t) => t._id !== id));
 
     const timeoutId = setTimeout(async () => {
-      try { await deleteTodo(id); } catch (e) {}
+      try { await deleteTodo(id); }
+      catch (e) {
+        setActionError(e?.response?.data?.message || "Could not delete task");
+      }
       setPendingDelete((curr) => (curr?.todo._id === id ? null : curr));
     }, 5000);
 
@@ -255,20 +292,34 @@ const Dashboard = () => {
     try {
       await updateTodo(id, { star: value });
       setTodos((prev) => prev.map((t) => (t._id === id ? { ...t, star: value } : t)));
-    } catch (e) { console.log(e); }
+    } catch (e) {
+      setActionError(e?.response?.data?.message || "Could not update task");
+    }
   };
 
-  // ── Status change: fires confetti whenever a task newly becomes "done" ──
+  // ── Status change: fires confetti whenever a task newly becomes Completed ──
   // Also used by Kanban drag-and-drop and swipe-right-to-done on TodoCard
   const changeStatus = async (id, newStatus) => {
     const currentTodo = todos.find((t) => t._id === id);
-    const justCompleted = currentTodo && currentTodo.status !== "done" && newStatus === "done";
+    const justCompleted = currentTodo && currentTodo.status !== STATUS.DONE && newStatus === STATUS.DONE;
 
     try {
       await updateTodo(id, { status: newStatus });
       setTodos((prev) => prev.map((t) => (t._id === id ? { ...t, status: newStatus } : t)));
       if (justCompleted) fireTaskConfetti();
-    } catch (e) { console.log(e); }
+    } catch (e) {
+      setActionError(e?.response?.data?.message || "Could not update task");
+    }
+  };
+
+  // ── Priority change: used by TaskDetailPanel's clickable priority pill ──
+  const changePriority = async (id, newPriority) => {
+    try {
+      await updateTodo(id, { priority: newPriority });
+      setTodos((prev) => prev.map((t) => (t._id === id ? { ...t, priority: newPriority } : t)));
+    } catch (e) {
+      setActionError(e?.response?.data?.message || "Could not update task");
+    }
   };
 
   const handleModalSubmit = async (data) => {
@@ -290,9 +341,9 @@ const Dashboard = () => {
     },
   });
 
-  const pendingCount    = todos.filter(t => t.status === "pending").length;
-  const inProgressCount = todos.filter(t => t.status === "inprogress").length;
-  const doneCount       = todos.filter(t => t.status === "done").length;
+  const pendingCount    = todos.filter(t => t.status === STATUS.PENDING).length;
+  const inProgressCount = todos.filter(t => t.status === STATUS.IN_PROGRESS).length;
+  const doneCount       = todos.filter(t => t.status === STATUS.DONE).length;
   const streak          = getStreak(todos);
   const score           = getScore(todos);
 
@@ -303,7 +354,7 @@ const Dashboard = () => {
 
   const now = new Date();
   const overdueTasks = todos.filter(
-    (t) => t.dueDate && new Date(t.dueDate) < now && t.status !== "done"
+    (t) => t.dueDate && new Date(t.dueDate) < now && t.status !== STATUS.DONE
   );
 
   // ── Tab title badge: "(3) TodoFlow" while there are overdue tasks ──
@@ -313,7 +364,7 @@ const Dashboard = () => {
     todos.filter(t => {
       const s = t.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
                 t.description.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
-      const f = activeFilter === "all" || t.status === activeFilter;
+      const f = activeFilter === "all" || t.status === STATUS_KEYS[activeFilter];
       const due = matchesDueFilter(t, dueFilter);
       const star = !starredOnly || t.star;
       return s && f && due && star;
@@ -360,6 +411,12 @@ const Dashboard = () => {
 
           <NotificationBanner />
 
+          <WorkspaceSwitcher
+            workspaces={workspaces}
+            activeWorkspace={activeWorkspace}
+            onSelect={handleWorkspaceSelect}
+          />
+
           <WeeklyRecap todos={todos} />
 
           <OnThisDay todos={todos} />
@@ -377,7 +434,11 @@ const Dashboard = () => {
                   <span className="hero-username">{userName}</span>!
                 </h1>
               </div>
-              <p className="hero-sub">Here's your productivity snapshot for today</p>
+              <p className="hero-sub">
+                {activeWorkspace
+                  ? `Viewing tasks in ${activeWorkspace.name}`
+                  : "Here's your productivity snapshot for today"}
+              </p>
             </div>
 
             <div className="hero-stats">
@@ -592,6 +653,8 @@ const Dashboard = () => {
           onStatusChange={changeStatus}
           onToggleStar={toggleStar}
           onDuplicate={duplicateTask}
+          onPriorityChange={changePriority}
+          onRefresh={fetchTodos}
         />
       )}
 
@@ -603,7 +666,15 @@ const Dashboard = () => {
         />
       )}
 
-      {nudgeActive && !pendingDelete && (
+      {!pendingDelete && actionError && (
+        <Toast
+          message={actionError}
+          onDismiss={() => setActionError("")}
+          duration={4000}
+        />
+      )}
+
+      {nudgeActive && !pendingDelete && !actionError && (
         <Toast
           message={`${pendingCount} task${pendingCount !== 1 ? "s" : ""} still pending today`}
           onDismiss={dismissNudge}
@@ -616,4 +687,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard; 
+export default Dashboard;

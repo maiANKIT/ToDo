@@ -109,6 +109,52 @@ body[data-theme="dark"] .todo-card.urgency-soon    { border-left-color: #fbbf24;
 body[data-theme="dark"] .todo-card.urgency-week    { border-left-color: #fde047; }
 body[data-theme="dark"] .todo-card.urgency-later   { border-left-color: #4ade80; }
 
+/* ── Priority badge ── */
+.priority-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  margin-left: 6px;
+}
+.priority-low      { background: rgba(107, 114, 128, 0.10); color: #4b5563; }
+.priority-medium   { background: rgba(59, 130, 246, 0.10);  color: #2563eb; }
+.priority-high     { background: rgba(249, 115, 22, 0.12);  color: #c2410c; }
+.priority-critical { background: rgba(239, 68, 68, 0.12);   color: #dc2626; }
+
+body[data-theme="dark"] .priority-low      { background: rgba(107, 114, 128, 0.18); color: #9ca3af; }
+body[data-theme="dark"] .priority-medium   { background: rgba(59, 130, 246, 0.18);  color: #60a5fa; }
+body[data-theme="dark"] .priority-high     { background: rgba(249, 115, 22, 0.20);  color: #fb923c; }
+body[data-theme="dark"] .priority-critical { background: rgba(239, 68, 68, 0.18);   color: #f87171; }
+
+/* ── Subtask progress badge ── */
+.subtask-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  margin-left: 6px;
+  background: rgba(16, 185, 129, 0.10);
+  color: #059669;
+}
+body[data-theme="dark"] .subtask-badge {
+  background: rgba(52, 211, 153, 0.14);
+  color: #34d399;
+}
+
+.todo-list-left .priority-badge,
+.todo-list-left .subtask-badge {
+  margin-bottom: 0;
+}
+
 /* ── Link pill (grid view) ── */
 .todo-link-pill {
   display: inline-flex;

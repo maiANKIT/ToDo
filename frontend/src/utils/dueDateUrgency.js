@@ -1,3 +1,5 @@
+import { STATUS } from "./taskEnums";
+
 export const URGENCY = {
   OVERDUE: "overdue",
   TODAY: "today",
@@ -13,7 +15,7 @@ export const URGENCY = {
  * only matters for things you still need to act on.
  */
 export function getUrgencyLevel(dueDate, status) {
-  if (!dueDate || status === "done") return URGENCY.NONE;
+  if (!dueDate || status === STATUS.DONE) return URGENCY.NONE;
 
   const due = new Date(dueDate);
   const now = new Date();

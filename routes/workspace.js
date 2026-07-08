@@ -1,6 +1,7 @@
 const express = require("express");
 
 const { auth } = require("../middleware/auth");
+const { validateObjectId } = require("../middleware/validateObjectId");
 
 const { createWorkspace } = require("../controller/workspace/createWorkspace");
 
@@ -17,6 +18,7 @@ const { restoreWorkspace } = require("../controller/workspace/restoreWorkspace")
 
 const {
     inviteMember,
+    getInvitationByToken,
     acceptInvitation,
     rejectInvitation,
     getWorkspaceInvitations
@@ -36,41 +38,46 @@ router.post("/", auth, createWorkspace);
 
 router.get("/", auth, getWorkspaces);
 
-router.get("/:id", auth, getWorkspaceById);
+router.get("/:id", auth, validateObjectId("id"), getWorkspaceById);
 
-router.put("/:id", auth, updateWorkspace);
+router.put("/:id", auth, validateObjectId("id"), updateWorkspace);
 
-router.patch("/:id/archive", auth, archiveWorkspace);
+router.patch("/:id/archive", auth, validateObjectId("id"), archiveWorkspace);
 
-router.patch("/:id/restore", auth, restoreWorkspace);
+router.patch("/:id/restore", auth, validateObjectId("id"), restoreWorkspace);
 
 // invitation
-router.post("/:id/invite", auth, inviteMember);
+router.post("/:id/invite", auth, validateObjectId("id"), inviteMember);
+
+router.get("/invite/:token", auth, getInvitationByToken);
 
 router.post("/invite/:token/accept", auth, acceptInvitation);
 
 router.post("/invite/:token/reject", auth, rejectInvitation);
 
-router.get("/:id/invitations", auth, getWorkspaceInvitations);
+router.get("/:id/invitations", auth, validateObjectId("id"), getWorkspaceInvitations);
 
 // members
-router.get("/:id/members", auth, getWorkspaceMembers);
+router.get("/:id/members", auth, validateObjectId("id"), getWorkspaceMembers);
 
 router.patch(
     "/:workspaceId/member/:memberId/role",
     auth,
+    validateObjectId("workspaceId", "memberId"),
     changeMemberRole
 );
 
 router.delete(
     "/:workspaceId/member/:memberId",
     auth,
+    validateObjectId("workspaceId", "memberId"),
     removeMember
 );
 
 router.delete(
     "/:workspaceId/leave",
     auth,
+    validateObjectId("workspaceId"),
     leaveWorkspace
 );
 

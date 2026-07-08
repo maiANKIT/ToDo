@@ -1,49 +1,62 @@
 const ToDo = require('../models/ToDo');
+const resolveTaskAccess = require('../utils/resolveTaskAccess');
 
-//define route handler
-exports.updateToDo = async(req, res)=>{
+exports.updateToDo = async (req, res) => {
 
-    try{
+    try {
 
-        const {id} = req.params;
-        const {title, description, link, dueDate,  star, status, priority} = req.body;
+        const { id } = req.params;
+        const { title, description, link, dueDate, star, status, priority } = req.body;
 
-        const todo = await ToDo.findOneAndUpdate(
-            {
-                _id: id,
-                user: req.user.id
-            },
-            {
-                title,
-                description,
-                link,
-                dueDate,
-                star,
-                status,
-                priority
-            },
-            {
-                new: true
-            }
-        );
+        const todo = await ToDo.findById(id);
 
-        if(!todo){
+        if (!todo) {
 
             return res.status(404).json({
                 success: false,
                 message: 'Task not found'
-            })
+            });
 
         }
+
+        const access = await resolveTaskAccess(todo, req.user.id);
+
+        if (!access.allowed) {
+
+            return res.status(404).json({
+                success: false,
+                message: 'Task not found'
+            });
+
+        }
+
+        if (todo.workspace && !access.member.permissions.canEdit) {
+
+            return res.status(403).json({
+                success: false,
+                message: 'permission denied'
+            });
+
+        }
+
+        if (title !== undefined) todo.title = title;
+        if (description !== undefined) todo.description = description;
+        if (link !== undefined) todo.link = link;
+        if (dueDate !== undefined) todo.dueDate = dueDate;
+        if (star !== undefined) todo.star = star;
+        if (status !== undefined) todo.status = status;
+        if (priority !== undefined) todo.priority = priority;
+
+        await todo.save();
 
         return res.status(200).json({
             success: true,
             data: todo,
             message: `updated successfully`
-        })
+        });
 
     }
-    catch(err){
+    catch (err) {
 
         console.error(err);
         return res.status(500).json({
@@ -51,25 +64,21 @@ exports.updateToDo = async(req, res)=>{
             success: false,
             message: 'server error'
 
-        })
+        });
 
     }
 
-}
+};
 
 //subtask add
-exports.addSubtask = async(req, res)=>{
+exports.addSubtask = async (req, res) => {
 
-    try{
+    try {
 
-        //fetch id
-        const {id} = req.params;
+        const { id } = req.params;
+        const { title, description, link, dueDate, status, priority } = req.body;
 
-        //fetch data
-        const{title, description, link, dueDate, status, priority} = req.body;
-
-        //validation
-        if(!title || !title.trim()){
+        if (!title || !title.trim()) {
 
             return res.status(400).json({
                 success: false,
@@ -78,15 +87,10 @@ exports.addSubtask = async(req, res)=>{
 
         }
 
-        //find todo
-        const todo = await ToDo.findOne({
-            _id: id,
-            user: req.user.id
-        });
+        const todo = await ToDo.findById(id);
 
-        //todo not found
-        if(!todo){
-            
+        if (!todo) {
+
             return res.status(404).json({
                 success: false,
                 message: 'todo not found'
@@ -94,158 +98,191 @@ exports.addSubtask = async(req, res)=>{
 
         }
 
-        //add subtask
+        const access = await resolveTaskAccess(todo, req.user.id);
+
+        if (!access.allowed) {
+
+            return res.status(404).json({
+                success: false,
+                message: 'todo not found'
+            });
+
+        }
+
+        if (todo.workspace && !access.member.permissions.canEdit) {
+
+            return res.status(403).json({
+                success: false,
+                message: 'permission denied'
+            });
+
+        }
+
         todo.subtasks.push({
             title, description, link, dueDate, status: status || 'Pending', priority: priority || 'Medium', order: todo.subtasks.length
         });
 
-        //save todo
         await todo.save();
 
-        //return response
         return res.status(201).json({
             success: true,
             data: todo,
             message: 'Subtask is added'
-        })
+        });
 
     }
-    catch(error){
+    catch (error) {
         console.error(error);
         return res.status(500).json({
             success: false,
             message: 'Internal server error'
-        })
+        });
     }
 
-}
+};
 
 //update subtask
-exports.updateSubtask = async(req, res)=>{
+exports.updateSubtask = async (req, res) => {
 
-    try{
+    try {
 
-        //fetch id
-        const {todoId, subtaskId} = req.params;
+        const { todoId, subtaskId } = req.params;
+        const { title, description, link, dueDate, status, priority } = req.body;
 
-        //fetch data
-        const {title, description, link, dueDate, status, priority} = req.body;
+        const todo = await ToDo.findById(todoId);
 
-        //find todo
-        const todo = await ToDo.findOne({
-            _id: todoId,
-            user: req.user.id
-        });
-
-        //todo not found
-        if(!todo){
+        if (!todo) {
             return res.status(404).json({
                 success: false,
                 message: 'Todo not found'
             });
         }
 
-        //find subtask
+        const access = await resolveTaskAccess(todo, req.user.id);
+
+        if (!access.allowed) {
+
+            return res.status(404).json({
+                success: false,
+                message: 'Todo not found'
+            });
+
+        }
+
+        if (todo.workspace && !access.member.permissions.canEdit) {
+
+            return res.status(403).json({
+                success: false,
+                message: 'permission denied'
+            });
+
+        }
+
         const subtask = todo.subtasks.id(subtaskId);
 
-        //subtask id not found
-        if(!subtask){
+        if (!subtask) {
             return res.status(404).json({
                 success: false,
                 message: 'subtask not found'
             });
         }
 
-        //update data
-        if(title !== undefined) subtask.title = title;
-        if(description !== undefined) subtask.description = description;
-        if(link !== undefined) subtask.link = link;
-        if(dueDate !== undefined) subtask.dueDate = dueDate;
-        if(status !== undefined) subtask.status = status;
-        if(priority !== undefined) subtask.priority = priority;
+        if (title !== undefined) subtask.title = title;
+        if (description !== undefined) subtask.description = description;
+        if (link !== undefined) subtask.link = link;
+        if (dueDate !== undefined) subtask.dueDate = dueDate;
+        if (status !== undefined) subtask.status = status;
+        if (priority !== undefined) subtask.priority = priority;
 
-        //save
         await todo.save();
 
-        //return response
         return res.status(200).json({
             success: true,
             data: todo,
             message: 'Subtask updated successfully'
-        })
+        });
 
     }
-    catch(error){
+    catch (error) {
 
         console.error(error);
         return res.status(500).json({
             success: false,
             message: 'Internal server error'
-        })
+        });
 
     }
 
-}
+};
 
 //delete subtask
-exports.deleteSubtask = async (req, res)=>{
+exports.deleteSubtask = async (req, res) => {
 
-    try{
+    try {
 
-        //fetch id
-        const {todoId, subtaskId} = req.params;
+        const { todoId, subtaskId } = req.params;
 
-        //find todo
-        const todo = await ToDo.findOne({
-            _id: todoId,
-            user: req.user.id
-        });
+        const todo = await ToDo.findById(todoId);
 
-        //todo not found
-        if(!todo){
+        if (!todo) {
             return res.status(404).json({
                 success: false,
                 message: 'todo not found'
-            })
+            });
         }
 
-        //find subtask
+        const access = await resolveTaskAccess(todo, req.user.id);
+
+        if (!access.allowed) {
+
+            return res.status(404).json({
+                success: false,
+                message: 'todo not found'
+            });
+
+        }
+
+        if (todo.workspace && !access.member.permissions.canEdit) {
+
+            return res.status(403).json({
+                success: false,
+                message: 'permission denied'
+            });
+
+        }
+
         const subtask = todo.subtasks.id(subtaskId);
 
-        //subtask not found
-        if(!subtask){
+        if (!subtask) {
             return res.status(404).json({
                 success: false,
                 message: 'subtask not found'
             });
         }
 
-        //delete subtask
         subtask.deleteOne();
 
-        //reorder
-        todo.subtasks.forEach((subtask, index)=>{
-            subtask.order = index;
+        todo.subtasks.forEach((sub, index) => {
+            sub.order = index;
         });
 
-        //save todo
         await todo.save();
 
-        //return response
         return res.status(200).json({
             success: true,
             data: todo,
             message: 'Subtask deleted successfully'
-        })
+        });
 
     }
-    catch(error){
+    catch (error) {
 
+        console.error(error);
         return res.status(500).json({
             success: false,
             message: 'internal server error'
-        })
+        });
 
     }
 
-}
+};

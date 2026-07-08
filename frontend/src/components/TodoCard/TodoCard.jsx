@@ -1,9 +1,9 @@
 import { useState, useRef } from "react";
-import { FiExternalLink, FiStar, FiCopy, FiClock, FiCheck, FiTrash2, FiEdit2 } from "react-icons/fi";
+import { FiExternalLink, FiStar, FiCopy, FiClock, FiCheck, FiTrash2, FiEdit2, FiCheckSquare } from "react-icons/fi";
 import { getUrgencyLevel, getUrgencyLabel } from "../../utils/dueDateUrgency";
+import { STATUS, getStatusKey, getNextStatus, STATUS_LABELS, PRIORITY_META } from "../../utils/taskEnums";
 import "./TodoCard.css";
 
-const STATUS_CYCLE = ["pending", "inprogress", "done"];
 const SWIPE_THRESHOLD = 90;
 const SWIPE_MAX = 130;
 const LONG_PRESS_MS = 500;
@@ -32,20 +32,13 @@ const TodoCard = ({
   const longPressFiredRef = useRef(false);
 
   const getStatusClass = () => {
-    switch (todo.status) {
-      case "done":       return "status-done";
-      case "inprogress": return "status-progress";
-      default:           return "status-pending";
-    }
+    const key = getStatusKey(todo.status);
+    if (key === "done") return "status-done";
+    if (key === "inprogress") return "status-progress";
+    return "status-pending";
   };
 
-  const getStatusText = () => {
-    switch (todo.status) {
-      case "done":       return "Done";
-      case "inprogress": return "In Progress";
-      default:           return "Pending";
-    }
-  };
+  const getStatusText = () => STATUS_LABELS[todo.status] || "Pending";
 
   const handleLinkClick = (e) => {
     e.stopPropagation();
@@ -62,9 +55,7 @@ const TodoCard = ({
   const handleStatusClick = (e) => {
     e.stopPropagation();
     if (!onStatusChange) return;
-    const currentIndex = STATUS_CYCLE.indexOf(todo.status);
-    const nextStatus = STATUS_CYCLE[(currentIndex + 1) % STATUS_CYCLE.length];
-    onStatusChange(todo._id, nextStatus);
+    onStatusChange(todo._id, getNextStatus(todo.status));
   };
 
   const handleTitleClick = (e) => {
@@ -138,7 +129,7 @@ const TodoCard = ({
 
     if (swipeLockRef.current === "x") {
       if (swipeX >= SWIPE_THRESHOLD) {
-        onStatusChange?.(todo._id, "done");
+        onStatusChange?.(todo._id, STATUS.DONE);
       } else if (swipeX <= -SWIPE_THRESHOLD) {
         onDelete?.(todo._id);
       }
@@ -170,6 +161,13 @@ const TodoCard = ({
   const dueDateLabel = todo.dueDate ? getUrgencyLabel(todo.dueDate, urgency) : null;
   const dueDateClass = `due-${urgency}`;
   const urgencyClass = urgency !== "none" ? `urgency-${urgency}` : "";
+
+  // ── Priority ──
+  const priorityMeta = todo.priority ? PRIORITY_META[todo.priority] : null;
+
+  // ── Subtasks progress ──
+  const subtaskTotal = todo.subtasks?.length || 0;
+  const subtaskDone = todo.subtasks?.filter((s) => s.status === STATUS.DONE).length || 0;
 
   // ── Favicon helpers ──
   const getDomain = (url) => {
@@ -249,6 +247,21 @@ const TodoCard = ({
       </span>
     ) : null;
 
+  const PriorityBadge = () =>
+    priorityMeta ? (
+      <span className={`priority-badge ${priorityMeta.className}`} title="Priority">
+        {priorityMeta.label}
+      </span>
+    ) : null;
+
+  const SubtaskBadge = () =>
+    subtaskTotal > 0 ? (
+      <span className="subtask-badge" title="Subtasks completed">
+        <FiCheckSquare size={11} />
+        {subtaskDone}/{subtaskTotal}
+      </span>
+    ) : null;
+
   const swipeTouchProps = swipeEnabled
     ? {
         onTouchStart: handleTouchStart,
@@ -270,6 +283,8 @@ const TodoCard = ({
             {todo.title}
           </h3>
           {dueDateLabel && <span className={`due-badge ${dueDateClass}`}>{dueDateLabel}</span>}
+          <PriorityBadge />
+          <SubtaskBadge />
           <EstimateBadge />
           <span className="todo-date">
             {new Date(todo.createdAt).toLocaleDateString()}
@@ -305,6 +320,8 @@ const TodoCard = ({
           {todo.description && <p>{todo.description}</p>}
 
           {dueDateLabel && <span className={`due-badge ${dueDateClass}`}>{dueDateLabel}</span>}
+          <PriorityBadge />
+          <SubtaskBadge />
           <EstimateBadge />
 
           {todo.link && (

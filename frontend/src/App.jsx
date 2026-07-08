@@ -11,17 +11,19 @@ import Collaboration  from "./pages/Collaboration/Collaboration";
 import TodayTasks     from "./pages/TodayTasks/TodayTasks";
 import StarredTasks   from "./pages/StarredTasks/StarredTasks";
 import Features       from "./pages/Features/Features";
+import InvitePage     from "./pages/InvitePage/InvitePage";
 import NotFound       from "./pages/NotFound/NotFound";
 
 import ProtectedRoute from "./routes/ProtectedRoute";
 import OfflineScreen from "./components/OfflineScreen/OfflineScreen";
 import useOnlineStatus from "./hooks/useOnlineStatus";
+import { WorkspaceProvider } from "./context/WorkspaceContext";
 
 function App() {
   const isOnline = useOnlineStatus();
 
   return (
-    <>
+    <WorkspaceProvider>
       <Routes>
         <Route path="/"                element={<Home />} />
         <Route path="/login"           element={<Login />} />
@@ -34,13 +36,14 @@ function App() {
         <Route path="/today"         element={<ProtectedRoute><TodayTasks /></ProtectedRoute>} />
         <Route path="/starred"       element={<ProtectedRoute><StarredTasks /></ProtectedRoute>} />
         <Route path="/features"      element={<ProtectedRoute><Features /></ProtectedRoute>} />
+        <Route path="/invite/:token" element={<InvitePage />} />
 
         {/* Catch-all: any unmatched URL shows the 404 page */}
         <Route path="*" element={<NotFound />} />
       </Routes>
 
       {!isOnline && <OfflineScreen onRetry={() => window.location.reload()} />}
-    </>
+    </WorkspaceProvider>
   );
 }
 

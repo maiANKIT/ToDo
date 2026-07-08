@@ -1,0 +1,144 @@
+.invite-page {
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.invite-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 32px 28px;
+  text-align: center;
+  animation: inviteFadeIn 0.3s ease;
+}
+
+.invite-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 18px;
+  background: var(--bg);
+  box-shadow: inset 4px 4px 10px var(--shadow-dark),
+    inset -4px -4px 10px var(--shadow-light);
+  color: var(--primary);
+}
+
+.invite-icon-error {
+  color: #dc2626;
+}
+
+.invite-card h2 {
+  font-size: 19px;
+  margin-bottom: 8px;
+}
+
+.invite-muted {
+  opacity: 0.65;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
+.invite-detail {
+  font-size: 14px;
+  margin: 14px 0;
+}
+
+.invite-role-tag {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--bg);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.invite-status-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 13px;
+  opacity: 0.7;
+  margin: 10px 0;
+}
+
+.invite-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.invite-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 20px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 600;
+  background: var(--card);
+  color: var(--text);
+  box-shadow: 6px 6px 12px var(--shadow-dark), -6px -6px 12px var(--shadow-light);
+  transition: transform 0.2s ease;
+}
+
+.invite-btn:hover {
+  transform: translateY(-1px);
+}
+
+.invite-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.invite-btn-primary {
+  background: var(--primary);
+  color: var(--card);
+}
+
+.invite-btn-ghost {
+  opacity: 0.8;
+}
+
+.invite-result {
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.invite-result-success {
+  background: rgba(22, 163, 74, 0.15);
+  color: #15803d;
+}
+
+.invite-result-info {
+  background: rgba(107, 114, 128, 0.15);
+  color: #4b5563;
+}
+
+.invite-result-error {
+  background: rgba(220, 38, 38, 0.15);
+  color: #b91c1c;
+}
+
+@keyframes inviteFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
