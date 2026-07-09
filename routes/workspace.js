@@ -19,6 +19,7 @@ const { restoreWorkspace } = require("../controller/workspace/restoreWorkspace")
 const {
     inviteMember,
     getInvitationByToken,
+    getMyInvitations,
     acceptInvitation,
     rejectInvitation,
     getWorkspaceInvitations
@@ -50,6 +51,8 @@ router.patch("/:id/restore", auth, validateObjectId("id"), restoreWorkspace);
 router.post("/:id/invite", auth, validateObjectId("id"), inviteMember);
 
 router.get("/invite/:token", auth, getInvitationByToken);
+
+router.get("/invitations/mine", auth, getMyInvitations);
 
 router.post("/invite/:token/accept", auth, acceptInvitation);
 

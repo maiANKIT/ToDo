@@ -84,13 +84,15 @@ exports.inviteMember = async (req, res) => {
       }
     }
 
+    // The {workspace, email} pair is unique at the DB level (one row per
+    // pair, any status) — so re-inviting after a Reject/Expire must reuse
+    // and reset the same row instead of creating a new document.
     const existingInvitation = await Invitation.findOne({
       workspace: id,
       email: normalizedEmail,
-      status: "Pending",
     });
 
-    if (existingInvitation) {
+    if (existingInvitation && existingInvitation.status === "Pending") {
       return res.status(409).json({
         success: false,
         message: "invitation already sent",
@@ -101,19 +103,30 @@ exports.inviteMember = async (req, res) => {
 
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-    const invitation = await Invitation.create({
-      workspace: id,
+    let invitation;
 
-      invitedBy: req.user.id,
+    if (existingInvitation) {
 
-      email: normalizedEmail,
+      existingInvitation.invitedBy = req.user.id;
+      existingInvitation.role = role || "Viewer";
+      existingInvitation.token = token;
+      existingInvitation.status = "Pending";
+      existingInvitation.expiresAt = expiresAt;
 
-      role: role || "Viewer",
+      invitation = await existingInvitation.save();
 
-      token,
+    } else {
 
-      expiresAt,
-    });
+      invitation = await Invitation.create({
+        workspace: id,
+        invitedBy: req.user.id,
+        email: normalizedEmail,
+        role: role || "Viewer",
+        token,
+        expiresAt,
+      });
+
+    }
 
     const inviter = await User.findById(req.user.id).select("name");
 
@@ -189,7 +202,7 @@ exports.getInvitationByToken = async (req, res) => {
 
         }
 
-        //lazily mark expired invites
+        // lazily mark expired invites
         if (invitation.status === "Pending" && invitation.expiresAt < new Date()) {
 
             invitation.status = "Expired";
@@ -213,6 +226,48 @@ exports.getInvitationByToken = async (req, res) => {
             },
 
             message: "invitation fetched successfully"
+
+        });
+
+    }
+    catch (error) {
+
+        console.error(error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error"
+        });
+
+    }
+
+};
+
+// Invitations addressed to the logged-in user's email, across ALL workspaces —
+// powers the navbar notification bell.
+exports.getMyInvitations = async (req, res) => {
+
+    try {
+
+        const invitations = await Invitation.find({
+            email: req.user.email.toLowerCase(),
+            status: "Pending",
+            expiresAt: { $gt: new Date() }
+        })
+        .populate("workspace", "name isArchived")
+        .populate("invitedBy", "name")
+        .sort({ createdAt: -1 });
+
+        // skip invites whose workspace got archived in the meantime
+        const active = invitations.filter(
+            (inv) => inv.workspace && !inv.workspace.isArchived
+        );
+
+        return res.status(200).json({
+
+            success: true,
+            data: active,
+            message: "invitations fetched successfully"
 
         });
 

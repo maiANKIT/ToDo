@@ -22,7 +22,7 @@
   isolation: isolate;
   will-change: transform;
   z-index: 1000;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease, left 0.2s ease, width 0.2s ease;
 }
 
 body[data-theme="dark"] .navbar {
@@ -33,6 +33,14 @@ body[data-theme="dark"] .navbar {
   box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.50),
     inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+/* Shift navbar centering to account for the fixed left sidebar */
+@media (min-width: 901px) {
+  .navbar--with-sidebar {
+    left: calc(50% + 130px);
+    width: min(1120px, calc(100% - 292px - 32px));
+  }
 }
 
 /* ================= NORMAL LAYER ================= */
@@ -485,114 +493,114 @@ body[data-theme="dark"] .nav-search-close:hover { background: rgba(255,255,255,0
   opacity: 0.75;
   padding: 6px 11px 2px;
 }
+/* ================= WORKSPACE INVITATION NOTIFICATIONS ================= */
+.nav-notif-section-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.45;
+  padding: 6px 10px 4px;
+}
 
-/* ================= WORKSPACE BRAND (navbar becomes team name) ================= */
-.brand-workspace-avatar {
-  width: 34px;
-  height: 34px;
+.nav-invite-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 0 2px;
+}
+
+.nav-invite-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 8px 10px;
   border-radius: 12px;
+}
+
+.nav-invite-item:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+body[data-theme="dark"] .nav-invite-item:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.nav-invite-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
-  font-weight: 700;
-  background: var(--primary);
-  color: var(--card);
+  background: rgba(124, 58, 237, 0.10);
+  color: #7c3aed;
   flex-shrink: 0;
+  margin-top: 1px;
+}
+body[data-theme="dark"] .nav-invite-icon {
+  background: rgba(167, 139, 250, 0.15);
+  color: #a78bfa;
 }
 
-.brand-workspace-info {
-  display: flex;
-  flex-direction: column;
+.nav-invite-text {
+  flex: 1;
   min-width: 0;
-  overflow: hidden;
-}
-
-.brand-workspace-name {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.brand-workspace-sub {
-  font-size: 0.7rem;
-  opacity: 0.5;
-  color: var(--text);
-  white-space: nowrap;
-}
-
-/* ================= WORKSPACE GROUP-INFO DROPDOWN ================= */
-.nav-dropdown--workspace {
-  width: 270px;
-}
-
-.nav-workspace-member-list {
-  max-height: 220px;
-  overflow-y: auto;
-  padding: 2px 2px 4px;
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
-.nav-workspace-member-row {
+.nav-invite-title {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.35;
+}
+
+.nav-invite-role {
+  font-size: 0.68rem;
+  opacity: 0.5;
+  color: var(--text);
+}
+
+.nav-invite-actions {
   display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 7px 9px;
-  border-radius: 11px;
+  gap: 5px;
+  flex-shrink: 0;
+  margin-top: 1px;
 }
 
-.nav-workspace-member-row:hover {
-  background: rgba(0, 0, 0, 0.05);
-}
-body[data-theme="dark"] .nav-workspace-member-row:hover {
-  background: rgba(255, 255, 255, 0.07);
-}
-
-.nav-workspace-member-avatar {
-  width: 26px;
-  height: 26px;
+.nav-invite-btn {
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
-  font-weight: 700;
-  background: rgba(0, 0, 0, 0.06);
-  color: var(--text);
-  flex-shrink: 0;
-}
-body[data-theme="dark"] .nav-workspace-member-avatar {
-  background: rgba(255, 255, 255, 0.1);
+  transition: transform 0.15s ease, background 0.15s ease;
 }
 
-.nav-workspace-member-name {
-  flex: 1;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.nav-invite-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
-.nav-workspace-member-role {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  font-size: 0.68rem;
-  font-weight: 700;
-  opacity: 0.55;
-  color: var(--text);
-  flex-shrink: 0;
+.nav-invite-btn--accept {
+  background: rgba(22, 163, 74, 0.15);
+  color: #16a34a;
+}
+.nav-invite-btn--accept:hover:not(:disabled) {
+  background: rgba(22, 163, 74, 0.28);
+  transform: scale(1.1);
 }
 
-@media (max-width: 480px) {
-  .brand-workspace-name { font-size: 0.9rem; max-width: 120px; }
-  .brand-workspace-sub  { display: none; }
-  .brand-workspace-avatar { width: 28px; height: 28px; font-size: 12px; }
+.nav-invite-btn--reject {
+  background: rgba(220, 38, 38, 0.12);
+  color: #dc2626;
+}
+.nav-invite-btn--reject:hover:not(:disabled) {
+  background: rgba(220, 38, 38, 0.22);
+  transform: scale(1.1);
 }

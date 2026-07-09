@@ -58,9 +58,19 @@ const TodoCard = ({
     onStatusChange(todo._id, getNextStatus(todo.status));
   };
 
-  const handleTitleClick = (e) => {
-    e.stopPropagation();
+  // ── Whole card opens the detail panel now (not just the title) ──
+  const handleCardClick = () => {
     onViewDetails?.(todo);
+  };
+
+  const handleEditClick = (e) => {
+    e.stopPropagation();
+    onEdit?.(todo);
+  };
+
+  const handleDeleteClick = (e) => {
+    e.stopPropagation();
+    onDelete?.(todo._id);
   };
 
   const handleDuplicateClick = (e) => {
@@ -275,11 +285,14 @@ const TodoCard = ({
 
   if (isListView) {
     cardBody = (
-      <div className={`todo-card todo-card--list neu-card ${urgencyClass}`}>
+      <div
+        className={`todo-card todo-card--list neu-card todo-card--clickable ${urgencyClass}`}
+        onClick={handleCardClick}
+      >
         <div className="todo-list-left">
           <StatusBadge />
           {StarButton}
-          <h3 onClick={handleTitleClick} className="todo-title-clickable">
+          <h3 className="todo-title-clickable">
             {todo.title}
           </h3>
           {dueDateLabel && <span className={`due-badge ${dueDateClass}`}>{dueDateLabel}</span>}
@@ -297,10 +310,10 @@ const TodoCard = ({
             </button>
           )}
           <DuplicateButton className="link-btn" />
-          <button className="edit-btn" onClick={() => onEdit(todo)} title="Edit task">
+          <button className="edit-btn" onClick={handleEditClick} title="Edit task">
             <FiEdit2 size={14} />
           </button>
-          <button className="delete-btn" onClick={() => onDelete(todo._id)} title="Delete task">
+          <button className="delete-btn" onClick={handleDeleteClick} title="Delete task">
             <FiTrash2 size={14} />
           </button>
         </div>
@@ -308,13 +321,16 @@ const TodoCard = ({
     );
   } else {
     cardBody = (
-      <div className={`todo-card neu-card ${urgencyClass}`}>
+      <div
+        className={`todo-card neu-card todo-card--clickable ${urgencyClass}`}
+        onClick={handleCardClick}
+      >
         <div className="todo-content">
           <div className="todo-card-top-row">
             <StatusBadge extraClass="status-badge--card" />
             {StarButton}
           </div>
-          <h3 onClick={handleTitleClick} className="todo-title-clickable">
+          <h3 className="todo-title-clickable">
             {todo.title}
           </h3>
           {todo.description && <p>{todo.description}</p>}
@@ -337,10 +353,10 @@ const TodoCard = ({
           </span>
           <div className="todo-actions">
             <DuplicateButton />
-            <button className="edit-btn" onClick={() => onEdit(todo)} title="Edit task">
+            <button className="edit-btn" onClick={handleEditClick} title="Edit task">
               <FiEdit2 size={16} />
             </button>
-            <button className="delete-btn" onClick={() => onDelete(todo._id)} title="Delete task">
+            <button className="delete-btn" onClick={handleDeleteClick} title="Delete task">
               <FiTrash2 size={16} />
             </button>
           </div>

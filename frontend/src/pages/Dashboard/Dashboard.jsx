@@ -20,7 +20,6 @@ import NotificationBanner from "../../components/NotificationBanner/Notification
 import WeeklyRecap from "../../components/WeeklyRecap/WeeklyRecap";
 import OnThisDay from "../../components/OnThisDay/OnThisDay";
 import PrintableView from "../../components/PrintableView/PrintableView";
-import WorkspaceSwitcher from "../../components/WorkspaceSwitcher/WorkspaceSwitcher";
 import useKeyboardShortcuts from "../../hooks/useKeyboardShortcuts";
 import useDueDateNotifications from "../../hooks/useDueDateNotifications";
 import useDocumentTitleBadge from "../../hooks/useDocumentTitleBadge";
@@ -116,7 +115,7 @@ const fireTaskConfetti = () => {
 
 const Dashboard = () => {
   const { user } = useContext(AuthContext);
-  const { workspaces, activeWorkspace, setActiveWorkspace } = useContext(WorkspaceContext);
+  const { activeWorkspace } = useContext(WorkspaceContext);
   const userName = user?.name?.split(" ")[0] || "User";
 
   const [todos,         setTodos]        = useState([]);
@@ -207,11 +206,6 @@ const Dashboard = () => {
   const handleSetViewMode = (mode) => {
     setViewMode(mode);
     localStorage.setItem("todoflow-view-mode", mode);
-  };
-
-  const handleWorkspaceSelect = (ws) => {
-    setActiveWorkspace(ws);
-    setActiveFilter("all");
   };
 
   const addTask = async (d) => {
@@ -407,15 +401,10 @@ const Dashboard = () => {
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
             overdueTasks={overdueTasks}
+            withSidebar
           />
 
           <NotificationBanner />
-
-          <WorkspaceSwitcher
-            workspaces={workspaces}
-            activeWorkspace={activeWorkspace}
-            onSelect={handleWorkspaceSelect}
-          />
 
           <WeeklyRecap todos={todos} />
 

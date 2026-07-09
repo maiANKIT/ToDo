@@ -18,6 +18,10 @@
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
 }
 
+.todo-card--clickable {
+  cursor: pointer;
+}
+
 .todo-content { flex: 1; }
 
 /* ── Top row: status badge + star (grid view) ── */

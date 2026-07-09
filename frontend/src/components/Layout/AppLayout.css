@@ -1,0 +1,63 @@
+.app-layout {
+  min-height: 100vh;
+}
+
+.app-layout-content {
+  margin-left: 260px;
+  min-height: 100vh;
+  transition: margin-left 0.25s ease;
+}
+
+.app-layout-hamburger {
+  display: none;
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 1200;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  align-items: center;
+  justify-content: center;
+  background: var(--card);
+  color: var(--text);
+  box-shadow: 4px 4px 10px var(--shadow-dark), -4px -4px 10px var(--shadow-light);
+}
+
+.app-layout-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1099;
+}
+
+@media (min-width: 901px) {
+  .app-layout-content {
+    margin-left: var(--sidebar-w, 260px);
+  }
+
+  /* Navbar shift — width/cap now matches Dashboard's hero-card/container
+     (max-width: 1300px, 40px side padding = 80px total) so both stay
+     visually the same length instead of navbar being narrower. */
+  .app-layout-content .navbar {
+    left: calc(50% + (var(--sidebar-w, 260px) / 2));
+    width: min(1300px, calc(100% - var(--sidebar-w, 260px) - 80px));
+    transition: left 0.25s ease, width 0.25s ease, border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+  }
+
+  /* Sticky status strip — same formula, so it stays aligned with the navbar */
+  .app-layout-content .status-strip--sticky {
+    left: calc(50% + (var(--sidebar-w, 260px) / 2));
+    width: min(1300px, calc(100% - var(--sidebar-w, 260px) - 80px));
+    transition: left 0.25s ease, width 0.25s ease, transform 0.25s ease;
+  }
+}
+
+@media (max-width: 900px) {
+  .app-layout-content {
+    margin-left: 0;
+  }
+  .app-layout-hamburger {
+    display: flex;
+  }
+}

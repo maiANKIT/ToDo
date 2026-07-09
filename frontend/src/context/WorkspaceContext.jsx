@@ -1,6 +1,6 @@
 import { createContext, useState, useEffect, useCallback, useContext } from "react";
 import { AuthContext } from "./AuthContext";
-import { getWorkspaces, getWorkspaceMembers } from "../services/workspaceAPI";
+import { getWorkspaces, getWorkspaceMembers, getMyInvitations } from "../services/workspaceAPI";
 
 export const WorkspaceContext = createContext();
 
@@ -12,6 +12,9 @@ export const WorkspaceProvider = ({ children }) => {
   const [members, setMembers] = useState([]);
   const [membersLoading, setMembersLoading] = useState(false);
 
+  // ── Pending invitations addressed to me, across all workspaces ──
+  const [myInvitations, setMyInvitations] = useState([]);
+
   const refreshWorkspaces = useCallback(async () => {
     if (!user) return;
     try {
@@ -19,6 +22,16 @@ export const WorkspaceProvider = ({ children }) => {
       setWorkspaces(res.data.data || []);
     } catch (e) {
       console.log(e);
+    }
+  }, [user]);
+
+  const refreshMyInvitations = useCallback(async () => {
+    if (!user) return;
+    try {
+      const res = await getMyInvitations();
+      setMyInvitations(res.data.data || []);
+    } catch (e) {
+      setMyInvitations([]);
     }
   }, [user]);
 
@@ -53,10 +66,12 @@ export const WorkspaceProvider = ({ children }) => {
   useEffect(() => {
     if (user) {
       refreshWorkspaces();
+      refreshMyInvitations();
     } else {
       setWorkspaces([]);
       setActiveWorkspaceState(null);
       setMembers([]);
+      setMyInvitations([]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
@@ -83,6 +98,8 @@ export const WorkspaceProvider = ({ children }) => {
         membersLoading,
         refreshWorkspaces,
         refreshMembers,
+        myInvitations,
+        refreshMyInvitations,
       }}
     >
       {children}

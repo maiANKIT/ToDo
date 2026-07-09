@@ -18,6 +18,8 @@ export const inviteMember = (id, data) => api.post(`${BASE}/${id}/invite`, data)
 
 export const getInvitationByToken = (token) => api.get(`${BASE}/invite/${token}`);
 
+export const getMyInvitations = () => api.get(`${BASE}/invitations/mine`);
+
 export const acceptInvitation = (token) =>
   api.post(`${BASE}/invite/${token}/accept`);
 

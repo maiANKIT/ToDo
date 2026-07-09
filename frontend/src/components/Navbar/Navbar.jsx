@@ -2,9 +2,10 @@ import { useContext, useRef, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { AuthContext } from "../../context/AuthContext";
 import { WorkspaceContext } from "../../context/WorkspaceContext";
+import { acceptInvitation, rejectInvitation } from "../../services/workspaceAPI";
 import logo from "../../assets/images/logo.png";
 import {
-  FiSearch, FiX, FiUser, FiMoon, FiBell, FiStar, FiZap, FiUsers, FiShield,
+  FiSearch, FiX, FiUser, FiMoon, FiBell, FiStar, FiZap, FiCheck, FiUsers,
 } from "react-icons/fi";
 import { RiDashboardLine } from "react-icons/ri";
 import { HiOutlineUser } from "react-icons/hi2";
@@ -16,8 +17,8 @@ import "./Navbar.css";
 import ThemePicker from "../ThemePicker/ThemePicker";
 
 
-const DropdownPortal = ({ anchorRef, children, align = "right" }) => {
-  const [pos, setPos] = useState({ top: 0, right: 0, left: 0 });
+const DropdownPortal = ({ anchorRef, children }) => {
+  const [pos, setPos] = useState({ top: 0, right: 0 });
 
   useEffect(() => {
     const recalc = () => {
@@ -26,7 +27,6 @@ const DropdownPortal = ({ anchorRef, children, align = "right" }) => {
       setPos({
         top:   rect.bottom + 12,
         right: window.innerWidth - rect.right,
-        left:  rect.left,
       });
     };
     recalc();
@@ -39,7 +39,7 @@ const DropdownPortal = ({ anchorRef, children, align = "right" }) => {
   return createPortal(
     <div
       className="nav-dropdown-portal"
-      style={align === "left" ? { top: pos.top, left: pos.left } : { top: pos.top, right: pos.right }}
+      style={{ top: pos.top, right: pos.right }}
     >
       {children}
     </div>,
@@ -56,26 +56,26 @@ const Navbar = ({
   onSearchChange,
   hideSearch = false,
   overdueTasks = [],
+  withSidebar = false,
 }) => {
   const { logout, user } = useContext(AuthContext);
-  const { activeWorkspace, members, membersLoading, setActiveWorkspace } = useContext(WorkspaceContext);
+  const { myInvitations, refreshMyInvitations, refreshWorkspaces } = useContext(WorkspaceContext);
 
-  const inputRef      = useRef(null);
-  const menuRef        = useRef(null);
-  const dropdownRef    = useRef(null);
-  const notifRef       = useRef(null);
-  const notifDropRef   = useRef(null);
-  const brandRef       = useRef(null);
-  const brandDropRef   = useRef(null);
-  const navigate       = useNavigate();
-  const location       = useLocation();
+  const inputRef     = useRef(null);
+  const menuRef       = useRef(null);
+  const dropdownRef   = useRef(null);
+  const notifRef      = useRef(null);
+  const notifDropRef  = useRef(null);
+  const navigate      = useNavigate();
+  const location      = useLocation();
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [themeOpen, setThemeOpen] = useState(false);
-  const [brandOpen, setBrandOpen] = useState(false);
+  const [actingToken, setActingToken] = useState(null);
 
   const isSearchOpen = searchState === "open" || searchState === "opening";
+  const totalNotifCount = overdueTasks.length + myInvitations.length;
 
   useEffect(() => {
     if (searchState === "open") {
@@ -98,26 +98,14 @@ const Navbar = ({
       ) {
         setNotifOpen(false);
       }
-      if (
-        brandRef.current     && !brandRef.current.contains(e.target) &&
-        brandDropRef.current && !brandDropRef.current.contains(e.target)
-      ) {
-        setBrandOpen(false);
-      }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Close theme accordion whenever the main menu closes
   useEffect(() => {
     if (!menuOpen) setThemeOpen(false);
   }, [menuOpen]);
-
-  // Close workspace info panel whenever the active workspace changes
-  useEffect(() => {
-    setBrandOpen(false);
-  }, [activeWorkspace?._id]);
 
   const menuItems = [
     { icon: <RiDashboardLine size={14} />, label: "Dashboard",     path: "/dashboard"     },
@@ -131,24 +119,33 @@ const Navbar = ({
 
   const handleLogoClick = () => navigate(user ? "/dashboard" : "/");
 
-  const handleBrandClick = () => {
-    if (activeWorkspace) setBrandOpen((p) => !p);
-    else handleLogoClick();
+  const handleAcceptInvite = async (token) => {
+    setActingToken(token);
+    try {
+      await acceptInvitation(token);
+      await Promise.all([refreshMyInvitations(), refreshWorkspaces()]);
+    } catch (e) {
+      console.log(e);
+    } finally {
+      setActingToken(null);
+    }
   };
 
-  const goToCollaboration = () => {
-    setBrandOpen(false);
-    navigate("/collaboration");
-  };
-
-  const backToPersonal = () => {
-    setActiveWorkspace(null);
-    setBrandOpen(false);
+  const handleRejectInvite = async (token) => {
+    setActingToken(token);
+    try {
+      await rejectInvitation(token);
+      await refreshMyInvitations();
+    } catch (e) {
+      console.log(e);
+    } finally {
+      setActingToken(null);
+    }
   };
 
   return (
     <nav
-      className={`navbar ${isSearchOpen ? "navbar--search" : ""}`}
+      className={`navbar ${isSearchOpen ? "navbar--search" : ""} ${withSidebar ? "navbar--with-sidebar" : ""}`}
       ref={navbarRef}
     >
       {/* Normal layer */}
@@ -156,31 +153,14 @@ const Navbar = ({
 
         <div
           className="logo-section"
-          ref={brandRef}
-          onClick={handleBrandClick}
+          onClick={handleLogoClick}
           role="button"
           tabIndex={0}
-          onKeyDown={(e) => e.key === "Enter" && handleBrandClick()}
+          onKeyDown={(e) => e.key === "Enter" && handleLogoClick()}
           style={{ cursor: "pointer" }}
         >
-          {activeWorkspace ? (
-            <>
-              <span className="brand-workspace-avatar">
-                {activeWorkspace.name[0]?.toUpperCase()}
-              </span>
-              <div className="brand-workspace-info">
-                <h2 className="brand-workspace-name">{activeWorkspace.name}</h2>
-                <span className="brand-workspace-sub">
-                  {members.length} member{members.length !== 1 ? "s" : ""}
-                </span>
-              </div>
-            </>
-          ) : (
-            <>
-              <img src={logo} alt="logo" className="logo" />
-              <h2>TodoFlow</h2>
-            </>
-          )}
+          <img src={logo} alt="logo" className="logo" />
+          <h2>TodoFlow</h2>
         </div>
 
         <div className="nav-actions">
@@ -198,8 +178,8 @@ const Navbar = ({
               aria-label="Notifications"
             >
               <FiBell size={16} />
-              {overdueTasks.length > 0 && (
-                <span className="nav-badge">{overdueTasks.length}</span>
+              {totalNotifCount > 0 && (
+                <span className="nav-badge">{totalNotifCount}</span>
               )}
             </button>
           </div>
@@ -234,64 +214,6 @@ const Navbar = ({
         </div>
       )}
 
-      {/* Workspace group-info dropdown (WhatsApp-style) */}
-      {brandOpen && activeWorkspace && (
-        <DropdownPortal anchorRef={brandRef} align="left">
-          <div className="nav-dropdown nav-dropdown--workspace" ref={brandDropRef}>
-            <div className="nav-dropdown__header">
-              <div className="nav-dropdown__avatar">
-                <FiUsers size={16} />
-              </div>
-              <div className="nav-dropdown__info">
-                <span className="nav-dropdown__name">{activeWorkspace.name}</span>
-                <span className="nav-dropdown__email">
-                  {members.length} member{members.length !== 1 ? "s" : ""}
-                </span>
-              </div>
-            </div>
-
-            <div className="nav-dropdown__divider" />
-
-            {membersLoading ? (
-              <p className="nav-notif-empty">Loading members...</p>
-            ) : (
-              <div className="nav-workspace-member-list">
-                {members.map((m) => (
-                  <div className="nav-workspace-member-row" key={m._id}>
-                    <span className="nav-workspace-member-avatar">
-                      {m.user?.name?.[0]?.toUpperCase() || "?"}
-                    </span>
-                    <span className="nav-workspace-member-name">
-                      {m.user?.name}
-                    </span>
-                    <span className="nav-workspace-member-role">
-                      {m.role === "Owner" && <FiShield size={11} />}
-                      {m.role}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div className="nav-dropdown__divider" />
-
-            <button className="nav-dropdown__item nav-dropdown__item--collab" onClick={goToCollaboration}>
-              <span className="nav-dropdown__item-icon">
-                <TbUsers size={13} />
-              </span>
-              Manage Workspace
-            </button>
-
-            <button className="nav-dropdown__item" onClick={backToPersonal}>
-              <span className="nav-dropdown__item-icon">
-                <HiOutlineUser size={13} />
-              </span>
-              Switch to Personal
-            </button>
-          </div>
-        </DropdownPortal>
-      )}
-
       {/* Notification dropdown */}
       {notifOpen && (
         <DropdownPortal anchorRef={notifRef}>
@@ -303,16 +225,57 @@ const Navbar = ({
               <div className="nav-dropdown__info">
                 <span className="nav-dropdown__name">Notifications</span>
                 <span className="nav-dropdown__email">
-                  {overdueTasks.length} overdue task{overdueTasks.length === 1 ? "" : "s"}
+                  {totalNotifCount} unread
                 </span>
               </div>
             </div>
 
             <div className="nav-dropdown__divider" />
 
-            {overdueTasks.length === 0 ? (
+            {myInvitations.length > 0 && (
+              <>
+                <div className="nav-notif-section-label">Workspace Invitations</div>
+                <div className="nav-invite-list">
+                  {myInvitations.map((inv) => (
+                    <div key={inv._id} className="nav-invite-item">
+                      <div className="nav-invite-icon">
+                        <FiUsers size={14} />
+                      </div>
+                      <div className="nav-invite-text">
+                        <span className="nav-invite-title">
+                          {inv.invitedBy?.name || "Someone"} invited you to{" "}
+                          <strong>{inv.workspace?.name}</strong>
+                        </span>
+                        <span className="nav-invite-role">as {inv.role}</span>
+                      </div>
+                      <div className="nav-invite-actions">
+                        <button
+                          className="nav-invite-btn nav-invite-btn--accept"
+                          disabled={actingToken === inv.token}
+                          onClick={() => handleAcceptInvite(inv.token)}
+                          title="Accept"
+                        >
+                          <FiCheck size={13} />
+                        </button>
+                        <button
+                          className="nav-invite-btn nav-invite-btn--reject"
+                          disabled={actingToken === inv.token}
+                          onClick={() => handleRejectInvite(inv.token)}
+                          title="Decline"
+                        >
+                          <FiX size={13} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="nav-dropdown__divider" />
+              </>
+            )}
+
+            {overdueTasks.length === 0 && myInvitations.length === 0 ? (
               <p className="nav-notif-empty">You're all caught up</p>
-            ) : (
+            ) : overdueTasks.length > 0 ? (
               <div className="nav-notif-list">
                 {overdueTasks.map((t) => (
                   <div key={t._id} className="nav-notif-item">
@@ -323,7 +286,7 @@ const Navbar = ({
                   </div>
                 ))}
               </div>
-            )}
+            ) : null}
           </div>
         </DropdownPortal>
       )}
@@ -360,7 +323,6 @@ const Navbar = ({
 
             <div className="nav-dropdown__divider" />
 
-            {/* ── Theme accordion ── */}
             <button
               className="nav-dropdown__item nav-dropdown__item--accordion"
               onClick={() => setThemeOpen((p) => !p)}

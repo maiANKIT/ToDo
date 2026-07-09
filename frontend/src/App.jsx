@@ -18,6 +18,7 @@ import ProtectedRoute from "./routes/ProtectedRoute";
 import OfflineScreen from "./components/OfflineScreen/OfflineScreen";
 import useOnlineStatus from "./hooks/useOnlineStatus";
 import { WorkspaceProvider } from "./context/WorkspaceContext";
+import AppLayout from "./components/Layout/AppLayout";
 
 function App() {
   const isOnline = useOnlineStatus();
@@ -29,13 +30,36 @@ function App() {
         <Route path="/login"           element={<Login />} />
         <Route path="/signup"          element={<Signup />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/dashboard"     element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-        <Route path="/profile"       element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-        <Route path="/calendar"      element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
-        <Route path="/collaboration" element={<ProtectedRoute><Collaboration /></ProtectedRoute>} />
-        <Route path="/today"         element={<ProtectedRoute><TodayTasks /></ProtectedRoute>} />
-        <Route path="/starred"       element={<ProtectedRoute><StarredTasks /></ProtectedRoute>} />
-        <Route path="/features"      element={<ProtectedRoute><Features /></ProtectedRoute>} />
+
+        <Route
+          path="/dashboard"
+          element={<ProtectedRoute><AppLayout><Dashboard /></AppLayout></ProtectedRoute>}
+        />
+        <Route
+          path="/profile"
+          element={<ProtectedRoute><AppLayout><Profile /></AppLayout></ProtectedRoute>}
+        />
+        <Route
+          path="/calendar"
+          element={<ProtectedRoute><AppLayout><Calendar /></AppLayout></ProtectedRoute>}
+        />
+        <Route
+          path="/collaboration"
+          element={<ProtectedRoute><AppLayout><Collaboration /></AppLayout></ProtectedRoute>}
+        />
+        <Route
+          path="/today"
+          element={<ProtectedRoute><AppLayout><TodayTasks /></AppLayout></ProtectedRoute>}
+        />
+        <Route
+          path="/starred"
+          element={<ProtectedRoute><AppLayout><StarredTasks /></AppLayout></ProtectedRoute>}
+        />
+        <Route
+          path="/features"
+          element={<ProtectedRoute><AppLayout><Features /></AppLayout></ProtectedRoute>}
+        />
+
         <Route path="/invite/:token" element={<InvitePage />} />
 
         {/* Catch-all: any unmatched URL shows the 404 page */}
