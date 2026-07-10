@@ -20,16 +20,18 @@ body[data-theme="dark"] .detail-overlay {
   background: rgba(0, 0, 0, 0.5);
 }
 
-/* ── Panel ── */
+/* ── Panel ──
+   Now a fixed-height flex column: header and footer stay put,
+   only .detail-scroll (the middle section) scrolls. ── */
 .detail-panel {
   width: min(420px, 100vw);
   height: 100%;
   background: var(--card);
   border-radius: 0;
-  padding: 32px 28px 28px;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
+  overflow: hidden;
   box-shadow: -16px 0 50px rgba(0, 0, 0, 0.18);
   animation: detail-slide-in 0.36s cubic-bezier(0.32, 0.94, 0.4, 1) both;
   box-sizing: border-box;
@@ -46,12 +48,13 @@ body[data-theme="dark"] .detail-overlay {
   }
 }
 
-/* ── Header ── */
+/* ── Header (static) ── */
 .detail-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 22px;
+  padding: 32px 28px 18px;
+  flex-shrink: 0;
 }
 
 .detail-header-actions {
@@ -82,6 +85,13 @@ body[data-theme="dark"] .detail-close-btn {
 }
 body[data-theme="dark"] .detail-close-btn:hover {
   background: rgba(255, 255, 255, 0.14);
+}
+
+/* ── Scrollable middle section ── */
+.detail-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 28px;
 }
 
 /* ── Title ── */
@@ -225,6 +235,13 @@ body[data-theme="dark"] .detail-subtask-item {
   background: rgba(255, 255, 255, 0.05);
 }
 
+.detail-subtask-item--editing {
+  background: rgba(102, 126, 234, 0.05);
+}
+body[data-theme="dark"] .detail-subtask-item--editing {
+  background: rgba(167, 139, 250, 0.08);
+}
+
 .detail-subtask-check {
   width: 20px;
   height: 20px;
@@ -250,6 +267,15 @@ body[data-theme="dark"] .detail-subtask-item {
 .detail-subtask-check--done {
   background: #10b981;
   border-color: #10b981;
+}
+.detail-subtask-check--progress {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  animation: subtask-spin 1.4s linear infinite;
+}
+@keyframes subtask-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
 body[data-theme="dark"] .detail-subtask-check {
   border-color: rgba(255, 255, 255, 0.3);
@@ -282,6 +308,19 @@ body[data-theme="dark"] .detail-subtask-check {
   opacity: 0.55;
   overflow-wrap: break-word;
   word-break: break-word;
+}
+
+.detail-subtask-progress-tag {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.12);
+  color: #2563eb;
+}
+body[data-theme="dark"] .detail-subtask-progress-tag {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
 }
 
 .detail-subtask-meta-row {
@@ -333,6 +372,39 @@ body[data-theme="dark"] .detail-subtask-priority--critical { background: rgba(23
 .detail-subtask-link:hover { text-decoration: underline; }
 body[data-theme="dark"] .detail-subtask-link { color: #a78bfa; }
 
+.detail-subtask-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.detail-subtask-edit-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  opacity: 0.5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.16s ease;
+  flex-shrink: 0;
+}
+.detail-subtask-edit-btn:hover {
+  opacity: 1;
+  background: rgba(102, 126, 234, 0.12);
+  color: #667eea;
+}
+body[data-theme="dark"] .detail-subtask-edit-btn:hover {
+  color: #a78bfa;
+  background: rgba(167, 139, 250, 0.15);
+}
+
 .detail-subtask-delete {
   width: 24px;
   height: 24px;
@@ -347,12 +419,52 @@ body[data-theme="dark"] .detail-subtask-link { color: #a78bfa; }
   opacity: 0.6;
   transition: all 0.16s ease;
   flex-shrink: 0;
-  margin-top: 1px;
 }
 .detail-subtask-delete:hover {
   opacity: 1;
   background: rgba(239, 68, 68, 0.12);
 }
+
+/* ── Subtask edit form (inline replacement of item) ── */
+.detail-subtask-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.detail-subtask-edit-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.detail-subtask-edit-cancel {
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1.5px solid rgba(0, 0, 0, 0.1);
+  background: transparent;
+  color: var(--text);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.detail-subtask-edit-cancel:hover { background: rgba(0, 0, 0, 0.04); }
+body[data-theme="dark"] .detail-subtask-edit-cancel { border-color: rgba(255, 255, 255, 0.12); }
+body[data-theme="dark"] .detail-subtask-edit-cancel:hover { background: rgba(255, 255, 255, 0.06); }
+
+.detail-subtask-edit-save {
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: none;
+  background: #111;
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.detail-subtask-edit-save:disabled { opacity: 0.45; cursor: default; }
+body[data-theme="dark"] .detail-subtask-edit-save { background: #fff; color: #111; }
 
 /* ── Subtask add form ── */
 .detail-subtask-add-form {
@@ -527,8 +639,8 @@ body[data-theme="dark"] .detail-subtask-priority-option--critical { background: 
 
 /* ── Meta ── */
 .detail-meta {
-  margin-top: auto;
   padding-top: 20px;
+  padding-bottom: 20px;
   border-top: 1px solid rgba(0, 0, 0, 0.07);
   display: flex;
   flex-direction: column;
@@ -548,9 +660,14 @@ body[data-theme="dark"] .detail-meta {
   opacity: 0.5;
 }
 
-/* ── Footer ── */
+/* ── Footer (static) ── */
 .detail-footer {
-  margin-top: 20px;
+  flex-shrink: 0;
+  padding: 16px 28px 24px;
+  border-top: 1px solid rgba(0, 0, 0, 0.07);
+}
+body[data-theme="dark"] .detail-footer {
+  border-top-color: rgba(255, 255, 255, 0.08);
 }
 
 .detail-footer-row {
@@ -614,8 +731,10 @@ body[data-theme="dark"] .detail-edit-btn {
   .detail-panel {
     width: 100%;
     max-width: 100vw;
-    padding: 24px 20px 20px;
   }
+  .detail-header { padding: 24px 20px 16px; }
+  .detail-scroll { padding: 0 20px; }
+  .detail-footer { padding: 14px 20px 20px; }
   .detail-title { font-size: 1.4rem; }
   .detail-overlay {
     -webkit-backdrop-filter: blur(3px);

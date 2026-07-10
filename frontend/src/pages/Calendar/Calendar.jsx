@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useContext } from "react";
 import { toast } from "react-toastify";
 import Navbar from "../../components/Navbar/Navbar";
 import { getTodos, updateTodo } from "../../services/todoAPI";
-import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { WorkspaceContext } from "../../context/WorkspaceContext";
+import { FiChevronLeft, FiChevronRight, FiUsers, FiUser } from "react-icons/fi";
 import { CheckCircle2, Clock, Circle } from "lucide-react";
 import "./Calendar.css";
 
@@ -28,6 +29,8 @@ const getRefDate = (t) => {
 };
 
 const Calendar = () => {
+  const { activeWorkspace } = useContext(WorkspaceContext);
+
   const [todos,       setTodos]       = useState([]);
   const [view,        setView]        = useState("Month");
   const [current,     setCurrent]     = useState(new Date());
@@ -56,11 +59,18 @@ const Calendar = () => {
     return () => window.removeEventListener("resize", measureNavbar);
   }, [measureNavbar]);
 
-  const fetchTodos = () => {
-    getTodos().then((r) => setTodos(r.data.data)).catch(console.log);
-  };
+  // ── Fetch tasks for whichever context is active — personal (no
+  //    workspace) or the currently selected workspace. Refetches
+  //    automatically whenever the user switches workspace elsewhere
+  //    in the app (Sidebar/WorkspaceSwitcher), since activeWorkspace
+  //    comes from shared WorkspaceContext. ──
+  const fetchTodos = useCallback(() => {
+    getTodos(activeWorkspace?._id)
+      .then((r) => setTodos(r.data.data))
+      .catch(console.log);
+  }, [activeWorkspace]);
 
-  useEffect(() => { fetchTodos(); }, []);
+  useEffect(() => { fetchTodos(); }, [fetchTodos]);
 
   const openSearch = () => {
     setSearchState("opening");
@@ -299,7 +309,16 @@ const Calendar = () => {
         <div className="cal-header neu-card">
           <div className="cal-header__left">
             <h1 className="cal-title">Calendar</h1>
-            <p className="cal-sub">View your tasks by date · drag a task onto a day to reschedule</p>
+            <p className="cal-sub">
+              View your tasks by date · drag a task onto a day to reschedule
+            </p>
+            <span className="cal-context-badge">
+              {activeWorkspace ? (
+                <><FiUsers size={12} /> {activeWorkspace.name}</>
+              ) : (
+                <><FiUser size={12} /> Personal</>
+              )}
+            </span>
           </div>
           <div className="cal-header__right">
             <div className="cal-view-switch">

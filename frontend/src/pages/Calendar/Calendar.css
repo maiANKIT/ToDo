@@ -31,6 +31,24 @@
   font-size: 0.85rem;
   opacity: 0.45;
   font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.cal-context-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  background: rgba(102, 126, 234, 0.1);
+  color: #667eea;
+}
+body[data-theme="dark"] .cal-context-badge {
+  background: rgba(167, 139, 250, 0.14);
+  color: #a78bfa;
 }
 
 .cal-header__right {
