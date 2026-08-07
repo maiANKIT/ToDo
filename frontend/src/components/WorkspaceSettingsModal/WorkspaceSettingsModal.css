@@ -1,0 +1,194 @@
+/* Reuses .modal-overlay / .modal-box / .cancel-btn / .submit-btn / .modal-actions
+   from TodoModal.css — this file only adds settings-specific pieces. */
+
+.ws-settings-box {
+  width: 520px;
+}
+
+.ws-settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 22px;
+}
+
+.ws-settings-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text);
+}
+.ws-settings-title h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0;
+  text-align: left;
+}
+
+.ws-settings-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0,0,0,0.06);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.34,1.4,0.64,1);
+}
+.ws-settings-close:hover {
+  background: rgba(0,0,0,0.12);
+  transform: rotate(90deg);
+}
+body[data-theme="dark"] .ws-settings-close { background: rgba(255,255,255,0.08); }
+body[data-theme="dark"] .ws-settings-close:hover { background: rgba(255,255,255,0.15); }
+
+.ws-settings-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 18px;
+}
+
+.ws-settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ws-settings-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text);
+  opacity: 0.6;
+  margin-top: 10px;
+  margin-bottom: 2px;
+}
+.ws-settings-form label:first-child { margin-top: 0; }
+
+.ws-settings-form textarea {
+  min-height: 90px;
+  resize: none;
+}
+
+.ws-settings-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  opacity: 0.5;
+  color: var(--text);
+  margin-top: 6px;
+}
+
+.ws-settings-divider {
+  height: 1px;
+  background: rgba(0,0,0,0.08);
+  margin: 24px 0 18px;
+}
+body[data-theme="dark"] .ws-settings-divider { background: rgba(255,255,255,0.08); }
+
+/* ── Danger zone ── */
+.ws-danger-zone {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ws-danger-title {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #ef4444;
+  margin: 0 0 4px;
+}
+
+.ws-danger-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  background: rgba(239, 68, 68, 0.03);
+}
+body[data-theme="dark"] .ws-danger-row {
+  border-color: rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.06);
+}
+
+.ws-danger-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.ws-danger-row-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text);
+}
+.ws-danger-row-sub {
+  font-size: 0.76rem;
+  opacity: 0.55;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.ws-danger-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 14px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(239, 68, 68, 0.35);
+  background: rgba(239, 68, 68, 0.08);
+  color: #ef4444;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.2s cubic-bezier(0.34,1.4,0.64,1);
+}
+.ws-danger-btn:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.16);
+  transform: translateY(-1px);
+}
+.ws-danger-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  border-color: rgba(0,0,0,0.12);
+  background: rgba(0,0,0,0.04);
+  color: var(--text);
+}
+body[data-theme="dark"] .ws-danger-btn:disabled {
+  border-color: rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.05);
+}
+
+.ws-danger-btn--confirm {
+  background: #ef4444;
+  color: #fff;
+  border-color: #ef4444;
+}
+.ws-danger-btn--confirm:hover {
+  background: #dc2626;
+}
+
+@media (max-width: 600px) {
+  .ws-settings-box { width: calc(100% - 24px); }
+  .ws-danger-row { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .ws-danger-btn { width: 100%; justify-content: center; }
+}

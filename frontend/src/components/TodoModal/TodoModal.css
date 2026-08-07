@@ -19,12 +19,22 @@
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   animation: modalFade 0.25s ease;
+  /* NEW: padding so the modal never touches the viewport edge on short screens */
+  padding: 24px;
+  box-sizing: border-box;
 }
 
 .modal-box {
   width: 550px;
   max-width: 90%;
-  padding: 35px;
+  /* ── FIX: constrain height + scroll internally instead of overflowing
+     the viewport and forcing the whole page to scroll ── */
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  padding: 0;
   border-radius: 30px;
   background: #ffffff;
   border: 1px solid rgba(0, 0, 0, 0.08);
@@ -45,18 +55,26 @@ body[data-theme="dark"] .modal-box {
   font-weight: 700;
 }
 
-/* ── Header row: title + star toggle ── */
+/* ── Header row: title + star toggle ──
+   NEW: sticky, always visible, doesn't scroll away */
 .modal-header-row {
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative;
-  margin-bottom: 25px;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  flex-shrink: 0;
+  padding: 35px 35px 20px;
+  background: #ffffff;
+}
+body[data-theme="dark"] .modal-header-row {
+  background: #1a1a1a;
 }
 
 .modal-star-toggle {
   position: absolute;
-  right: 0;
+  right: 35px;
   top: 50%;
   transform: translateY(-50%);
   background: rgba(0, 0, 0, 0.06);
@@ -94,7 +112,7 @@ body[data-theme="dark"] .modal-star-toggle--active {
 /* ── Quick add / Detailed switch ── */
 .modal-quick-switch {
   position: absolute;
-  left: 0;
+  left: 35px;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
@@ -122,10 +140,36 @@ body[data-theme="dark"] .modal-quick-switch:hover {
   background: rgba(167, 139, 250, 0.22);
 }
 
-.modal-box form {
+/* ── Form: fills the remaining height of modal-box, in two parts ──
+   .modal-scroll-body scrolls; .modal-actions is a normal, static
+   flex child that always has its own guaranteed space below it. ── */
+.modal-box .modal-form {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;   /* required so flex children can actually shrink+scroll */
+  overflow: hidden;
+}
+
+.modal-scroll-body {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 4px 35px 24px;
+}
+
+/* Slim, theme-aware scrollbar for the scrolling field area */
+.modal-scroll-body::-webkit-scrollbar { width: 6px; }
+.modal-scroll-body::-webkit-scrollbar-track { background: transparent; }
+.modal-scroll-body::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 999px;
+}
+body[data-theme="dark"] .modal-scroll-body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .modal-box input,
@@ -161,7 +205,13 @@ body[data-theme="dark"] .modal-box textarea:focus {
   box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.04);
 }
 
-.modal-box textarea { min-height: 140px; resize: none; }
+/* NEW: cap the textarea so it can't push the rest of the form
+   out of view on its own — it still resizes, just bounded */
+.modal-box textarea {
+  min-height: 100px;
+  max-height: 200px;
+  resize: vertical;
+}
 
 /* ── Link input row (also reused by quick-add mode's single input) ── */
 .modal-link-wrap {
@@ -255,13 +305,23 @@ body[data-theme="dark"] .quickadd-chip--date { color: #34d399; background: rgba(
 .quickadd-chip--link { color: #667eea; background: rgba(102, 126, 234, 0.1); }
 body[data-theme="dark"] .quickadd-chip--link { color: #a78bfa; background: rgba(167, 139, 250, 0.12); }
 
-/* ── Actions ── */
+/* ── Actions ──
+   Static (not sticky) flex child — always rendered with its own
+   space, can never overlap the scrolling fields above it. ── */
 .modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 14px;
-  margin-top: 10px;
+  flex-shrink: 0;
+  padding: 18px 35px 35px;
+  background: #ffffff;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
 }
+body[data-theme="dark"] .modal-actions {
+  background: #1a1a1a;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
 .modal-actions--with-save {
   justify-content: space-between;
   align-items: center;
@@ -483,13 +543,57 @@ body[data-theme="dark"] .custom-option.selected { background: rgba(255, 255, 255
 
 /* ── Responsive ── */
 @media (max-width: 600px) {
-  .modal-box { width: calc(100% - 24px); padding: 24px; border-radius: 24px; }
-  .modal-box h2 { font-size: 1.5rem; margin-bottom: 0; }
-  .modal-header-row { margin-bottom: 18px; }
-  .modal-box textarea { min-height: 120px; }
-  .modal-actions { flex-direction: column-reverse; }
+  .modal-overlay { padding: 12px; }
+  .modal-box { width: 100%; max-width: 100%; max-height: 94vh; border-radius: 24px; }
+  .modal-header-row { padding: 20px 24px 14px; }
+
+  /* ── FIX: quick-switch + star become equal-size icon-only circles,
+     positioned symmetrically at the true edges, so the centered title
+     never has to guess how much space to leave for them ── */
+  .modal-quick-switch,
+  .modal-star-toggle {
+    left: 16px;
+    right: auto;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 50%;
+  }
+  .modal-star-toggle { left: auto; right: 16px; }
+
+  /* Hide the text label, keep just the icon, so the pill doesn't grow
+     wider than the star button and stays clear of the title */
+  .modal-quick-switch-label { display: none; }
+
+  /* Reserve space equal to the icon buttons on both sides so the
+     centered title text can never render underneath them */
+  .modal-box h2 {
+    font-size: 1.3rem;
+    margin-bottom: 0;
+    padding: 0 46px;
+    line-height: 1.25;
+  }
+
+  .modal-scroll-body { padding: 4px 24px 20px; }
+  .modal-box textarea { min-height: 90px; }
+  .modal-actions { padding: 14px 24px 24px; flex-direction: column-reverse; }
   .modal-actions-right { width: 100%; flex-direction: column-reverse; gap: 10px; }
   .cancel-btn, .submit-btn { width: 100%; height: 48px; }
   .modal-save-template-btn { width: 100%; justify-content: center; height: 44px; }
-  .modal-quick-switch { font-size: 0.72rem; padding: 6px 10px; }
+}
+
+/* Slightly roomier breakpoint — bring the text label back once there's
+   enough width for it not to collide with the title */
+@media (min-width: 421px) and (max-width: 600px) {
+  .modal-quick-switch {
+    width: auto;
+    height: auto;
+    padding: 7px 12px;
+    border-radius: 999px;
+  }
+  .modal-quick-switch-label {
+    display: inline;
+    font-size: 0.72rem;
+  }
 }

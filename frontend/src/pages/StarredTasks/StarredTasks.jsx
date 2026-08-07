@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { ArrowLeft, Star, LayoutGrid, List, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../../components/Navbar/Navbar";
@@ -6,6 +6,7 @@ import TodoCard from "../../components/TodoCard/TodoCard";
 import TodoModal from "../../components/TodoModal/TodoModal";
 import Toast from "../../components/Toast/Toast";
 import FilterDropdown from "../../components/FilterDropdown/FilterDropdown";
+import { WorkspaceContext } from "../../context/WorkspaceContext";
 import { getTodos, updateTodo, deleteTodo } from "../../services/todoAPI";
 import "../TodayTasks/TodayTasks.css";
 
@@ -46,6 +47,10 @@ const sortTodos = (list, sortBy) => {
 
 const StarredTasks = () => {
   const navigate = useNavigate();
+
+  // ── Active workspace (null = Personal) drives which tasks we fetch ──
+  const { activeWorkspace } = useContext(WorkspaceContext);
+
   const [todos, setTodos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingTodo, setEditingTodo] = useState(null);
@@ -63,16 +68,23 @@ const StarredTasks = () => {
   );
 
   const fetchTodos = async () => {
+    setLoading(true);
     try {
-      const r = await getTodos();
+      // Pass active workspace id — undefined = Personal (backend's
+      // "workspace: null" branch); an id = that workspace's tasks.
+      const r = await getTodos(activeWorkspace?._id);
       setTodos(r.data.data);
     } catch (e) { console.log(e); }
     finally { setLoading(false); }
   };
 
-  useEffect(() => { fetchTodos(); }, []);
+  // Re-fetch whenever the active workspace changes (including → Personal)
+  useEffect(() => {
+    fetchTodos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeWorkspace]);
 
-  // Base set: all starred tasks
+  // Base set: all starred tasks (within the currently fetched scope)
   const starredTasks = todos.filter((t) => t.star);
 
   const pendingCount    = starredTasks.filter(t => t.status === "pending").length;
@@ -165,6 +177,7 @@ const StarredTasks = () => {
           </div>
           <p className="page-header-sub">
             Your important tasks — {starredTasks.length} total
+            {activeWorkspace ? ` · ${activeWorkspace.name}` : " · Personal"}
           </p>
         </div>
 

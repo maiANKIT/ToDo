@@ -37,10 +37,13 @@ const Signup = () => {
   const formAnim = useAnimation();
   const otpRefs = useRef([]);
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) navigate("/dashboard");
-  }, [navigate]);
+  const { user } = useContext(AuthContext);
+
+useEffect(() => {
+  if (user) {
+    navigate("/dashboard", { replace: true });
+  }
+}, [user, navigate]);
 
   // ── Step 1: details ──
   const [step, setStep] = useState("form"); // "form" | "otp"

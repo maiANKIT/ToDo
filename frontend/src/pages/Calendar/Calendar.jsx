@@ -5,13 +5,21 @@ import { getTodos, updateTodo } from "../../services/todoAPI";
 import { WorkspaceContext } from "../../context/WorkspaceContext";
 import { FiChevronLeft, FiChevronRight, FiUsers, FiUser } from "react-icons/fi";
 import { CheckCircle2, Clock, Circle } from "lucide-react";
+import { getStatusKey, STATUS_LABELS } from "../../utils/taskEnums";
 import "./Calendar.css";
 
 const VIEWS = ["Month", "Week", "Day"];
 
+// NOTE: t.status now comes from the backend as "Pending"/"In Progress"/
+// "Completed" (see utils/taskEnums.js). getStatusKey() maps that to the
+// internal lowercase keys ("pending"/"inprogress"/"done") that all the
+// CSS classes below (cal-dot--pending, cal-badge--done, etc.) expect —
+// without this mapping, workspace tasks (created with the new status
+// values) silently fail to match any CSS class and render with no color.
 const statusIcon = (status) => {
-  if (status === "done")       return <CheckCircle2 size={12} strokeWidth={2} className="cal-task-icon cal-task-icon--done" />;
-  if (status === "inprogress") return <Clock        size={12} strokeWidth={2} className="cal-task-icon cal-task-icon--progress" />;
+  const key = getStatusKey(status);
+  if (key === "done")       return <CheckCircle2 size={12} strokeWidth={2} className="cal-task-icon cal-task-icon--done" />;
+  if (key === "inprogress") return <Clock        size={12} strokeWidth={2} className="cal-task-icon cal-task-icon--progress" />;
   return                              <Circle       size={12} strokeWidth={2} className="cal-task-icon cal-task-icon--pending" />;
 };
 
@@ -141,8 +149,7 @@ const Calendar = () => {
   const today = new Date();
   const selectedTodos = todosForDay(selectedDay);
 
-  const statusLabel = (s) =>
-    s === "inprogress" ? "In Progress" : s.charAt(0).toUpperCase() + s.slice(1);
+  const statusLabel = (s) => STATUS_LABELS[s] || "Pending";
 
   // ── Drag-to-reschedule ──
   // NOTE: using the standard "text/plain" MIME type here instead of a
@@ -275,7 +282,7 @@ const Calendar = () => {
                 {searchResults.map((t, i) => (
                   <div
                     key={i}
-                    className={`cal-day__task cal-day__task--${t.status} cal-draggable-task`}
+                    className={`cal-day__task cal-day__task--${getStatusKey(t.status)} cal-draggable-task`}
                     draggable
                     onDragStart={(e) => handleDragStart(e, t._id)}
                     onClick={() => openReschedule(t)}
@@ -295,7 +302,7 @@ const Calendar = () => {
                         )}
                       </div>
                     </div>
-                    <span className={`cal-badge cal-badge--${t.status}`}>
+                    <span className={`cal-badge cal-badge--${getStatusKey(t.status)}`}>
                       {statusLabel(t.status)}
                     </span>
                   </div>
@@ -376,7 +383,7 @@ const Calendar = () => {
                       <span className="cal-cell__num">{date.getDate()}</span>
                       <div className="cal-cell__dots">
                         {dayTodos.slice(0,3).map((t, j) => (
-                          <span key={j} className={`cal-dot cal-dot--${t.status}`} />
+                          <span key={j} className={`cal-dot cal-dot--${getStatusKey(t.status)}`} />
                         ))}
                         {dayTodos.length > 3 && (
                           <span className="cal-dot-more">+{dayTodos.length - 3}</span>
@@ -422,7 +429,7 @@ const Calendar = () => {
                         dayTodos.map((t, j) => (
                           <div
                             key={j}
-                            className={`cal-week__task cal-week__task--${t.status} cal-draggable-task`}
+                            className={`cal-week__task cal-week__task--${getStatusKey(t.status)} cal-draggable-task`}
                             draggable
                             onDragStart={(e) => { e.stopPropagation(); handleDragStart(e, t._id); }}
                             onClick={(e) => { e.stopPropagation(); openReschedule(t); }}
@@ -461,7 +468,7 @@ const Calendar = () => {
                   todosForDay(current).map((t, i) => (
                     <div
                       key={i}
-                      className={`cal-day__task cal-day__task--${t.status} cal-draggable-task`}
+                      className={`cal-day__task cal-day__task--${getStatusKey(t.status)} cal-draggable-task`}
                       draggable
                       onDragStart={(e) => handleDragStart(e, t._id)}
                       onClick={() => openReschedule(t)}
@@ -474,7 +481,7 @@ const Calendar = () => {
                           {t.description && <p className="cal-day__task-desc">{t.description}</p>}
                         </div>
                       </div>
-                      <span className={`cal-badge cal-badge--${t.status}`}>
+                      <span className={`cal-badge cal-badge--${getStatusKey(t.status)}`}>
                         {statusLabel(t.status)}
                       </span>
                     </div>
@@ -504,7 +511,7 @@ const Calendar = () => {
                   {selectedTodos.map((t, i) => (
                     <div
                       key={i}
-                      className={`cal-day__task cal-day__task--${t.status} cal-draggable-task`}
+                      className={`cal-day__task cal-day__task--${getStatusKey(t.status)} cal-draggable-task`}
                       draggable
                       onDragStart={(e) => handleDragStart(e, t._id)}
                       onClick={() => openReschedule(t)}
@@ -517,7 +524,7 @@ const Calendar = () => {
                           {t.description && <p className="cal-day__task-desc">{t.description}</p>}
                         </div>
                       </div>
-                      <span className={`cal-badge cal-badge--${t.status}`}>
+                      <span className={`cal-badge cal-badge--${getStatusKey(t.status)}`}>
                         {statusLabel(t.status)}
                       </span>
                     </div>

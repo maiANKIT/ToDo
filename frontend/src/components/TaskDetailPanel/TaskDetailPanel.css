@@ -296,6 +296,7 @@ body[data-theme="dark"] .detail-subtask-check {
   color: var(--text);
   overflow-wrap: break-word;
   word-break: break-word;
+  transition: all 0.25s ease; /* <--- Yeh add kiya */
 }
 .detail-subtask-title--done {
   text-decoration: line-through;
@@ -740,4 +741,84 @@ body[data-theme="dark"] .detail-edit-btn {
     -webkit-backdrop-filter: blur(3px);
             backdrop-filter: blur(3px);
   }
+}
+/* 1. Star Button (Was missing completely from the CSS) */
+.star-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text);
+  opacity: 0.5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s cubic-bezier(0.34, 1.4, 0.64, 1); /* Nice bouncy effect */
+}
+.star-btn:hover {
+  opacity: 1;
+  transform: scale(1.25);
+  color: #eab308;
+}
+.star-btn--active {
+  opacity: 1;
+  color: #eab308;
+}
+
+/* 2. Status Badge (Add smooth lift on hover) */
+.status-badge--clickable {
+  transition: all 0.2s ease;
+}
+.status-badge--clickable:hover {
+  transform: translateY(-2px);
+  filter: brightness(0.95);
+}
+
+/* 3. Subtask Items (Makes the whole row feel alive when you hover) */
+.detail-subtask-item {
+  transition: background-color 0.2s ease;
+}
+.detail-subtask-item:hover {
+  background: rgba(0, 0, 0, 0.06); 
+}
+body[data-theme="dark"] .detail-subtask-item:hover {
+  background: rgba(255, 255, 255, 0.09);
+}
+
+/* 4. Fix the Subtask Edit Cancel button (was missing transition) */
+.detail-subtask-edit-cancel {
+  transition: background-color 0.2s ease;
+}
+/* 1. The main Status Badge (Pending/In Progress) */
+/* (This class wasn't in your CSS file, so it was probably snapping instantly!) */
+.status-badge {
+  transition: all 0.2s ease;
+}
+
+/* 2. The Save button inside the subtask edit form */
+.detail-subtask-edit-save {
+  transition: all 0.2s ease;
+}
+.detail-subtask-edit-save:hover:not(:disabled) {
+  background: #333;
+  transform: translateY(-1px);
+}
+body[data-theme="dark"] .detail-subtask-edit-save:hover:not(:disabled) {
+  background: #e5e5e5;
+}
+
+/* 3. The '+' Add Subtask button */
+.detail-subtask-add-btn {
+  transition: all 0.2s ease; /* Changing this from just 'opacity' to 'all' */
+}
+.detail-subtask-add-btn:hover:not(:disabled) {
+  background: #333;
+  transform: translateY(-1px);
+}
+body[data-theme="dark"] .detail-subtask-add-btn:hover:not(:disabled) {
+  background: #e5e5e5;
+}
+
+/* 4. The little subtask links */
+.detail-subtask-link {
+  transition: color 0.2s ease;
 }

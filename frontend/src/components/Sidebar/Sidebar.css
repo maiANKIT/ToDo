@@ -478,3 +478,37 @@ body[data-theme="dark"] .sidebar-logo-img { filter: invert(1); }
     display: none;
   }
 }
+.sidebar-ws-member-stack {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.sidebar-ws-member-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  font-weight: 700;
+  background: var(--card);
+  color: var(--text);
+  border: 1.5px solid var(--bg);
+  margin-left: -6px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+.sidebar-ws-member-dot:first-child {
+  margin-left: 0;
+}
+
+.sidebar-ws-member-dot--more {
+  background: var(--primary);
+  color: var(--card);
+  font-size: 7px;
+}
+
+.app-sidebar--collapsed .sidebar-ws-member-stack {
+  display: none;
+}

@@ -13,6 +13,7 @@ import {
   FiClock,
   FiShield,
   FiList,
+  FiCheckCircle,
 } from "react-icons/fi";
 import {
   getWorkspaceInvitations,
@@ -22,6 +23,8 @@ import {
   leaveWorkspace,
   archiveWorkspace,
 } from "../../services/workspaceAPI";
+import { getTodos } from "../../services/todoAPI";
+import { STATUS } from "../../utils/taskEnums";
 import "./Collaboration.css";
 
 const ROLE_OPTIONS = ["Admin", "Editor", "Contributor", "Viewer"];
@@ -40,6 +43,7 @@ const Collaboration = () => {
   } = useContext(WorkspaceContext);
 
   const [invitations, setInvitations] = useState([]);
+  const [workspaceTodos, setWorkspaceTodos] = useState([]);
 
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
@@ -68,12 +72,25 @@ const Collaboration = () => {
 
   const pendingInvitations = invitations.filter((i) => i.status === "Pending");
 
+  const totalTasks = workspaceTodos.length;
+  const completedTasks = workspaceTodos.filter((t) => t.status === STATUS.DONE).length;
+  const pendingTasks = workspaceTodos.filter((t) => t.status !== STATUS.DONE).length;
+
   const fetchInvitations = async (workspaceId) => {
     try {
       const res = await getWorkspaceInvitations(workspaceId);
       setInvitations(res.data.data || []);
     } catch (e) {
       setInvitations([]);
+    }
+  };
+
+  const fetchWorkspaceTodos = async (workspaceId) => {
+    try {
+      const res = await getTodos(workspaceId);
+      setWorkspaceTodos(res.data.data || []);
+    } catch (e) {
+      setWorkspaceTodos([]);
     }
   };
 
@@ -85,8 +102,10 @@ const Collaboration = () => {
   useEffect(() => {
     if (activeWorkspace?._id) {
       fetchInvitations(activeWorkspace._id);
+      fetchWorkspaceTodos(activeWorkspace._id);
     } else {
       setInvitations([]);
+      setWorkspaceTodos([]);
     }
   }, [activeWorkspace]);
 
@@ -223,11 +242,25 @@ const Collaboration = () => {
                 <div>
                   <h2>{activeWorkspace.name}</h2>
                   <p className="collab-muted">
-                    {members.length} member{members.length !== 1 ? "s" : ""}
-                    {activeWorkspace.description
-                      ? ` · ${activeWorkspace.description}`
-                      : ""}
+                    {activeWorkspace.description || "No description yet"}
                   </p>
+
+                  <div className="collab-member-stack">
+                    {members.slice(0, 5).map((m) => (
+                      <span
+                        key={m._id}
+                        className="collab-stack-avatar"
+                        title={m.user?.name}
+                      >
+                        {m.user?.name?.[0]?.toUpperCase() || "?"}
+                      </span>
+                    ))}
+                    {members.length > 5 && (
+                      <span className="collab-stack-avatar collab-stack-avatar--more">
+                        +{members.length - 5}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -268,6 +301,29 @@ const Collaboration = () => {
               </div>
             </div>
 
+            <div className="collab-stats-row">
+              <div className="collab-stat-card neu-card">
+                <FiUsers size={16} className="collab-stat-icon" />
+                <span className="collab-stat-value">{members.length}</span>
+                <span className="collab-stat-label">Members</span>
+              </div>
+              <div className="collab-stat-card neu-card">
+                <FiList size={16} className="collab-stat-icon" />
+                <span className="collab-stat-value">{totalTasks}</span>
+                <span className="collab-stat-label">Total Tasks</span>
+              </div>
+              <div className="collab-stat-card neu-card">
+                <FiCheckCircle size={16} className="collab-stat-icon" />
+                <span className="collab-stat-value">{completedTasks}</span>
+                <span className="collab-stat-label">Completed</span>
+              </div>
+              <div className="collab-stat-card neu-card">
+                <FiClock size={16} className="collab-stat-icon" />
+                <span className="collab-stat-value">{pendingTasks}</span>
+                <span className="collab-stat-label">In Progress</span>
+              </div>
+            </div>
+
             {membersLoading ? (
               <p className="collab-muted">Loading workspace details...</p>
             ) : (
@@ -287,6 +343,12 @@ const Collaboration = () => {
                       const canEditThisRow =
                         canManageMembers && !isSelf && !isTargetOwner;
 
+                      const memberCompletedCount = workspaceTodos.filter(
+                        (t) =>
+                          t.status === STATUS.DONE &&
+                          (t.user?._id || t.user) === (m.user?._id || m.user)
+                      ).length;
+
                       return (
                         <div className="collab-member-row" key={m._id}>
                           <div className="collab-member-info">
@@ -302,6 +364,8 @@ const Collaboration = () => {
                               </p>
                               <p className="collab-muted collab-small">
                                 {m.user?.email}
+                                {memberCompletedCount > 0 &&
+                                  ` · ${memberCompletedCount} completed`}
                               </p>
                             </div>
                           </div>

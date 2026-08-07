@@ -25,6 +25,7 @@ import useDueDateNotifications from "../../hooks/useDueDateNotifications";
 import useDocumentTitleBadge from "../../hooks/useDocumentTitleBadge";
 import useIdleNudge from "../../hooks/useIdleNudge";
 import useFaviconBadge from "../../hooks/useFaviconBadge";
+import useWorkspacePermissions from "../../hooks/useWorkspacePermissions";
 import { AuthContext } from "../../context/AuthContext";
 import { WorkspaceContext } from "../../context/WorkspaceContext";
 import { getTodos, createTodo, deleteTodo, updateTodo } from "../../services/todoAPI";
@@ -102,7 +103,6 @@ const sortTodos = (list, sortBy) => {
   }
 };
 
-// ── Confetti burst for a single completed task ──
 const fireTaskConfetti = () => {
   confetti({
     particleCount: 60,
@@ -117,6 +117,10 @@ const Dashboard = () => {
   const { user } = useContext(AuthContext);
   const { activeWorkspace } = useContext(WorkspaceContext);
   const userName = user?.name?.split(" ")[0] || "User";
+
+  // ── Current effective permissions for this scope (Personal = full,
+  //    Workspace = based on this user's WorkspaceMember role) ──
+  const permissions = useWorkspacePermissions();
 
   const [todos,         setTodos]        = useState([]);
   const [showModal,     setShowModal]    = useState(false);
@@ -135,10 +139,7 @@ const Dashboard = () => {
   const [dueFilter,   setDueFilter]   = useState("all");
   const [starredOnly, setStarredOnly] = useState(false);
 
-  // ── Undo-delete toast state ──
-  const [pendingDelete, setPendingDelete] = useState(null); // { todo, timeoutId }
-
-  // ── Action error toast (e.g. permission denied on a workspace task) ──
+  const [pendingDelete, setPendingDelete] = useState(null);
   const [actionError, setActionError] = useState("");
 
   const [navbarBottom, setNavbarBottom] = useState(84);
@@ -166,7 +167,6 @@ const Dashboard = () => {
 
   useEffect(() => { fetchTodos(); }, [fetchTodos]);
 
-  // ── Browser notifications: fires once per task, 10 min before it's due ──
   useDueDateNotifications(todos);
 
   useEffect(() => {
@@ -208,7 +208,17 @@ const Dashboard = () => {
     localStorage.setItem("todoflow-view-mode", mode);
   };
 
+  // ── Every mutating action below front-loads a permission check.
+  //    This is defense-in-depth: the UI already hides/disables the
+  //    triggering buttons, but keyboard shortcuts and any stale UI
+  //    state could still attempt these, so we guard here too and the
+  //    backend has the final say regardless. ──
+
   const addTask = async (d) => {
+    if (!permissions.canCreate) {
+      setActionError("You don't have permission to create tasks here");
+      return;
+    }
     try {
       const payload = activeWorkspace
         ? { ...d, workspace: activeWorkspace._id }
@@ -221,6 +231,10 @@ const Dashboard = () => {
   };
 
   const updateTask = async (id, d) => {
+    if (!permissions.canEdit) {
+      setActionError("You don't have permission to edit tasks here");
+      return;
+    }
     try {
       await updateTodo(id, d);
       fetchTodos();
@@ -229,12 +243,11 @@ const Dashboard = () => {
     }
   };
 
-  // ── Duplicate: clones a task's fields into a fresh task via the same
-  //    addTask/createTodo path everything else uses. Status resets to
-  //    pending and star resets to false — a duplicate starts fresh.
-  //    Priority and estimate carry over since they're descriptive metadata.
-  //    Subtasks are NOT copied — a duplicate starts with a clean checklist.
   const duplicateTask = (todo) => {
+    if (!permissions.canCreate) {
+      setActionError("You don't have permission to create tasks here");
+      return;
+    }
     addTask({
       title: `${todo.title} (Copy)`,
       description: todo.description || "",
@@ -247,12 +260,14 @@ const Dashboard = () => {
     });
   };
 
-  // ── Undo-delete: remove instantly from UI, actually call API after 5s ──
   const deleteTask = (id) => {
+    if (!permissions.canDelete) {
+      setActionError("You don't have permission to delete tasks here");
+      return;
+    }
     const todoToDelete = todos.find((t) => t._id === id);
     if (!todoToDelete) return;
 
-    // If something else was pending, finalize it first
     if (pendingDelete) {
       clearTimeout(pendingDelete.timeoutId);
       deleteTodo(pendingDelete.todo._id).catch(() => {});
@@ -283,6 +298,10 @@ const Dashboard = () => {
   };
 
   const toggleStar = async (id, value) => {
+    if (!permissions.canEdit) {
+      setActionError("You don't have permission to edit tasks here");
+      return;
+    }
     try {
       await updateTodo(id, { star: value });
       setTodos((prev) => prev.map((t) => (t._id === id ? { ...t, star: value } : t)));
@@ -291,9 +310,11 @@ const Dashboard = () => {
     }
   };
 
-  // ── Status change: fires confetti whenever a task newly becomes Completed ──
-  // Also used by Kanban drag-and-drop and swipe-right-to-done on TodoCard
   const changeStatus = async (id, newStatus) => {
+    if (!permissions.canEdit) {
+      setActionError("You don't have permission to edit tasks here");
+      return;
+    }
     const currentTodo = todos.find((t) => t._id === id);
     const justCompleted = currentTodo && currentTodo.status !== STATUS.DONE && newStatus === STATUS.DONE;
 
@@ -306,8 +327,11 @@ const Dashboard = () => {
     }
   };
 
-  // ── Priority change: used by TaskDetailPanel's clickable priority pill ──
   const changePriority = async (id, newPriority) => {
+    if (!permissions.canEdit) {
+      setActionError("You don't have permission to edit tasks here");
+      return;
+    }
     try {
       await updateTodo(id, { priority: newPriority });
       setTodos((prev) => prev.map((t) => (t._id === id ? { ...t, priority: newPriority } : t)));
@@ -322,11 +346,24 @@ const Dashboard = () => {
     setEditingTodo(null);
   };
 
-  // ── Keyboard shortcuts: N = new task, / = search, Cmd/Ctrl+K = quick add, Esc = close ──
+  // ── Keyboard shortcuts: gate create actions behind canCreate ──
   useKeyboardShortcuts({
-    onNew: () => { setEditingTodo(null); setShowModal(true); },
+    onNew: () => {
+      if (!permissions.canCreate) {
+        setActionError("You don't have permission to create tasks here");
+        return;
+      }
+      setEditingTodo(null);
+      setShowModal(true);
+    },
     onSearch: () => { if (searchState === "closed") openSearch(); },
-    onQuickAdd: () => setShowQuickAdd(true),
+    onQuickAdd: () => {
+      if (!permissions.canCreate) {
+        setActionError("You don't have permission to create tasks here");
+        return;
+      }
+      setShowQuickAdd(true);
+    },
     onEscape: () => {
       if (showQuickAdd) setShowQuickAdd(false);
       else if (showModal) setShowModal(false);
@@ -341,8 +378,6 @@ const Dashboard = () => {
   const streak          = getStreak(todos);
   const score           = getScore(todos);
 
-  // ── Idle nudge: if the user's been inactive for a while with pending
-  //    tasks left, show a gentle toast + a red-dot badge on the tab favicon ──
   const { nudgeActive, dismissNudge } = useIdleNudge(pendingCount);
   useFaviconBadge(nudgeActive);
 
@@ -351,7 +386,6 @@ const Dashboard = () => {
     (t) => t.dueDate && new Date(t.dueDate) < now && t.status !== STATUS.DONE
   );
 
-  // ── Tab title badge: "(3) TodoFlow" while there are overdue tasks ──
   useDocumentTitleBadge(overdueTasks.length);
 
   const filteredTodos = sortTodos(
@@ -366,8 +400,6 @@ const Dashboard = () => {
     sortBy
   );
 
-  // ── Kanban: same search/due/star filters, but NOT status filter
-  //    (the 3 columns already split by status, so status filter would be redundant) ──
   const filteredTodosForKanban = todos.filter(t => {
     const s = t.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
               t.description.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
@@ -425,32 +457,34 @@ const Dashboard = () => {
               </div>
               <p className="hero-sub">
                 {activeWorkspace
-                  ? `Viewing tasks in ${activeWorkspace.name}`
+                  ? `Viewing tasks in ${activeWorkspace.name}${
+                      !permissions.isPersonal ? ` · ${permissions.role}` : ""
+                    }`
                   : "Here's your productivity snapshot for today"}
               </p>
             </div>
 
             <div className="hero-stats">
               <div className="hero-stat">
-                <ListTodo size={18} strokeWidth={1.8} className="stat-icon" />
+                <ListTodo size={14} strokeWidth={1.8} className="stat-icon" />
                 <span className="stat-value">{todos.length}</span>
                 <span className="stat-label">Total Tasks</span>
               </div>
               <div className="hero-stat-divider" />
               <div className="hero-stat">
-                <CheckCircle2 size={18} strokeWidth={1.8} className="stat-icon" />
+                <CheckCircle2 size={14} strokeWidth={1.8} className="stat-icon" />
                 <span className="stat-value">{doneCount}</span>
                 <span className="stat-label">Completed</span>
               </div>
               <div className="hero-stat-divider" />
               <div className="hero-stat">
-                <Flame size={18} strokeWidth={1.8} className="stat-icon" />
+                <Flame size={14} strokeWidth={1.8} className="stat-icon" />
                 <span className="stat-value">{streak}</span>
                 <span className="stat-label">Day Streak</span>
               </div>
               <div className="hero-stat-divider" />
               <div className="hero-stat">
-                <BarChart2 size={18} strokeWidth={1.8} className="stat-icon" />
+                <BarChart2 size={14} strokeWidth={1.8} className="stat-icon" />
                 <span className="stat-value">{score}%</span>
                 <span className="stat-label">Score</span>
                 <div className="score-bar">
@@ -484,125 +518,139 @@ const Dashboard = () => {
             ))}
           </div>
 
-          {viewMode !== "kanban" && filteredTodos.length === 0 ? (
-            <div className="empty-state neu-card">
-              {activeFilter === "all" && !debouncedSearchTerm && dueFilter === "all" && !starredOnly ? (
-                <>
-                  <ListTodo size={48} strokeWidth={1.5} className="empty-icon" />
-                  <h2>No tasks yet</h2>
-                  <p>Hit the <strong>+</strong> button (or press <strong>N</strong>, or <strong>⌘K</strong> to quick-add) to create your first task!</p>
-                </>
-              ) : debouncedSearchTerm ? (
-                <>
-                  <Search size={48} strokeWidth={1.5} className="empty-icon" />
-                  <h2>No results for "{debouncedSearchTerm}"</h2>
-                  <p>Double-check the spelling, or try a shorter, more general search term.</p>
-                  <div className="empty-state-actions">
-                    <button
-                      className="empty-state-action-btn"
-                      onClick={() => setSearchTerm("")}
-                    >
-                      Clear search
-                    </button>
-                    {(activeFilter !== "all" || dueFilter !== "all" || starredOnly) && (
+          <div
+            key={activeWorkspace?._id || "personal"}
+            className="workspace-switch-fade"
+          >
+            {viewMode !== "kanban" && filteredTodos.length === 0 ? (
+              <div className="empty-state neu-card">
+                {activeFilter === "all" && !debouncedSearchTerm && dueFilter === "all" && !starredOnly ? (
+                  <>
+                    <ListTodo size={48} strokeWidth={1.5} className="empty-icon" />
+                    <h2>No tasks yet</h2>
+                    <p>
+                      {permissions.canCreate
+                        ? <>Hit the <strong>+</strong> button (or press <strong>N</strong>, or <strong>⌘K</strong> to quick-add) to create your first task!</>
+                        : "No tasks have been created here yet."}
+                    </p>
+                  </>
+                ) : debouncedSearchTerm ? (
+                  <>
+                    <Search size={48} strokeWidth={1.5} className="empty-icon" />
+                    <h2>No results for "{debouncedSearchTerm}"</h2>
+                    <p>Double-check the spelling, or try a shorter, more general search term.</p>
+                    <div className="empty-state-actions">
+                      <button
+                        className="empty-state-action-btn"
+                        onClick={() => setSearchTerm("")}
+                      >
+                        Clear search
+                      </button>
+                      {(activeFilter !== "all" || dueFilter !== "all" || starredOnly) && (
+                        <button
+                          className="empty-state-action-btn"
+                          onClick={() => { setActiveFilter("all"); setDueFilter("all"); setStarredOnly(false); }}
+                        >
+                          Clear filters too
+                        </button>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <Search size={48} strokeWidth={1.5} className="empty-icon" />
+                    <h2>Nothing here</h2>
+                    <p>No tasks match your current filters.</p>
+                    <div className="empty-state-actions">
                       <button
                         className="empty-state-action-btn"
                         onClick={() => { setActiveFilter("all"); setDueFilter("all"); setStarredOnly(false); }}
                       >
-                        Clear filters too
+                        Clear filters
                       </button>
-                    )}
-                  </div>
-                </>
-              ) : (
-                <>
-                  <Search size={48} strokeWidth={1.5} className="empty-icon" />
-                  <h2>Nothing here</h2>
-                  <p>No tasks match your current filters.</p>
-                  <div className="empty-state-actions">
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : (
+              <>
+                <div className="view-toolbar-row">
+                  <div className="view-toggle">
                     <button
-                      className="empty-state-action-btn"
-                      onClick={() => { setActiveFilter("all"); setDueFilter("all"); setStarredOnly(false); }}
+                      className={`view-toggle-btn ${viewMode === "grid" ? "active" : ""}`}
+                      onClick={() => handleSetViewMode("grid")}
+                      title="Grid view"
                     >
-                      Clear filters
+                      <LayoutGrid size={15} strokeWidth={1.8} />
+                    </button>
+                    <button
+                      className={`view-toggle-btn ${viewMode === "list" ? "active" : ""}`}
+                      onClick={() => handleSetViewMode("list")}
+                      title="List view"
+                    >
+                      <List size={15} strokeWidth={1.8} />
+                    </button>
+                    <button
+                      className={`view-toggle-btn ${viewMode === "kanban" ? "active" : ""}`}
+                      onClick={() => handleSetViewMode("kanban")}
+                      title="Kanban view"
+                    >
+                      <Kanban size={15} strokeWidth={1.8} />
                     </button>
                   </div>
-                </>
-              )}
-            </div>
-          ) : (
-            <>
-              <div className="view-toolbar-row">
-                <div className="view-toggle">
+
+                  <FilterDropdown
+                    sortBy={sortBy} setSortBy={setSortBy}
+                    dueFilter={dueFilter} setDueFilter={setDueFilter}
+                    starredOnly={starredOnly} setStarredOnly={setStarredOnly}
+                  />
+
                   <button
-                    className={`view-toggle-btn ${viewMode === "grid" ? "active" : ""}`}
-                    onClick={() => handleSetViewMode("grid")}
-                    title="Grid view"
+                    className="view-toggle-btn"
+                    onClick={() => window.print()}
+                    title="Print current task list"
                   >
-                    <LayoutGrid size={15} strokeWidth={1.8} />
-                  </button>
-                  <button
-                    className={`view-toggle-btn ${viewMode === "list" ? "active" : ""}`}
-                    onClick={() => handleSetViewMode("list")}
-                    title="List view"
-                  >
-                    <List size={15} strokeWidth={1.8} />
-                  </button>
-                  <button
-                    className={`view-toggle-btn ${viewMode === "kanban" ? "active" : ""}`}
-                    onClick={() => handleSetViewMode("kanban")}
-                    title="Kanban view"
-                  >
-                    <Kanban size={15} strokeWidth={1.8} />
+                    <Printer size={15} strokeWidth={1.8} />
                   </button>
                 </div>
 
-                <FilterDropdown
-                  sortBy={sortBy} setSortBy={setSortBy}
-                  dueFilter={dueFilter} setDueFilter={setDueFilter}
-                  starredOnly={starredOnly} setStarredOnly={setStarredOnly}
-                />
+                {viewMode === "kanban" ? (
+                  <KanbanBoard
+                    todos={filteredTodosForKanban}
+                    onEdit={t => { setEditingTodo(t); setShowModal(true); }}
+                    onDelete={id => deleteTask(id)}
+                    onToggleStar={toggleStar}
+                    onStatusChange={changeStatus}
+                    onViewDetails={setViewingTodo}
+                    onDuplicate={duplicateTask}
+                    permissions={permissions}
+                  />
+                ) : (
+                  <div className={viewMode === "grid" ? "todo-grid" : "todo-list"}>
+                    {filteredTodos.map(todo => (
+                      <TodoCard
+                        key={todo._id}
+                        todo={todo}
+                        onEdit={t => { setEditingTodo(t); setShowModal(true); }}
+                        onDelete={id => deleteTask(id)}
+                        onToggleStar={toggleStar}
+                        onStatusChange={changeStatus}
+                        onViewDetails={setViewingTodo}
+                        onDuplicate={duplicateTask}
+                        isListView={viewMode === "list"}
+                        permissions={permissions}
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
 
-                <button
-                  className="view-toggle-btn"
-                  onClick={() => window.print()}
-                  title="Print current task list"
-                >
-                  <Printer size={15} strokeWidth={1.8} />
-                </button>
-              </div>
-
-              {viewMode === "kanban" ? (
-                <KanbanBoard
-                  todos={filteredTodosForKanban}
-                  onEdit={t => { setEditingTodo(t); setShowModal(true); }}
-                  onDelete={id => deleteTask(id)}
-                  onToggleStar={toggleStar}
-                  onStatusChange={changeStatus}
-                  onViewDetails={setViewingTodo}
-                  onDuplicate={duplicateTask}
-                />
-              ) : (
-                <div className={viewMode === "grid" ? "todo-grid" : "todo-list"}>
-                  {filteredTodos.map(todo => (
-                    <TodoCard
-                      key={todo._id}
-                      todo={todo}
-                      onEdit={t => { setEditingTodo(t); setShowModal(true); }}
-                      onDelete={id => deleteTask(id)}
-                      onToggleStar={toggleStar}
-                      onStatusChange={changeStatus}
-                      onViewDetails={setViewingTodo}
-                      onDuplicate={duplicateTask}
-                      isListView={viewMode === "list"}
-                    />
-                  ))}
-                </div>
-              )}
-            </>
-          )}
-
-          <FloatingButton onClick={() => { setEditingTodo(null); setShowModal(true); }} />
+          <FloatingButton
+            onClick={() => { setEditingTodo(null); setShowModal(true); }}
+            disabled={!permissions.canCreate}
+          />
         </div>
       </div>
 
@@ -644,6 +692,7 @@ const Dashboard = () => {
           onDuplicate={duplicateTask}
           onPriorityChange={changePriority}
           onRefresh={fetchTodos}
+          permissions={permissions}
         />
       )}
 

@@ -31,12 +31,13 @@ const Sidebar = ({ mobileOpen, onClose, collapsed, onToggleCollapse }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useContext(AuthContext);
-  const {
+const {
     workspaces,
     activeWorkspace,
     setActiveWorkspace,
     members,
     refreshWorkspaces,
+    workspacePreviews,
   } = useContext(WorkspaceContext);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -175,24 +176,38 @@ const Sidebar = ({ mobileOpen, onClose, collapsed, onToggleCollapse }) => {
               <span className="sidebar-ws-name">Personal</span>
             </button>
 
-            {workspaces.map((ws) => (
-              <button
-                key={ws._id}
-                className={`sidebar-ws-item ${
-                  activeWorkspace?._id === ws._id ? "active" : ""
-                }`}
-                onClick={() => handleWorkspaceSelect(ws)}
-                title={ws.name}
-              >
-                <span className="sidebar-ws-avatar">
-                  {ws.name[0]?.toUpperCase()}
-                </span>
-                <span className="sidebar-ws-name">{ws.name}</span>
-                {activeWorkspace?._id === ws._id && (
-                  <span className="sidebar-ws-count">{members.length}</span>
-                )}
-              </button>
-            ))}
+            {workspaces.map((ws) => {
+              const preview = workspacePreviews[ws._id];
+              return (
+                <button
+                  key={ws._id}
+                  className={`sidebar-ws-item ${
+                    activeWorkspace?._id === ws._id ? "active" : ""
+                  }`}
+                  onClick={() => handleWorkspaceSelect(ws)}
+                  title={ws.name}
+                >
+                  <span className="sidebar-ws-avatar">
+                    {ws.name[0]?.toUpperCase()}
+                  </span>
+                  <span className="sidebar-ws-name">{ws.name}</span>
+                  {preview?.initials?.length > 0 && (
+                    <span className="sidebar-ws-member-stack">
+                      {preview.initials.map((letter, i) => (
+                        <span key={i} className="sidebar-ws-member-dot">
+                          {letter}
+                        </span>
+                      ))}
+                      {preview.count > 3 && (
+                        <span className="sidebar-ws-member-dot sidebar-ws-member-dot--more">
+                          +{preview.count - 3}
+                        </span>
+                      )}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
 

@@ -25,10 +25,13 @@ const Login = () => {
   const { login } = useContext(AuthContext);
   const formAnim = useAnimation();
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) navigate("/dashboard");
-  }, [navigate]);
+  const { user } = useContext(AuthContext);
+
+useEffect(() => {
+  if (user) {
+    navigate("/dashboard", { replace: true });
+  }
+}, [user, navigate]);
 
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);

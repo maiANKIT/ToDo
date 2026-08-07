@@ -132,7 +132,11 @@ const TodoModal = ({ onClose, onSubmit, editTodo }) => {
               title={quickMode ? "Switch to detailed form" : "Switch to quick add"}
             >
               <FiZap size={14} fill={quickMode ? "currentColor" : "none"} />
-              {quickMode ? "Detailed" : "Quick add"}
+              {/* NEW: label wrapped in its own span so it can be hidden on
+                  narrow screens without losing the icon (see CSS) */}
+              <span className="modal-quick-switch-label">
+                {quickMode ? "Detailed" : "Quick add"}
+              </span>
             </button>
           )}
           <h2>{editTodo ? "Edit Task" : "Create Task"}</h2>
@@ -147,40 +151,43 @@ const TodoModal = ({ onClose, onSubmit, editTodo }) => {
         </div>
 
         {quickMode ? (
-          <form onSubmit={quickSubmitHandler}>
-            <div className="modal-link-wrap">
-              <span className="modal-link-icon"><FiZap size={15} /></span>
-              <input
-                type="text"
-                className="modal-link-input"
-                placeholder='Try "Merge Intervals due tomorrow leetcode.com"'
-                value={quickText}
-                onChange={(e) => setQuickText(e.target.value)}
-                autoFocus
-              />
-            </div>
-
-            {quickPreview && (quickPreview.title || quickPreview.dueDate || quickPreview.link) && (
-              <div className="quickadd-preview">
-                {quickPreview.title && (
-                  <span className="quickadd-chip quickadd-chip--title">{quickPreview.title}</span>
-                )}
-                {quickPreview.dueDate && (
-                  <span className="quickadd-chip quickadd-chip--date">
-                    <FiCalendar size={12} />
-                    {new Date(quickPreview.dueDate).toLocaleString(undefined, {
-                      month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
-                    })}
-                  </span>
-                )}
-                {quickPreview.link && (
-                  <span className="quickadd-chip quickadd-chip--link">
-                    <FiLink size={12} />
-                    {quickPreview.link.replace(/^https?:\/\//, "")}
-                  </span>
-                )}
+          // ── NEW: fields wrapped in .modal-scroll-body, actions stay outside it ──
+          <form className="modal-form" onSubmit={quickSubmitHandler}>
+            <div className="modal-scroll-body">
+              <div className="modal-link-wrap">
+                <span className="modal-link-icon"><FiZap size={15} /></span>
+                <input
+                  type="text"
+                  className="modal-link-input"
+                  placeholder='Try "Merge Intervals due tomorrow leetcode.com"'
+                  value={quickText}
+                  onChange={(e) => setQuickText(e.target.value)}
+                  autoFocus
+                />
               </div>
-            )}
+
+              {quickPreview && (quickPreview.title || quickPreview.dueDate || quickPreview.link) && (
+                <div className="quickadd-preview">
+                  {quickPreview.title && (
+                    <span className="quickadd-chip quickadd-chip--title">{quickPreview.title}</span>
+                  )}
+                  {quickPreview.dueDate && (
+                    <span className="quickadd-chip quickadd-chip--date">
+                      <FiCalendar size={12} />
+                      {new Date(quickPreview.dueDate).toLocaleString(undefined, {
+                        month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
+                      })}
+                    </span>
+                  )}
+                  {quickPreview.link && (
+                    <span className="quickadd-chip quickadd-chip--link">
+                      <FiLink size={12} />
+                      {quickPreview.link.replace(/^https?:\/\//, "")}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
 
             <div className="modal-actions">
               <button type="button" className="cancel-btn" onClick={onClose}>
@@ -192,138 +199,140 @@ const TodoModal = ({ onClose, onSubmit, editTodo }) => {
             </div>
           </form>
         ) : (
-          <form onSubmit={submitHandler}>
-            <input
-              type="text"
-              placeholder="Task title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              required
-            />
-
-            <textarea
-              placeholder="Description (optional)"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-
-            <div className="modal-link-wrap">
-              <span className="modal-link-icon"><FiLink size={15} /></span>
-              <input
-                type="url"
-                className="modal-link-input"
-                placeholder="Link (optional) — https://..."
-                value={link}
-                onChange={(e) => setLink(e.target.value)}
-              />
-              {link && (
-                <button
-                  type="button"
-                  className="modal-link-clear"
-                  onClick={() => setLink("")}
-                  title="Clear link"
-                >
-                  ×
-                </button>
-              )}
-            </div>
-
-            {/* Time estimate — free-form, e.g. "30 min", "2 hrs" */}
-            <div className="modal-link-wrap">
-              <span className="modal-link-icon"><FiClock size={15} /></span>
+          <form className="modal-form" onSubmit={submitHandler}>
+            <div className="modal-scroll-body">
               <input
                 type="text"
-                className="modal-link-input"
-                placeholder="Time estimate (optional) — e.g. 30 min, 2 hrs"
-                value={estimate}
-                onChange={(e) => setEstimate(e.target.value)}
-                maxLength={24}
+                placeholder="Task title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                required
               />
-              {estimate && (
-                <button
-                  type="button"
-                  className="modal-link-clear"
-                  onClick={() => setEstimate("")}
-                  title="Clear estimate"
-                >
-                  ×
-                </button>
-              )}
-            </div>
 
-            <DateTimePicker
-              value={dueDate}
-              onChange={(iso) => setDueDate(iso || "")}
-            />
+              <textarea
+                placeholder="Description (optional)"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
 
-            {/* Status dropdown */}
-            <div className="custom-select-wrapper">
-              <div
-                ref={selectRef}
-                className={`custom-select ${dropdownOpen ? "open" : ""}`}
-                onClick={handleSelectClick}
-              >
-                <span>{statusOptions.find((o) => o.value === status)?.label}</span>
-                <svg
-                  className={`select-arrow ${dropdownOpen ? "rotated" : ""}`}
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16" height="16"
-                  viewBox="0 0 24 24"
-                  fill="none" stroke="currentColor"
-                  strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-                >
-                  <polyline points="6 9 12 15 18 9" />
-                </svg>
+              <div className="modal-link-wrap">
+                <span className="modal-link-icon"><FiLink size={15} /></span>
+                <input
+                  type="url"
+                  className="modal-link-input"
+                  placeholder="Link (optional) — https://..."
+                  value={link}
+                  onChange={(e) => setLink(e.target.value)}
+                />
+                {link && (
+                  <button
+                    type="button"
+                    className="modal-link-clear"
+                    onClick={() => setLink("")}
+                    title="Clear link"
+                  >
+                    ×
+                  </button>
+                )}
               </div>
 
-              {dropdownOpen && (
-                <div className={`custom-options ${dropdownFlip ? "custom-options--flip" : ""}`}>
-                  {statusOptions.map((opt) => (
-                    <div
-                      key={opt.value}
-                      className={`custom-option ${status === opt.value ? "selected" : ""}`}
-                      onClick={() => { setStatus(opt.value); setDropdownOpen(false); }}
-                    >
-                      {opt.label}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Priority dropdown */}
-            <div className="custom-select-wrapper">
-              <div
-                ref={priorityRef}
-                className={`custom-select ${priorityDropdownOpen ? "open" : ""}`}
-                onClick={handlePrioritySelectClick}
-              >
-                <span>{priorityOptions.find((o) => o.value === priority)?.label} priority</span>
-                <svg
-                  className={`select-arrow ${priorityDropdownOpen ? "rotated" : ""}`}
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16" height="16"
-                  viewBox="0 0 24 24"
-                  fill="none" stroke="currentColor"
-                  strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-                >
-                  <polyline points="6 9 12 15 18 9" />
-                </svg>
+              {/* Time estimate — free-form, e.g. "30 min", "2 hrs" */}
+              <div className="modal-link-wrap">
+                <span className="modal-link-icon"><FiClock size={15} /></span>
+                <input
+                  type="text"
+                  className="modal-link-input"
+                  placeholder="Time estimate (optional) — e.g. 30 min, 2 hrs"
+                  value={estimate}
+                  onChange={(e) => setEstimate(e.target.value)}
+                  maxLength={24}
+                />
+                {estimate && (
+                  <button
+                    type="button"
+                    className="modal-link-clear"
+                    onClick={() => setEstimate("")}
+                    title="Clear estimate"
+                  >
+                    ×
+                  </button>
+                )}
               </div>
 
-              {priorityDropdownOpen && (
-                <div className={`custom-options ${priorityDropdownFlip ? "custom-options--flip" : ""}`}>
-                  {priorityOptions.map((opt) => (
-                    <div
-                      key={opt.value}
-                      className={`custom-option ${priority === opt.value ? "selected" : ""}`}
-                      onClick={() => { setPriority(opt.value); setPriorityDropdownOpen(false); }}
-                    >
-                      {opt.label}
-                    </div>
-                  ))}
+              <DateTimePicker
+                value={dueDate}
+                onChange={(iso) => setDueDate(iso || "")}
+              />
+
+              {/* Status dropdown */}
+              <div className="custom-select-wrapper">
+                <div
+                  ref={selectRef}
+                  className={`custom-select ${dropdownOpen ? "open" : ""}`}
+                  onClick={handleSelectClick}
+                >
+                  <span>{statusOptions.find((o) => o.value === status)?.label}</span>
+                  <svg
+                    className={`select-arrow ${dropdownOpen ? "rotated" : ""}`}
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16" height="16"
+                    viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor"
+                    strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
                 </div>
-              )}
+
+                {dropdownOpen && (
+                  <div className={`custom-options ${dropdownFlip ? "custom-options--flip" : ""}`}>
+                    {statusOptions.map((opt) => (
+                      <div
+                        key={opt.value}
+                        className={`custom-option ${status === opt.value ? "selected" : ""}`}
+                        onClick={() => { setStatus(opt.value); setDropdownOpen(false); }}
+                      >
+                        {opt.label}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Priority dropdown */}
+              <div className="custom-select-wrapper">
+                <div
+                  ref={priorityRef}
+                  className={`custom-select ${priorityDropdownOpen ? "open" : ""}`}
+                  onClick={handlePrioritySelectClick}
+                >
+                  <span>{priorityOptions.find((o) => o.value === priority)?.label} priority</span>
+                  <svg
+                    className={`select-arrow ${priorityDropdownOpen ? "rotated" : ""}`}
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16" height="16"
+                    viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor"
+                    strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </div>
+
+                {priorityDropdownOpen && (
+                  <div className={`custom-options ${priorityDropdownFlip ? "custom-options--flip" : ""}`}>
+                    {priorityOptions.map((opt) => (
+                      <div
+                        key={opt.value}
+                        className={`custom-option ${priority === opt.value ? "selected" : ""}`}
+                        onClick={() => { setPriority(opt.value); setPriorityDropdownOpen(false); }}
+                      >
+                        {opt.label}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="modal-actions">

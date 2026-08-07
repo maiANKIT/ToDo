@@ -6,13 +6,14 @@ import {
 import { getUrgencyLevel } from "../../utils/dueDateUrgency";
 import { STATUS, getNextStatus, PRIORITY, PRIORITY_ORDER, PRIORITY_META, getNextPriority } from "../../utils/taskEnums";
 import { addSubtask, updateSubtask, deleteSubtask } from "../../services/todoAPI";
+import { useCelebration } from "../../hooks/useCelebration";
+import CelebrationOverlay from "../CelebrationOverlay/CelebrationOverlay";
 import "./TaskDetailPanel.css";
 
 const TaskDetailPanel = ({
   todo, onClose, onEdit, onStatusChange, onToggleStar, onDuplicate,
   onPriorityChange, onRefresh,
 }) => {
-  // ── Subtask creation form state ──
   const [subtaskTitle, setSubtaskTitle] = useState("");
   const [subtaskDescription, setSubtaskDescription] = useState("");
   const [subtaskLink, setSubtaskLink] = useState("");
@@ -21,7 +22,6 @@ const TaskDetailPanel = ({
   const [subtaskExpanded, setSubtaskExpanded] = useState(false);
   const [addingSubtask, setAddingSubtask] = useState(false);
 
-  // ── Subtask edit state (only one subtask editable at a time) ──
   const [editingSubtaskId, setEditingSubtaskId] = useState(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
@@ -30,7 +30,8 @@ const TaskDetailPanel = ({
   const [editPriority, setEditPriority] = useState(PRIORITY.MEDIUM);
   const [savingEdit, setSavingEdit] = useState(false);
 
-  // Close on Escape
+  const { active: celebrationActive, celebrate, dismiss: dismissCelebration } = useCelebration();
+
   useEffect(() => {
     const handleKey = (e) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", handleKey);
@@ -42,6 +43,21 @@ const TaskDetailPanel = ({
   }, [onClose]);
 
   if (!todo) return null;
+
+  const subtasks = todo.subtasks || [];
+  const subtaskDoneCount = subtasks.filter((s) => s.status === STATUS.DONE).length;
+
+  // ── Helper: derive what the task status SHOULD be from subtask states ──
+  const deriveTaskStatus = (projectedSubtasks) => {
+    if (projectedSubtasks.length === 0) return null; // no subtasks → don't auto-change
+    const allDone   = projectedSubtasks.every((s) => s.status === STATUS.DONE);
+    const anyActive = projectedSubtasks.some(
+      (s) => s.status === STATUS.DONE || s.status === STATUS.IN_PROGRESS
+    );
+    if (allDone)   return STATUS.DONE;
+    if (anyActive) return STATUS.IN_PROGRESS;
+    return STATUS.PENDING;
+  };
 
   const getStatusClass = () => {
     if (todo.status === STATUS.DONE) return "status-done";
@@ -98,9 +114,6 @@ const TaskDetailPanel = ({
 
   const priorityMeta = todo.priority ? PRIORITY_META[todo.priority] : null;
 
-  const subtasks = todo.subtasks || [];
-  const subtaskDoneCount = subtasks.filter((s) => s.status === STATUS.DONE).length;
-
   const resetSubtaskForm = () => {
     setSubtaskTitle("");
     setSubtaskDescription("");
@@ -110,6 +123,7 @@ const TaskDetailPanel = ({
     setSubtaskExpanded(false);
   };
 
+  // ── Add subtask — if task is DONE, revert to IN_PROGRESS ──────────
   const handleAddSubtask = async (e) => {
     e.preventDefault();
     if (!subtaskTitle.trim() || addingSubtask) return;
@@ -123,6 +137,12 @@ const TaskDetailPanel = ({
         priority: subtaskPriority,
       });
       resetSubtaskForm();
+
+      // New subtask added while task was Done → revert to In Progress
+      if (todo.status === STATUS.DONE) {
+        onStatusChange?.(todo._id, STATUS.IN_PROGRESS);
+      }
+
       onRefresh?.();
     } catch (err) {
       console.error("Failed to add subtask:", err?.response?.data || err);
@@ -131,20 +151,39 @@ const TaskDetailPanel = ({
     }
   };
 
-  // ── 3-way status cycle: Pending -> In Progress -> Done -> Pending ──
+  // ── Cycle subtask status — auto-sync task status afterwards ───────
   const handleCycleSubtaskStatus = async (subtask) => {
     let nextStatus;
-    if (subtask.status === STATUS.PENDING) nextStatus = STATUS.IN_PROGRESS;
+    if (subtask.status === STATUS.PENDING)     nextStatus = STATUS.IN_PROGRESS;
     else if (subtask.status === STATUS.IN_PROGRESS) nextStatus = STATUS.DONE;
-    else nextStatus = STATUS.PENDING;
+    else                                            nextStatus = STATUS.PENDING;
 
     try {
       await updateSubtask(todo._id, subtask._id, { status: nextStatus });
+
+      // Project what all subtasks will look like after this change
+      const projected = subtasks.map((s) =>
+        s._id === subtask._id ? { ...s, status: nextStatus } : s
+      );
+
+      const newTaskStatus = deriveTaskStatus(projected);
+
+      if (newTaskStatus !== null && newTaskStatus !== todo.status) {
+        // Auto-update the parent task status
+        onStatusChange?.(todo._id, newTaskStatus);
+      }
+
+      // 🎉 Fire celebration when every subtask is done
+      if (newTaskStatus === STATUS.DONE) {
+        celebrate();
+      }
+
       onRefresh?.();
     } catch (err) {
       console.error("Failed to update subtask:", err?.response?.data || err);
     }
   };
+  // ──────────────────────────────────────────────────────────────────
 
   const handleCycleSubtaskPriority = async (subtask) => {
     try {
@@ -173,9 +212,7 @@ const TaskDetailPanel = ({
     setEditPriority(s.priority || PRIORITY.MEDIUM);
   };
 
-  const cancelEditSubtask = () => {
-    setEditingSubtaskId(null);
-  };
+  const cancelEditSubtask = () => { setEditingSubtaskId(null); };
 
   const handleSaveSubtaskEdit = async (subtaskId) => {
     if (!editTitle.trim() || savingEdit) return;
@@ -231,11 +268,9 @@ const TaskDetailPanel = ({
 
   return (
     <div className="detail-overlay" onClick={onClose}>
-      <div
-        className="detail-panel neu-card"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* ── Header (static) ── */}
+      <div className="detail-panel neu-card" onClick={(e) => e.stopPropagation()}>
+
+        {/* ── Header ── */}
         <div className="detail-header">
           <button
             className={`status-badge status-badge--clickable ${getStatusClass()}`}
@@ -260,10 +295,8 @@ const TaskDetailPanel = ({
 
         {/* ── Scrollable content ── */}
         <div className="detail-scroll">
-          {/* ── Title ── */}
           <h2 className="detail-title">{todo.title}</h2>
 
-          {/* ── Priority pill ── */}
           {priorityMeta && (
             <button
               className={`detail-priority-pill detail-priority-pill--${priorityMeta.className.replace("priority-", "")}`}
@@ -274,12 +307,8 @@ const TaskDetailPanel = ({
             </button>
           )}
 
-          {/* ── Description ── */}
-          {todo.description && (
-            <p className="detail-description">{todo.description}</p>
-          )}
+          {todo.description && <p className="detail-description">{todo.description}</p>}
 
-          {/* ── Due date ── */}
           {due && (
             <div className={`detail-due-row ${dueDateClass}`}>
               <FiClock size={14} />
@@ -292,7 +321,6 @@ const TaskDetailPanel = ({
             </div>
           )}
 
-          {/* ── Link ── */}
           {todo.link && (
             <button className="detail-link-pill" onClick={handleLinkClick}>
               <FiExternalLink size={13} />
@@ -304,7 +332,9 @@ const TaskDetailPanel = ({
           <div className="detail-subtasks">
             <div className="detail-subtasks-title">
               <span>Subtasks</span>
-              {subtasks.length > 0 && <span>{subtaskDoneCount}/{subtasks.length}</span>}
+              {subtasks.length > 0 && (
+                <span>{subtaskDoneCount}/{subtasks.length}</span>
+              )}
             </div>
 
             {subtasks.length > 0 && (
@@ -361,11 +391,7 @@ const TaskDetailPanel = ({
                             ))}
                           </div>
                           <div className="detail-subtask-edit-actions">
-                            <button
-                              type="button"
-                              className="detail-subtask-edit-cancel"
-                              onClick={cancelEditSubtask}
-                            >
+                            <button type="button" className="detail-subtask-edit-cancel" onClick={cancelEditSubtask}>
                               Cancel
                             </button>
                             <button
@@ -385,7 +411,6 @@ const TaskDetailPanel = ({
                   return (
                     <div key={s._id} className="detail-subtask-item">
                       {renderSubtaskCheck(s)}
-
                       <div className="detail-subtask-body">
                         <span className={`detail-subtask-title ${s.status === STATUS.DONE ? "detail-subtask-title--done" : ""}`}>
                           {s.title}
@@ -426,7 +451,6 @@ const TaskDetailPanel = ({
                           )}
                         </div>
                       </div>
-
                       <div className="detail-subtask-actions">
                         <button
                           className="detail-subtask-edit-btn"
@@ -535,7 +559,7 @@ const TaskDetailPanel = ({
           </div>
         </div>
 
-        {/* ── Footer (static) ── */}
+        {/* ── Footer ── */}
         <div className="detail-footer">
           <div className="detail-footer-row">
             <button
@@ -552,6 +576,12 @@ const TaskDetailPanel = ({
           </div>
         </div>
       </div>
+
+      <CelebrationOverlay
+        active={celebrationActive}
+        onDismiss={dismissCelebration}
+        taskTitle={todo.title}
+      />
     </div>
   );
 };

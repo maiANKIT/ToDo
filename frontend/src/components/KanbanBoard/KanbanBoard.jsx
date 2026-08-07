@@ -9,6 +9,8 @@ const COLUMNS = [
   { key: "done",       label: "Done",        dot: "dot-done"       },
 ];
 
+const FULL_PERMISSIONS = { canCreate: true, canEdit: true, canDelete: true };
+
 const KanbanBoard = ({
   todos,
   onEdit,
@@ -17,11 +19,17 @@ const KanbanBoard = ({
   onStatusChange,
   onViewDetails,
   onDuplicate,
+  permissions = FULL_PERMISSIONS,
 }) => {
+  // Dragging between columns changes status — same permission that
+  // gates the status-badge click and swipe-to-done on TodoCard.
+  const canEdit = permissions.canEdit ?? true;
+
   const handleDragEnd = (result) => {
     const { source, destination, draggableId } = result;
     if (!destination) return;
     if (source.droppableId === destination.droppableId) return;
+    if (!canEdit) return; // defense in depth — draggable is already disabled below
     onStatusChange(draggableId, STATUS_KEYS[destination.droppableId]);
   };
 
@@ -38,7 +46,7 @@ const KanbanBoard = ({
                 <span className="kanban-column-count">{colTodos.length}</span>
               </div>
 
-              <Droppable droppableId={col.key}>
+              <Droppable droppableId={col.key} isDropDisabled={!canEdit}>
                 {(provided, snapshot) => (
                   <div
                     className={`kanban-column-body ${
@@ -48,7 +56,9 @@ const KanbanBoard = ({
                     {...provided.droppableProps}
                   >
                     {colTodos.length === 0 && !snapshot.isDraggingOver && (
-                      <div className="kanban-empty-slot">Drop tasks here</div>
+                      <div className="kanban-empty-slot">
+                        {canEdit ? "Drop tasks here" : "No tasks"}
+                      </div>
                     )}
 
                     {colTodos.map((todo, index) => (
@@ -56,6 +66,7 @@ const KanbanBoard = ({
                         draggableId={todo._id}
                         index={index}
                         key={todo._id}
+                        isDragDisabled={!canEdit}
                       >
                         {(dragProvided, dragSnapshot) => (
                           <div
@@ -64,7 +75,7 @@ const KanbanBoard = ({
                             {...dragProvided.dragHandleProps}
                             className={`kanban-card-wrap ${
                               dragSnapshot.isDragging ? "kanban-card-wrap--dragging" : ""
-                            }`}
+                            } ${!canEdit ? "kanban-card-wrap--locked" : ""}`}
                           >
                             <TodoCard
                               todo={todo}
@@ -74,6 +85,7 @@ const KanbanBoard = ({
                               onStatusChange={onStatusChange}
                               onViewDetails={onViewDetails}
                               onDuplicate={onDuplicate}
+                              permissions={permissions}
                               isKanban
                             />
                           </div>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { ArrowLeft, CalendarCheck, LayoutGrid, List, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../../components/Navbar/Navbar";
@@ -7,6 +7,7 @@ import TodoModal from "../../components/TodoModal/TodoModal";
 import Toast from "../../components/Toast/Toast";
 import FilterDropdown from "../../components/FilterDropdown/FilterDropdown";
 import TaskDetailPanel from "../../components/TaskDetailPanel/TaskDetailPanel";
+import { WorkspaceContext } from "../../context/WorkspaceContext";
 import { getTodos, updateTodo, deleteTodo } from "../../services/todoAPI";
 import "./TodayTasks.css";
 
@@ -37,6 +38,10 @@ const isToday = (dateStr) => {
 
 const TodayTasks = () => {
   const navigate = useNavigate();
+
+  // ── Active workspace (null = Personal) drives which tasks we fetch ──
+  const { activeWorkspace } = useContext(WorkspaceContext);
+
   const [todos,        setTodos]       = useState([]);
   const [loading,      setLoading]     = useState(true);
   const [editingTodo,  setEditingTodo] = useState(null);
@@ -51,14 +56,21 @@ const TodayTasks = () => {
   );
 
   const fetchTodos = async () => {
+    setLoading(true);
     try {
-      const r = await getTodos();
+      // Pass the active workspace id — undefined when Personal,
+      // which correctly hits the "workspace: null" branch on the backend.
+      const r = await getTodos(activeWorkspace?._id);
       setTodos(r.data.data);
     } catch (e) { console.log(e); }
     finally { setLoading(false); }
   };
 
-  useEffect(() => { fetchTodos(); }, []);
+  // Re-fetch whenever the user switches workspace (including back to Personal)
+  useEffect(() => {
+    fetchTodos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeWorkspace]);
 
   // ── Today: due today OR created today ──
   const todayTasks = todos.filter(
@@ -135,6 +147,8 @@ const TodayTasks = () => {
     setPendingDelete(null);
   };
 
+  const handleToastDismiss = () => setPendingDelete(null);
+
   const todayLabel = new Date().toLocaleDateString("en-US", {
     weekday: "long", month: "long", day: "numeric",
   });
@@ -154,6 +168,7 @@ const TodayTasks = () => {
           </div>
           <p className="page-header-sub">
             {todayLabel} · {todayTasks.length} task{todayTasks.length !== 1 ? "s" : ""}
+            {activeWorkspace ? ` · ${activeWorkspace.name}` : " · Personal"}
           </p>
         </div>
 
@@ -269,4 +284,4 @@ const TodayTasks = () => {
   );
 };
 
-export default TodayTasks;  
+export default TodayTasks;

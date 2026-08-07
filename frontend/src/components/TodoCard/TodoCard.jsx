@@ -9,6 +9,12 @@ const SWIPE_MAX = 130;
 const LONG_PRESS_MS = 500;
 const LONG_PRESS_MOVE_TOLERANCE = 10;
 
+// Default: unrestricted — used for Personal tasks or when no permissions
+// prop is passed in (keeps older call sites working unchanged).
+const FULL_PERMISSIONS = {
+  canCreate: true, canEdit: true, canDelete: true,
+};
+
 const TodoCard = ({
   todo,
   onEdit,
@@ -19,8 +25,15 @@ const TodoCard = ({
   onDuplicate,
   isListView = false,
   isKanban = false,
+  permissions = FULL_PERMISSIONS,
 }) => {
-  const swipeEnabled = !isKanban;
+  const canEdit   = permissions.canEdit   ?? true;
+  const canDelete = permissions.canDelete ?? true;
+  const canCreate = permissions.canCreate ?? true; // gates Duplicate (creates a new task)
+
+  // Swipe only makes sense if at least one swipe action is allowed
+  const swipeEnabled = !isKanban && (canEdit || canDelete);
+
   const [swipeX, setSwipeX] = useState(0);
   const [swiping, setSwiping] = useState(false);
   const [longPressActive, setLongPressActive] = useState(false);
@@ -49,36 +62,22 @@ const TodoCard = ({
 
   const handleStarClick = (e) => {
     e.stopPropagation();
+    if (!canEdit) return;
     onToggleStar?.(todo._id, !todo.star);
   };
 
   const handleStatusClick = (e) => {
     e.stopPropagation();
-    if (!onStatusChange) return;
+    if (!canEdit || !onStatusChange) return;
     onStatusChange(todo._id, getNextStatus(todo.status));
   };
 
-  // ── Whole card opens the detail panel now (not just the title) ──
-  const handleCardClick = () => {
-    onViewDetails?.(todo);
-  };
+  const handleCardClick = () => { onViewDetails?.(todo); };
+  const handleEditClick = (e) => { e.stopPropagation(); if (!canEdit) return; onEdit?.(todo); };
+  const handleDeleteClick = (e) => { e.stopPropagation(); if (!canDelete) return; onDelete?.(todo._id); };
+  const handleDuplicateClick = (e) => { e.stopPropagation(); if (!canCreate) return; onDuplicate?.(todo); };
 
-  const handleEditClick = (e) => {
-    e.stopPropagation();
-    onEdit?.(todo);
-  };
-
-  const handleDeleteClick = (e) => {
-    e.stopPropagation();
-    onDelete?.(todo._id);
-  };
-
-  const handleDuplicateClick = (e) => {
-    e.stopPropagation();
-    onDuplicate?.(todo);
-  };
-
-  // ── Long-press → Edit ──
+  // ── Long-press → Edit (only when editing is allowed) ──
   const clearLongPressTimer = () => {
     if (longPressTimerRef.current) {
       clearTimeout(longPressTimerRef.current);
@@ -87,6 +86,7 @@ const TodoCard = ({
   };
 
   const startLongPressTimer = () => {
+    if (!canEdit) return;
     longPressFiredRef.current = false;
     clearLongPressTimer();
     longPressTimerRef.current = setTimeout(() => {
@@ -99,7 +99,6 @@ const TodoCard = ({
     }, LONG_PRESS_MS);
   };
 
-  // ── Swipe + long-press handlers (touch only) ──
   const handleTouchStart = (e) => {
     const t = e.touches[0];
     touchStartXRef.current = t.clientX;
@@ -122,7 +121,10 @@ const TodoCard = ({
     }
     if (swipeLockRef.current !== "x") return;
 
-    const clamped = Math.max(-SWIPE_MAX, Math.min(SWIPE_MAX, dx));
+    // Clamp the swipe range down to only the direction(s) actually permitted
+    const maxRight = canEdit   ? SWIPE_MAX : 0;   // right swipe = mark done
+    const maxLeft  = canDelete ? SWIPE_MAX : 0;    // left swipe  = delete
+    const clamped = Math.max(-maxLeft, Math.min(maxRight, dx));
     setSwipeX(clamped);
   };
 
@@ -138,11 +140,8 @@ const TodoCard = ({
     }
 
     if (swipeLockRef.current === "x") {
-      if (swipeX >= SWIPE_THRESHOLD) {
-        onStatusChange?.(todo._id, STATUS.DONE);
-      } else if (swipeX <= -SWIPE_THRESHOLD) {
-        onDelete?.(todo._id);
-      }
+      if (swipeX >= SWIPE_THRESHOLD && canEdit) onStatusChange?.(todo._id, STATUS.DONE);
+      else if (swipeX <= -SWIPE_THRESHOLD && canDelete) onDelete?.(todo._id);
     }
     setSwipeX(0);
     swipeLockRef.current = null;
@@ -166,20 +165,21 @@ const TodoCard = ({
   const doneOpacity   = swipeX > 0 ? Math.min(1, swipeX / SWIPE_THRESHOLD) : 0;
   const deleteOpacity = swipeX < 0 ? Math.min(1, -swipeX / SWIPE_THRESHOLD) : 0;
 
-  // ── Due date urgency ──
-  const urgency = getUrgencyLevel(todo.dueDate, todo.status);
+  const urgency      = getUrgencyLevel(todo.dueDate, todo.status);
   const dueDateLabel = todo.dueDate ? getUrgencyLabel(todo.dueDate, urgency) : null;
   const dueDateClass = `due-${urgency}`;
   const urgencyClass = urgency !== "none" ? `urgency-${urgency}` : "";
 
-  // ── Priority ──
   const priorityMeta = todo.priority ? PRIORITY_META[todo.priority] : null;
 
-  // ── Subtasks progress ──
   const subtaskTotal = todo.subtasks?.length || 0;
-  const subtaskDone = todo.subtasks?.filter((s) => s.status === STATUS.DONE).length || 0;
+  const subtaskDone  = todo.subtasks?.filter((s) => s.status === STATUS.DONE).length || 0;
 
-  // ── Favicon helpers ──
+  const isDone = todo.status === STATUS.DONE;
+  const priorityAccentClass = priorityMeta
+    ? `priority-accent--${priorityMeta.className.replace("priority-", "")}`
+    : "";
+
   const getDomain = (url) => {
     try {
       return new URL(
@@ -223,7 +223,9 @@ const TodoCard = ({
     <button
       className={`star-btn ${todo.star ? "star-btn--active" : ""}`}
       onClick={handleStarClick}
-      title={todo.star ? "Unmark important" : "Mark as important"}
+      disabled={!canEdit}
+      title={!canEdit ? "View only" : todo.star ? "Unmark important" : "Mark as important"}
+      style={!canEdit ? { opacity: 0.4, cursor: "not-allowed" } : undefined}
     >
       <FiStar size={15} fill={todo.star ? "currentColor" : "none"} />
     </button>
@@ -233,21 +235,20 @@ const TodoCard = ({
     <button
       className={`status-badge status-badge--clickable ${getStatusClass()} ${extraClass}`}
       onClick={handleStatusClick}
-      title="Click to change status"
+      disabled={!canEdit}
+      title={canEdit ? "Click to change status" : "View only"}
+      style={!canEdit ? { cursor: "default", opacity: 0.85 } : undefined}
     >
       {getStatusText()}
     </button>
   );
 
-  const DuplicateButton = ({ className = "duplicate-btn" }) => (
-    <button
-      className={className}
-      onClick={handleDuplicateClick}
-      title="Duplicate task"
-    >
-      <FiCopy size={14} />
-    </button>
-  );
+  const DuplicateButton = ({ className = "duplicate-btn" }) =>
+    canCreate ? (
+      <button className={className} onClick={handleDuplicateClick} title="Duplicate task">
+        <FiCopy size={14} />
+      </button>
+    ) : null;
 
   const EstimateBadge = () =>
     todo.estimate ? (
@@ -272,6 +273,36 @@ const TodoCard = ({
       </span>
     ) : null;
 
+  const SubtaskProgress = () => {
+    if (subtaskTotal === 0) return null;
+    const pct     = Math.round((subtaskDone / subtaskTotal) * 100);
+    const allDone = subtaskDone === subtaskTotal;
+    return (
+      <div className="subtask-progress">
+        <div className="subtask-progress__label">
+          <FiCheckSquare size={11} />
+          <span>{subtaskDone}/{subtaskTotal}</span>
+        </div>
+        <div className="subtask-progress__track">
+          <div
+            className={`subtask-progress__fill ${allDone ? "subtask-progress__fill--complete" : ""}`}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+      </div>
+    );
+  };
+
+  const isWorkspaceTask = !!todo.workspace && typeof todo.user === "object" && todo.user?.name;
+
+  const CreatorBadge = () =>
+    isWorkspaceTask ? (
+      <span className="creator-badge" title={`Created by ${todo.user.name}`}>
+        <span className="creator-badge-avatar">{todo.user.name[0]?.toUpperCase()}</span>
+        {todo.user.name}
+      </span>
+    ) : null;
+
   const swipeTouchProps = swipeEnabled
     ? {
         onTouchStart: handleTouchStart,
@@ -286,19 +317,18 @@ const TodoCard = ({
   if (isListView) {
     cardBody = (
       <div
-        className={`todo-card todo-card--list neu-card todo-card--clickable ${urgencyClass}`}
+        className={`todo-card todo-card--list neu-card todo-card--clickable ${urgencyClass} ${priorityAccentClass} ${isDone ? "todo-card--done" : ""}`}
         onClick={handleCardClick}
       >
         <div className="todo-list-left">
           <StatusBadge />
           {StarButton}
-          <h3 className="todo-title-clickable">
-            {todo.title}
-          </h3>
+          <h3 className="todo-title-clickable">{todo.title}</h3>
           {dueDateLabel && <span className={`due-badge ${dueDateClass}`}>{dueDateLabel}</span>}
           <PriorityBadge />
           <SubtaskBadge />
           <EstimateBadge />
+          <CreatorBadge />
           <span className="todo-date">
             {new Date(todo.createdAt).toLocaleDateString()}
           </span>
@@ -310,19 +340,23 @@ const TodoCard = ({
             </button>
           )}
           <DuplicateButton className="link-btn" />
-          <button className="edit-btn" onClick={handleEditClick} title="Edit task">
-            <FiEdit2 size={14} />
-          </button>
-          <button className="delete-btn" onClick={handleDeleteClick} title="Delete task">
-            <FiTrash2 size={14} />
-          </button>
+          {canEdit && (
+            <button className="edit-btn" onClick={handleEditClick} title="Edit task">
+              <FiEdit2 size={14} />
+            </button>
+          )}
+          {canDelete && (
+            <button className="delete-btn" onClick={handleDeleteClick} title="Delete task">
+              <FiTrash2 size={14} />
+            </button>
+          )}
         </div>
       </div>
     );
   } else {
     cardBody = (
       <div
-        className={`todo-card neu-card todo-card--clickable ${urgencyClass}`}
+        className={`todo-card neu-card todo-card--clickable ${urgencyClass} ${priorityAccentClass} ${isDone ? "todo-card--done" : ""}`}
         onClick={handleCardClick}
       >
         <div className="todo-content">
@@ -330,15 +364,15 @@ const TodoCard = ({
             <StatusBadge extraClass="status-badge--card" />
             {StarButton}
           </div>
-          <h3 className="todo-title-clickable">
-            {todo.title}
-          </h3>
+          <h3 className="todo-title-clickable">{todo.title}</h3>
           {todo.description && <p>{todo.description}</p>}
-
           {dueDateLabel && <span className={`due-badge ${dueDateClass}`}>{dueDateLabel}</span>}
           <PriorityBadge />
-          <SubtaskBadge />
+
+          <SubtaskProgress />
+
           <EstimateBadge />
+          <CreatorBadge />
 
           {todo.link && (
             <button className="todo-link-pill" onClick={handleLinkClick}>
@@ -353,12 +387,16 @@ const TodoCard = ({
           </span>
           <div className="todo-actions">
             <DuplicateButton />
-            <button className="edit-btn" onClick={handleEditClick} title="Edit task">
-              <FiEdit2 size={16} />
-            </button>
-            <button className="delete-btn" onClick={handleDeleteClick} title="Delete task">
-              <FiTrash2 size={16} />
-            </button>
+            {canEdit && (
+              <button className="edit-btn" onClick={handleEditClick} title="Edit task">
+                <FiEdit2 size={16} />
+              </button>
+            )}
+            {canDelete && (
+              <button className="delete-btn" onClick={handleDeleteClick} title="Delete task">
+                <FiTrash2 size={16} />
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -373,12 +411,16 @@ const TodoCard = ({
       style={swipeStyle}
       {...swipeTouchProps}
     >
-      <div className="swipe-bg swipe-bg--done" style={{ opacity: doneOpacity }}>
-        <FiCheck size={18} /> Done
-      </div>
-      <div className="swipe-bg swipe-bg--delete" style={{ opacity: deleteOpacity }}>
-        <FiTrash2 size={18} /> Delete
-      </div>
+      {canEdit && (
+        <div className="swipe-bg swipe-bg--done" style={{ opacity: doneOpacity }}>
+          <FiCheck size={18} /> Done
+        </div>
+      )}
+      {canDelete && (
+        <div className="swipe-bg swipe-bg--delete" style={{ opacity: deleteOpacity }}>
+          <FiTrash2 size={18} /> Delete
+        </div>
+      )}
       {longPressActive && (
         <div className="longpress-flash">
           <FiEdit2 size={20} />

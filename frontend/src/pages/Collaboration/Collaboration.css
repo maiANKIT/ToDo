@@ -390,3 +390,74 @@
     flex-wrap: wrap;
   }
 }
+/* ── Member avatar stack in hero ── */
+.collab-member-stack {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.collab-stack-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  background: var(--bg);
+  color: var(--text);
+  border: 2px solid var(--card);
+  margin-left: -8px;
+  box-shadow: inset 1px 1px 3px var(--shadow-dark);
+}
+.collab-stack-avatar:first-child {
+  margin-left: 0;
+}
+
+.collab-stack-avatar--more {
+  background: var(--primary);
+  color: var(--card);
+}
+
+/* ── Stats row ── */
+.collab-stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.collab-stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 16px 10px;
+}
+
+.collab-stat-icon {
+  opacity: 0.4;
+  margin-bottom: 2px;
+}
+
+.collab-stat-value {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.collab-stat-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  opacity: 0.5;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+@media (max-width: 560px) {
+  .collab-stats-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

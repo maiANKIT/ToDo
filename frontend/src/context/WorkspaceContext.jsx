@@ -12,18 +12,49 @@ export const WorkspaceProvider = ({ children }) => {
   const [members, setMembers] = useState([]);
   const [membersLoading, setMembersLoading] = useState(false);
 
+  // ── Lightweight per-workspace preview for the sidebar (avatar stack + count),
+  //    so we don't need to fetch full member lists there. ──
+  const [workspacePreviews, setWorkspacePreviews] = useState({});
+
   // ── Pending invitations addressed to me, across all workspaces ──
   const [myInvitations, setMyInvitations] = useState([]);
+
+  const loadWorkspacePreviews = useCallback(async (list) => {
+    if (!list.length) {
+      setWorkspacePreviews({});
+      return;
+    }
+    const entries = await Promise.all(
+      list.map(async (ws) => {
+        try {
+          const res = await getWorkspaceMembers(ws._id);
+          const list = res.data.data || [];
+          return [
+            ws._id,
+            {
+              count: list.length,
+              initials: list.slice(0, 3).map((m) => m.user?.name?.[0]?.toUpperCase() || "?"),
+            },
+          ];
+        } catch (e) {
+          return [ws._id, { count: 0, initials: [] }];
+        }
+      })
+    );
+    setWorkspacePreviews(Object.fromEntries(entries));
+  }, []);
 
   const refreshWorkspaces = useCallback(async () => {
     if (!user) return;
     try {
       const res = await getWorkspaces();
-      setWorkspaces(res.data.data || []);
+      const list = res.data.data || [];
+      setWorkspaces(list);
+      loadWorkspacePreviews(list);
     } catch (e) {
       console.log(e);
     }
-  }, [user]);
+  }, [user, loadWorkspacePreviews]);
 
   const refreshMyInvitations = useCallback(async () => {
     if (!user) return;
@@ -61,7 +92,8 @@ export const WorkspaceProvider = ({ children }) => {
 
   const refreshMembers = useCallback(() => {
     loadMembers(activeWorkspace?._id);
-  }, [activeWorkspace, loadMembers]);
+    if (workspaces.length) loadWorkspacePreviews(workspaces);
+  }, [activeWorkspace, loadMembers, workspaces, loadWorkspacePreviews]);
 
   useEffect(() => {
     if (user) {
@@ -72,6 +104,7 @@ export const WorkspaceProvider = ({ children }) => {
       setActiveWorkspaceState(null);
       setMembers([]);
       setMyInvitations([]);
+      setWorkspacePreviews({});
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
@@ -100,6 +133,7 @@ export const WorkspaceProvider = ({ children }) => {
         refreshMembers,
         myInvitations,
         refreshMyInvitations,
+        workspacePreviews,
       }}
     >
       {children}
