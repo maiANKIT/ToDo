@@ -47,7 +47,7 @@ const useWorkspacePermissions = () => {
   }
 
   const myMembership = members.find(
-    (m) => m.user?._id === user?.id || m.user === user?.id
+    (m) => m.user?._id === user?._id || m.user === user?._id
   );
 
   if (!myMembership) {
