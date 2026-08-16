@@ -16,6 +16,13 @@ const userSchema = new mongoose.Schema({
     password:{
         type: String,
         required: true
+    },
+    failedLoginAttempts:{
+        type: Number,
+        default: 0
+    },
+    lockUntil:{
+        type: Date
     }
     
 },

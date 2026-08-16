@@ -1,4 +1,4 @@
-import { createContext, useState } from "react";
+import { createContext, useState, useEffect } from "react";
 
 export const AuthContext = createContext();
 
@@ -16,10 +16,7 @@ export const AuthProvider = ({ children }) => {
     setUser(userData);
 
     localStorage.setItem("token", tokenData);
-    localStorage.setItem(
-      "user",
-      JSON.stringify(userData)
-    );
+    localStorage.setItem("user", JSON.stringify(userData));
   };
 
   const logout = () => {
@@ -31,6 +28,18 @@ export const AuthProvider = ({ children }) => {
 
     window.location.href = "/login";
   };
+
+  // Fired by api.js whenever any request comes back 401
+  // (session expired, kicked by device limit, etc.)
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      setToken("");
+      setUser(null);
+    };
+
+    window.addEventListener("session-expired", handleSessionExpired);
+    return () => window.removeEventListener("session-expired", handleSessionExpired);
+  }, []);
 
   return (
     <AuthContext.Provider

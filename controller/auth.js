@@ -10,6 +10,8 @@ const forgetPasswordTemplate = require("../templates/forgetPassword");
 const ResetPassword = require("../models/ResetPassword");
 const resetSuccessTemplate = require("../templates/resetSuccess");
 const welcomeEmailTemplate = require("../templates/welcomeEmail");
+const Session = require('../models/Session');
+const { success } = require("../templates/components/icons");
 
 require("dotenv").config();
 
@@ -336,15 +338,40 @@ exports.login = async (req, res) => {
       });
     }
 
+    //limitation
+    if(user.lockUntil && user.lockUntil > Date.now()){
+
+      return res.status(403).json({
+        success: false,
+        message: 'Account locked due to too many failed attempts. Try again in 15 min'
+      });
+
+    }
+
     //compare password
     const isPasswordCorrect = await bcrypt.compare(password, user.password);
 
     if (!isPasswordCorrect) {
+
+      user.failedLoginAttempts += 1;
+
+      if(user.failedLoginAttempts >= 4){
+
+        user.lockUntil = new Date(Date.now() + 15 * 60 * 1000);
+        
+      }
+
+      await user.save();
+      
       return res.status(401).json({
         success: false,
         message: "Invalid password",
       });
     }
+
+    user.failedLoginAttempts = 0;
+    user.lockUntil = undefined;
+    await user.save();
 
     // jwt payload
     const payload = {
@@ -356,6 +383,19 @@ exports.login = async (req, res) => {
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
       expiresIn: "30d",
     });
+
+    //active device
+    const MAX_DEVICES = 2;
+
+    const activeSessions = await Session.find({userId: user._id}).sort({createdAt: 1});
+
+    if(activeSessions.length >= MAX_DEVICES){
+
+      await Session.findByIdAndDelete(activeSessions[0]._id);
+
+    }
+
+    await Session.create({userId: user._id, token});
 
     //user document
     const userData = user.toObject();
@@ -629,3 +669,35 @@ exports.resetPassword = async (req, res) => {
     });
   }
 };
+
+//logout
+exports.logout = async (req, res) => {
+
+  try{
+
+    const token = req.cookies.token || req.header('Authorization')?.replace('Bearer', '');
+
+    if(token){
+      await Session.deleteOne({token: token});
+    }
+
+    //cookie clearance
+    res.clearCookie("token", {
+      httpOnly: true
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Logged Out successfully'
+    });
+
+  }
+  catch(error){
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error during logout'
+    })
+  }
+
+}

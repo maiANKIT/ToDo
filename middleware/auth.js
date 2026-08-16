@@ -1,8 +1,9 @@
 const jwt = require('jsonwebtoken');
+const Session = require('../models/Session');
 
 require('dotenv').config();
 
-exports.auth = (req, res, next)=>{
+exports.auth = async (req, res, next)=>{
 
     try{
 
@@ -34,6 +35,18 @@ exports.auth = (req, res, next)=>{
                 success: false,
                 message: 'token is invalid'
 
+            });
+
+        }
+
+        //device limit
+        const activeSession = await Session.findOne({token: token});
+
+        if(!activeSession){
+
+            return res.status(401).json({
+                success: false,
+                message: 'Session expired, You are logged out because of login from another device'
             });
 
         }
