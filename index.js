@@ -1,6 +1,6 @@
 const express = require("express");
 const app = express();
-const helmet = require("helmet"); // <-- 1. Helmet import kiya
+const helmet = require("helmet");
 
 require("dotenv").config();
 
