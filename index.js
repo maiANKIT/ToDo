@@ -1,9 +1,13 @@
 const express = require("express");
 const app = express();
+const helmet = require("helmet"); // <-- 1. Helmet import kiya
 
 require("dotenv").config();
 
 const PORT = process.env.PORT || 4000;
+
+//Helmet
+app.use(helmet());
 
 app.use(express.json());
 
@@ -20,7 +24,7 @@ app.use(
       "https://to-do-eight-plum.vercel.app",
     ],
     credentials: true,
-  }),
+  })
 );
 
 const todoRoutes = require("./routes/todos");
