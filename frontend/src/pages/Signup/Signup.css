@@ -498,3 +498,26 @@ body[data-theme="dark"] .otp-box { box-shadow: none; }
   .auth-form__head h1 { font-size: 1.45rem; }
   .otp-resend-row { flex-direction: column; gap: 2px; }
 }
+.auth-google-wrap :where(iframe) {
+  border-radius: 999px !important;
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.78rem;
+  color: var(--text);
+  opacity: 0.45;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--text);
+  opacity: 0.12;
+}

@@ -30,7 +30,7 @@ const AppLayout = ({ children }) => {
         if (!token) return; // already logged out, nothing to check
 
         // Same port (3000) as the rest of the app's API calls
-        await axios.get("http://localhost:3000/api/v1/auth/check", {
+        await axios.get("http://localhost:3000/api/v1/user/check", {
           headers: { Authorization: `Bearer ${token}` },
         });
       } catch (error) {

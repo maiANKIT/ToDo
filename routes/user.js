@@ -2,7 +2,7 @@ const express = require('express');
 
 const router = express.Router();
 
-const {signup, verifyOTP, resendOTP, login, forgotPassword, resetPassword, verifyResetOTP, logout} =require('../controller/auth');
+const {signup, verifyOTP, resendOTP, login, forgotPassword, resetPassword, verifyResetOTP, logout, googleLogin} =require('../controller/auth');
 
 const { auth } = require('../middleware/auth');
 
@@ -19,5 +19,6 @@ router.get('/check', auth, (req, res) => {
 })
 
 router.post('/logout', logout);
+router.post('/google-login', googleLogin);
 
 module.exports = router;

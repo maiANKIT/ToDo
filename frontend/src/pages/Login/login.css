@@ -397,3 +397,70 @@ body[data-theme="dark"] .field input {
 @media (max-width: 420px) {
   .auth-form__head h1 { font-size: 1.45rem; }
 }
+
+/* ── Google button ── */
+.auth-google-wrap :where(iframe) {
+  border-radius: 999px !important;
+}
+
+/* ── Divider ── */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.78rem;
+  color: var(--text);
+  opacity: 0.45;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--text);
+  opacity: 0.12;
+}
+
+/* ── Attempt / lockout banner ── */
+.auth-attempt-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  overflow: hidden;
+}
+
+.auth-attempt-banner.is-warning {
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+body[data-theme="dark"] .auth-attempt-banner.is-warning {
+  color: #fbbf24;
+}
+
+.auth-attempt-banner.is-locked {
+  background: rgba(239, 68, 68, 0.1);
+  color: #b91c1c;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+body[data-theme="dark"] .auth-attempt-banner.is-locked {
+  color: #f87171;
+}
+
+.auth-attempt-banner strong {
+  font-weight: 800;
+}
+
+.field input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

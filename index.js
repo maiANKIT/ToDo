@@ -7,7 +7,11 @@ require("dotenv").config();
 const PORT = process.env.PORT || 4000;
 
 //Helmet
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
+  })
+);
 
 app.use(express.json());
 

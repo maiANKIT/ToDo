@@ -2,12 +2,13 @@ import { useState, useEffect, useContext, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, useAnimation } from "framer-motion";
 import { toast } from "react-toastify";
+import { GoogleLogin } from "@react-oauth/google";
 import {
   User, Mail, Lock, Eye, EyeOff, ArrowRight, Loader2,
   Zap, Sparkles, ShieldCheck, RefreshCw, ChevronLeft,
 } from "lucide-react";
 
-import { signupUser, verifyOTP, resendOTP } from "../../services/authAPI";
+import { signupUser, verifyOTP, resendOTP, googleLoginAPI } from "../../services/authAPI";
 import { AuthContext } from "../../context/AuthContext";
 import logo from "../../assets/images/logo.png";
 
@@ -177,6 +178,18 @@ useEffect(() => {
     }
   };
 
+  // ── Google signup ──
+  const googleSuccessHandler = async (credentialResponse) => {
+    try {
+      const res = await googleLoginAPI(credentialResponse.credential);
+      login(res.data.token, res.data.user);
+      toast.success("Welcome to TodoFlow!");
+      navigate("/dashboard");
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Google sign-up failed");
+    }
+  };
+
   return (
     <div className="auth-page">
       {/* ── Brand panel ── */}
@@ -263,6 +276,27 @@ useEffect(() => {
               <motion.div className="auth-form__head" variants={fieldVariants} animate="show" initial="hidden">
                 <h1>Create account</h1>
                 <p>Start organising your tasks today.</p>
+              </motion.div>
+
+              <motion.div
+                className="auth-google-wrap"
+                variants={fieldVariants}
+                animate="show"
+                initial="hidden"
+              >
+                <GoogleLogin
+                  onSuccess={googleSuccessHandler}
+                  onError={() => toast.error("Google sign-up failed")}
+                  theme="outline"
+                  shape="pill"
+                  size="large"
+                  text="signup_with"
+                  width="100%"
+                />
+              </motion.div>
+
+              <motion.div className="auth-divider" variants={fieldVariants} animate="show" initial="hidden">
+                <span>or</span>
               </motion.div>
 
               <motion.div className="field" variants={fieldVariants} animate="show" initial="hidden">

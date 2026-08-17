@@ -1,6 +1,7 @@
 const bcrypt = require("bcrypt");
 const User = require("../models/User");
 const OTP = require("../models/OTP");
+const {OAuth2Client} = require('google-auth-library');
 
 const generateOTP = require("../utils/generateOTP");
 const mailSender = require("../utils/mailSender");
@@ -14,6 +15,8 @@ const Session = require('../models/Session');
 const { success } = require("../templates/components/icons");
 
 require("dotenv").config();
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 exports.signup = async (req, res) => {
   try {
@@ -343,7 +346,9 @@ exports.login = async (req, res) => {
 
       return res.status(403).json({
         success: false,
-        message: 'Account locked due to too many failed attempts. Try again in 15 min'
+        message: 'Account locked due to too many failed attempts. Try again in 15 min',
+        locked: true,
+        lockUntil: user.lockUntil,
       });
 
     }
@@ -355,9 +360,13 @@ exports.login = async (req, res) => {
 
       user.failedLoginAttempts += 1;
 
-      if(user.failedLoginAttempts >= 4){
+      const MAX_ATTEMPTS = 4;
+      let remainingAttempts = MAX_ATTEMPTS - user.failedLoginAttempts;
+
+      if(user.failedLoginAttempts >= MAX_ATTEMPTS){
 
         user.lockUntil = new Date(Date.now() + 15 * 60 * 1000);
+        remainingAttempts = 0;
         
       }
 
@@ -365,7 +374,12 @@ exports.login = async (req, res) => {
       
       return res.status(401).json({
         success: false,
-        message: "Invalid password",
+        message: user.lockUntil
+          ? 'Account locked due to too many failed attempts. Try again in 15 min'
+          : "Invalid password",
+        remainingAttempts: remainingAttempts < 0 ? 0 : remainingAttempts,
+        locked: !!user.lockUntil,
+        lockUntil: user.lockUntil || undefined,
       });
     }
 
@@ -698,6 +712,82 @@ exports.logout = async (req, res) => {
       success: false,
       message: 'Internal server error during logout'
     })
+  }
+
+}
+
+exports.googleLogin = async (req, res) => {
+
+  try{
+
+    const {token} = req.body;
+
+    if(!token){
+      return res.status(400).json({
+        success: false,
+        message: 'token is required'
+      });
+    }
+
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID
+    });
+
+    const payload = ticket.getPayload();
+    const {email, name} = payload;
+
+    let user = await User.findOne({email});
+
+    if(!user){
+
+      user = await User.create({
+        name: name,
+        email: email,
+        password: Math.random().toString(36).slice(-8) + 'A1@'
+      });
+
+    }
+
+    const appToken = jwt.sign(
+      {id: user._id, email: user.email},
+      process.env.JWT_SECRET,
+      {expiresIn: '30d'}
+    );
+
+    const MAX_DEVICES = 2;
+    const activeSessions = await Session.find({ userId: user._id }).sort({ createdAt: 1 });
+
+    if (activeSessions.length >= MAX_DEVICES) {
+      await Session.findByIdAndDelete(activeSessions[0]._id);
+    }
+    
+    await Session.create({ userId: user._id, token: appToken });
+
+    const options = {
+      expires: new Date(Date.now() + 30*24*60*60*1000),
+      httpOnly: true,
+      secure: true,
+      sameSite: 'None'
+    };
+
+    res.cookie('token', appToken, options).status(200).json({
+      success: true,
+      message: 'Google Login Successful',
+      user: user,
+      token: appToken
+    });
+
+
+  }
+  catch(error){
+
+    console.error('Google auth error: ', error);
+    res.status(401).json({
+      success: false,
+      message: 'Invalid or expired google token'
+    })
+
   }
 
 }

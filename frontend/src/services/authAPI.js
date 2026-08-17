@@ -4,7 +4,7 @@ import api from "./api";
 // all auth endpoints (signup, verify-otp, resend-otp, login,
 // forgot-password, verify-reset-otp, reset-password) live under
 // /api/v1/user, even though the controller file is named auth.js.
-
+export const googleLoginAPI = (token) => api.post("/api/v1/user/google-login", { token });
 export const signupUser = async (data) => {
   return await api.post("/api/v1/user/signup", data);
 };
