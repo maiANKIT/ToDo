@@ -291,7 +291,7 @@ useEffect(() => {
                   shape="pill"
                   size="large"
                   text="signup_with"
-                  width="100%"
+                  width="380"
                 />
               </motion.div>
 
