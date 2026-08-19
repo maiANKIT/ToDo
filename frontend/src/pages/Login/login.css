@@ -1,11 +1,22 @@
 /* =======================
+   GLOBAL SAFETY (fixes mobile overflow)
+======================= */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* =======================
    PAGE LAYOUT — split screen
 ======================= */
 
 .auth-page {
   min-height: 100vh;
+  min-height: 100dvh; /* fixes mobile address-bar vertical jump */
   display: flex;
   background: var(--bg);
+  overflow-x: hidden; /* safety net against any stray overflow */
+  width: 100%;
 }
 
 /* =======================
@@ -154,6 +165,7 @@
 
 .auth-main {
   flex: 1;
+  min-width: 0; /* prevents flex child from overflowing parent */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -387,20 +399,43 @@ body[data-theme="dark"] .field input {
 ======================= */
 
 @media (max-width: 900px) {
+  .auth-page {
+    display: block; /* avoid flex quirks feeding vertical overflow on mobile */
+    min-height: auto;
+  }
+
   .auth-aside { display: none; }
 
   .auth-form__logo-mobile { display: block; }
 
-  .auth-main { padding: 32px 20px; }
+  .auth-main {
+    padding: 32px 20px;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
 }
 
 @media (max-width: 420px) {
   .auth-form__head h1 { font-size: 1.45rem; }
+
+  .auth-main { padding: 24px 16px; }
 }
 
 /* ── Google button ── */
+.auth-google-wrap {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  overflow: hidden; /* clips fixed-width GoogleLogin iframe on small screens */
+}
+
+.auth-google-wrap > div {
+  max-width: 100%;
+}
+
 .auth-google-wrap :where(iframe) {
   border-radius: 999px !important;
+  max-width: 100% !important;
 }
 
 /* ── Divider ── */

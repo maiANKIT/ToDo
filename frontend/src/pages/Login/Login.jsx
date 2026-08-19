@@ -217,7 +217,6 @@ const Login = () => {
               shape="pill"
               size="large"
               text="continue_with"
-              width="380"
             />
           </motion.div>
 
