@@ -37,6 +37,10 @@ const Signup = () => {
   const { login } = useContext(AuthContext);
   const formAnim = useAnimation();
   const otpRefs = useRef([]);
+  const googleWrapRef = useRef(null);
+  // The GoogleLogin button renders a fixed-pixel-width iframe, so we track
+  // the wrapper's actual width and keep the button sized to fit it.
+  const [googleBtnWidth, setGoogleBtnWidth] = useState(380);
 
   const { user } = useContext(AuthContext);
 
@@ -70,6 +74,24 @@ useEffect(() => {
     if (step === "otp") {
       setTimeout(() => otpRefs.current[0]?.focus(), 350);
     }
+  }, [step]);
+
+  // Keep the Google button's width in sync with its wrapper so it never
+  // overflows on narrow screens (the library only accepts a fixed px width).
+  useEffect(() => {
+    const el = googleWrapRef.current;
+    if (!el) return;
+
+    const updateWidth = () => {
+      const width = Math.round(el.getBoundingClientRect().width);
+      if (width > 0) setGoogleBtnWidth(width);
+    };
+
+    updateWidth();
+
+    const observer = new ResizeObserver(updateWidth);
+    observer.observe(el);
+    return () => observer.disconnect();
   }, [step]);
 
   const changeHandler = (e) => {
@@ -280,6 +302,7 @@ useEffect(() => {
 
               <motion.div
                 className="auth-google-wrap"
+                ref={googleWrapRef}
                 variants={fieldVariants}
                 animate="show"
                 initial="hidden"
@@ -291,7 +314,7 @@ useEffect(() => {
                   shape="pill"
                   size="large"
                   text="signup_with"
-                  width="380"
+                  width={String(googleBtnWidth)}
                 />
               </motion.div>
 

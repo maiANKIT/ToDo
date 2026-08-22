@@ -426,7 +426,8 @@ body[data-theme="dark"] .field input {
   width: 100%;
   display: flex;
   justify-content: center;
-  overflow: hidden; /* clips fixed-width GoogleLogin iframe on small screens */
+  /* no overflow:hidden here — the button's pixel width is measured and set
+     in JS (see googleBtnWidth in Login.jsx), so it never needs clipping */
 }
 
 .auth-google-wrap > div {
@@ -435,7 +436,6 @@ body[data-theme="dark"] .field input {
 
 .auth-google-wrap :where(iframe) {
   border-radius: 999px !important;
-  max-width: 100% !important;
 }
 
 /* ── Divider ── */

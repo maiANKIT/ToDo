@@ -1,4 +1,4 @@
-import { useState, useContext, useEffect, useRef } from "react";
+import { useState, useContext, useEffect, useRef, useLayoutEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, useAnimation } from "framer-motion";
 import { toast } from "react-toastify";
@@ -50,6 +50,27 @@ const Login = () => {
   const [lockUntil, setLockUntil] = useState(null);
   const [countdown, setCountdown] = useState(null);
   const tickRef = useRef(null);
+
+  // ── Google button: measure container so it never overflows/clips ──
+  const googleWrapRef = useRef(null);
+  const [googleBtnWidth, setGoogleBtnWidth] = useState(0);
+
+  useLayoutEffect(() => {
+    const el = googleWrapRef.current;
+    if (!el) return;
+
+    const updateWidth = () => {
+      const w = Math.round(el.getBoundingClientRect().width);
+      // Google's button accepts roughly 200–400px; clamp to that range
+      setGoogleBtnWidth(Math.min(400, Math.max(200, w)));
+    };
+
+    updateWidth();
+
+    const observer = new ResizeObserver(updateWidth);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     if (!lockUntil) {
@@ -209,15 +230,24 @@ const Login = () => {
             <p>Log in to keep your flow going.</p>
           </motion.div>
 
-          <motion.div variants={fieldVariants} animate="show" initial="hidden" className="auth-google-wrap">
-            <GoogleLogin
-              onSuccess={googleSuccessHandler}
-              onError={() => toast.error("Google login failed")}
-              theme="outline"
-              shape="pill"
-              size="large"
-              text="continue_with"
-            />
+          <motion.div
+            variants={fieldVariants}
+            animate="show"
+            initial="hidden"
+            className="auth-google-wrap"
+            ref={googleWrapRef}
+          >
+            {googleBtnWidth > 0 && (
+              <GoogleLogin
+                onSuccess={googleSuccessHandler}
+                onError={() => toast.error("Google login failed")}
+                theme="outline"
+                shape="pill"
+                size="large"
+                text="continue_with"
+                width={googleBtnWidth}
+              />
+            )}
           </motion.div>
 
           <motion.div className="auth-divider" variants={fieldVariants} animate="show" initial="hidden">
