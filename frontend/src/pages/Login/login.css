@@ -434,9 +434,13 @@ body[data-theme="dark"] .field input {
   max-width: 100%;
 }
 
-.auth-google-wrap :where(iframe) {
-  border-radius: 999px !important;
-}
+/* NOTE: we intentionally do NOT force border-radius on the Google iframe.
+   Browsers clip replaced elements (like <iframe>) to their border-radius
+   automatically, even without overflow:hidden. Google's iframe reserves a
+   little extra space around the visible pill for its focus/hover ring, so
+   forcing a radius on the full iframe box clipped into that space and cut
+   the bottom off the button. shape="pill" (passed to <GoogleLogin>) already
+   renders a proper pill internally — no CSS override is needed. */
 
 /* ── Divider ── */
 .auth-divider {
